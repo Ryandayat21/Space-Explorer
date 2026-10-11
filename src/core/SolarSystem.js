@@ -3,6 +3,7 @@ import { bodies, moons, orbitRadiusFromAu, visualRadiusFromEarth } from '../data
 
 import { orbitalElements } from '../data/orbitalElements.js';
 import { OrbitMotion } from './OrbitMotion.js';
+import { dwarfPlanets } from '../data/dwarfPlanets.js';
 
 const DEG = Math.PI / 180;
 
@@ -212,9 +213,9 @@ export class SolarSystem {
   }
 
   #createPlanets() {
-    for (const data of bodies.slice(1)) {
-      const orbitRadius = orbitRadiusFromAu(data.orbitAu);
-      const radius = visualRadiusFromEarth(data.radiusEarth);
+    for (const data of [...bodies.slice(1), ...dwarfPlanets]) {
+      const orbitRadius = orbitalElements[data.id].semiMajorAxis;
+      const radius = data.visualRadius ?? visualRadiusFromEarth(data.radiusEarth);
       const parentObject = this.objects.get('sun');
       const motion = new OrbitMotion(parentObject.group, orbitalElements[data.id]);
       this.orbitMotions.push(motion);
@@ -323,7 +324,7 @@ export class SolarSystem {
     this.elapsedDays += deltaDays;
     for (const motion of this.orbitMotions) motion.update(this.elapsedDays);
     for (const object of this.objects.values()) {
-      if (object.data.type === 'planet') {
+      if (object.data.type === 'planet' || object.data.type === 'dwarf-planet') {
         const rotationPeriod = Math.abs(object.data.rotationDays) || 1;
         const direction = object.data.rotationDays < 0 ? -1 : 1;
         object.mesh.rotation.y += direction * (Math.PI * 2 / rotationPeriod) * deltaDays;

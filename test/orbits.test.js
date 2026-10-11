@@ -9,7 +9,7 @@ import { OrbitMotion } from '../src/core/OrbitMotion.js';
 const close = (a, b, tolerance = 1e-8) => assert.ok(Math.abs(a - b) < tolerance, `${a} != ${b}`);
 
 test('orbital elements preserve visual scales and correct parents', () => {
-  assert.equal(Object.keys(orbitalElements).length, 30);
+  assert.equal(Object.keys(orbitalElements).length, 35);
   for (const body of bodies.filter(body => body.type === 'planet')) {
     const elements = orbitalElements[body.id];
     assert.equal(elements.parent, 'sun');

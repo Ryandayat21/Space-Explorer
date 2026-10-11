@@ -1,5 +1,6 @@
 import { bodies } from './celestialBodies.js';
 import { moonScience, moonRadiiKm } from './moonScience.js';
+import { dwarfScienceFor } from './dwarfPlanets.js';
 
 // Scientific content is independent of scene radius, orbit spacing and time scale.
 // Moon totals are a dated NASA snapshot, not a claim of current discovery totals.
@@ -16,6 +17,7 @@ const totals = { jupiter: 95, saturn: 274, uranus: 28, neptune: 16 };
 const diameters = { mercury: 4879, venus: 12104, earth: 12756, mars: 6792, jupiter: 142984, saturn: 120536, uranus: 51118, neptune: 49528 };
 const gravity = { mercury: 3.7, venus: 8.9, earth: 9.8, mars: 3.7, jupiter: 23.1, saturn: 9, uranus: 8.7, neptune: 11 };
 export function scienceFor(body) {
+  if (body.type === 'dwarf-planet') return dwarfScienceFor(body);
   if (body.type !== 'moon' && !body.parent) return {
     ...body, diameterKm: diameters[body.id] || body.radiusKm * 2,
     gravity: gravity[body.id] ? `${gravity[body.id]} m/s² (ekuator, efektif)` : body.gravity,
