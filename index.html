@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Jelajahi Tata Surya melalui simulasi 3D ilmiah dan sinematik."
+    />
+    <meta name="theme-color" content="#030712" />
+    <title>Milky Way Observer</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="space-canvas" aria-label="Simulasi 3D Tata Surya"></canvas>
+
+      <div id="loading-screen" class="loading-screen" aria-live="polite">
+        <div class="loading-orbit" aria-hidden="true"><span></span></div>
+        <p class="eyebrow">MILKY WAY OBSERVER</p>
+        <h1>Menyiapkan Tata Surya</h1>
+        <p class="muted">Menyelaraskan orbit dan menyalakan bintang…</p>
+      </div>
+
+      <header class="topbar glass-panel">
+        <a class="brand" href="#" aria-label="Milky Way Observer — kembali ke Matahari">
+          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <span>
+            <strong>Milky Way</strong>
+            <small>OBSERVER</small>
+          </span>
+        </a>
+
+        <div class="object-search">
+          <label class="sr-only" for="object-select">Cari objek langit</label>
+          <span aria-hidden="true">⌕</span>
+          <select id="object-select">
+            <option value="">Cari objek langit…</option>
+          </select>
+        </div>
+
+        <nav class="top-actions" aria-label="Kontrol aplikasi">
+          <button id="tour-button" class="button button-primary" type="button">
+            <span aria-hidden="true">▶</span> Guided Tour
+          </button>
+          <button id="flight-button" class="icon-button text-button" type="button" title="Aktifkan mode terbang bebas">
+            <span aria-hidden="true">⌁</span><span>Free Flight</span>
+          </button>
+          <button id="help-button" class="icon-button" type="button" title="Bantuan kontrol" aria-label="Bantuan kontrol">?</button>
+          <button id="fullscreen-button" class="icon-button" type="button" title="Layar penuh" aria-label="Layar penuh">⛶</button>
+        </nav>
+      </header>
+
+      <aside class="left-rail" aria-label="Navigasi cepat">
+        <button class="rail-button active" data-filter="all" title="Semua objek"><span>✦</span><small>Semua</small></button>
+        <button class="rail-button" data-filter="star" title="Matahari"><span>☀</span><small>Bintang</small></button>
+        <button class="rail-button" data-filter="planet" title="Planet"><span>◉</span><small>Planet</small></button>
+        <button class="rail-button" data-filter="moon" title="Bulan"><span>◐</span><small>Bulan</small></button>
+      </aside>
+
+      <section id="welcome-card" class="welcome-card glass-panel">
+        <p class="eyebrow"><span></span> SIMULASI 3D INTERAKTIF</p>
+        <h1>Jelajahi rumah kita<br />di antara bintang.</h1>
+        <p>
+          Terbang melintasi Tata Surya, ikuti perjalanan terpandu, atau pilih benda langit untuk mempelajari kisah dan sains di baliknya.
+        </p>
+        <div class="welcome-actions">
+          <button id="explore-button" class="button button-primary" type="button">Mulai Menjelajah <span>→</span></button>
+          <button id="sun-button" class="button button-ghost" type="button">Kunjungi Matahari</button>
+        </div>
+        <p class="scale-note">◉ Visualisasi memakai skala jarak dan ukuran yang disederhanakan.</p>
+      </section>
+
+      <aside id="info-panel" class="info-panel glass-panel" aria-live="polite" aria-hidden="true">
+        <button id="close-info" class="panel-close" type="button" aria-label="Tutup informasi">×</button>
+        <div class="object-heading">
+          <span id="object-symbol" class="object-symbol">●</span>
+          <div>
+            <p id="object-type" class="eyebrow">PLANET</p>
+            <h2 id="object-name">Bumi</h2>
+          </div>
+        </div>
+        <p id="object-description" class="object-description"></p>
+        <dl id="object-stats" class="stat-grid"></dl>
+        <div id="object-fact" class="fact-box"></div>
+        <div class="panel-actions">
+          <button id="visit-button" class="button button-primary" type="button">Kunjungi objek</button>
+          <button id="follow-button" class="button button-ghost" type="button">Ikuti orbit</button>
+        </div>
+      </aside>
+
+      <div id="tour-panel" class="tour-panel glass-panel" hidden>
+        <div>
+          <p class="eyebrow">GUIDED TOUR <span id="tour-progress">1 / 9</span></p>
+          <h3 id="tour-title">Matahari</h3>
+          <p id="tour-copy">Pusat Tata Surya dan sumber energi bagi dunia-dunia di sekitarnya.</p>
+        </div>
+        <div class="tour-actions">
+          <button id="tour-prev" class="icon-button" type="button" aria-label="Objek sebelumnya">←</button>
+          <button id="tour-pause" class="icon-button" type="button" aria-label="Jeda tur">Ⅱ</button>
+          <button id="tour-next" class="icon-button" type="button" aria-label="Objek berikutnya">→</button>
+          <button id="tour-exit" class="text-link" type="button">Keluar</button>
+        </div>
+      </div>
+
+      <div class="time-dock glass-panel">
+        <button id="time-toggle" class="icon-button" type="button" aria-label="Jeda simulasi">Ⅱ</button>
+        <div class="time-copy">
+          <span>KECEPATAN WAKTU</span>
+          <strong id="time-label">1 hari/detik</strong>
+        </div>
+        <input id="time-speed" type="range" min="0" max="4" step="1" value="1" aria-label="Kecepatan waktu" />
+        <div class="dock-divider"></div>
+        <button id="orbit-toggle" class="dock-toggle active" type="button">Orbit</button>
+        <button id="label-toggle" class="dock-toggle active" type="button">Label</button>
+        <button id="quality-button" class="dock-toggle" type="button">Kualitas: High</button>
+      </div>
+
+      <div id="flight-hud" class="flight-hud" hidden>
+        <div class="reticle" aria-hidden="true"></div>
+        <div class="flight-status glass-panel">
+          <span>FREE FLIGHT</span>
+          <strong id="flight-speed">1.0×</strong>
+          <small>WASD bergerak · Shift boost · Esc melepas mouse</small>
+        </div>
+      </div>
+
+      <div id="labels-layer" class="labels-layer" aria-hidden="true"></div>
+
+      <dialog id="help-dialog" class="help-dialog glass-panel">
+        <button id="close-help" class="panel-close" type="button" aria-label="Tutup bantuan">×</button>
+        <p class="eyebrow">KONTROL OBSERVER</p>
+        <h2>Jelajahi semesta dengan caramu.</h2>
+        <div class="control-grid">
+          <div><kbd>W A S D</kbd><span>Terbang</span></div>
+          <div><kbd>Mouse</kbd><span>Lihat sekitar</span></div>
+          <div><kbd>Shift</kbd><span>Percepat</span></div>
+          <div><kbd>Space / Ctrl</kbd><span>Naik / turun</span></div>
+          <div><kbd>F</kbd><span>Fokus objek</span></div>
+          <div><kbd>Esc</kbd><span>Lepas pointer</span></div>
+        </div>
+        <p class="muted">Pada mode observer biasa, klik objek atau gunakan pencarian untuk membuka detailnya.</p>
+      </dialog>
+
+      <div id="mobile-notice" class="mobile-notice glass-panel">
+        Pengalaman terbaik tersedia di desktop dengan mouse dan keyboard.
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
