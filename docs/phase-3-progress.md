@@ -1,9 +1,11 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **audit dan perencanaan selesai; implementasi Phase 3 belum dimulai**.
+Status: **audit selesai; implementasi orbit elips Phase 3 selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8.
 
-Dokumen ini merupakan hasil pemeriksaan workspace, bukan spesifikasi fitur baru yang sudah disetujui. Karena permintaan belum menetapkan daftar fitur Phase 3 secara rinci, backlog di bawah adalah usulan berdasarkan bagian Roadmap dan Fase berikutnya dalam README. Prioritas dan kriteria penerimaan perlu ditetapkan sebelum implementasi masing-masing fitur.
+Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
+
+Dokumen audit ini merupakan hasil pemeriksaan workspace, bukan spesifikasi fitur baru yang sudah disetujui. Karena permintaan belum menetapkan daftar fitur Phase 3 secara rinci, backlog di bawah adalah usulan berdasarkan bagian Roadmap dan Fase berikutnya dalam README. Prioritas dan kriteria penerimaan perlu ditetapkan sebelum implementasi masing-masing fitur.
 
 ## 1. Kondisi baseline dan batas audit
 
@@ -105,16 +107,18 @@ Tidak ada alasan saat ini untuk mengganti Vite/Three.js, membuat proyek baru, me
 - [x] Catat gap, risiko, file terdampak dan usulan prioritas.
 - [x] Simpan audit ini tanpa perubahan aplikasi, reset atau commit.
 
-### Usulan implementasi - belum dikerjakan
+### Checklist implementasi - diperbarui setelah tugas orbit
 
-- [ ] Tetapkan cakupan Phase 3 dari kandidat roadmap dan acceptance criteria; Galaxy Scene bukan otomatis termasuk tahap awal.
+- [x] Tetapkan cakupan tugas pertama: orbit elips, inclination, relasi parent, waktu, garis orbit dan pengujiannya; Galaxy Scene tidak termasuk.
 - [ ] P3-01: lengkapi data ilmiah **satu bulan pilot, Europa**, dengan sumber resmi, definisi/unit dan test; gunakan panel existing.
 - [ ] P3-02: perluas pola terverifikasi ke bulan Galilea lain dan Titan, kemudian sisa katalog tanpa mengarang nilai kosong.
 - [ ] P3-03: tambahkan peta bulan/awan Venus yang berlisensi; integrasikan dengan cache, fallback dan atribusi existing.
 - [ ] P3-04: ukur frame-time, heap dan resource pada skenario berulang sebelum menambah efek visual atau kualitas adaptif.
-- [ ] P3-05: tetapkan semantik pause/clock; tambah test deterministik sebelum mengubah waktu dan gerakan orbit.
+- [x] P3-05a: semua gerakan SolarSystem memakai delta hari simulasi; pause/resume dan pengali waktu diuji deterministik.
+- [ ] P3-05b: kalender, kebijakan tab background/catch-up dan jam waktu dinding (di luar tugas ini).
 - [ ] P3-06: rancang perbandingan ukuran/jarak dengan angka ilmiah yang terpisah dari skala scene.
-- [ ] P3-07: implementasikan orbit elips/epoch bila diprioritaskan, dengan validasi matematis dan sinkronisasi garis orbit.
+- [x] P3-07a: orbit elips sederhana dengan inclination, fase awal, periode dan garis tersinkronisasi.
+- [ ] P3-07b: epoch kalender, orientasi node/periapsis dan ephemeris presisi (di luar tugas ini).
 - [ ] P3-08: perluas katalog ke planet katai/komet/Sabuk Kuiper hanya setelah tipe, pencarian, panel dan kamera siap.
 - [ ] P3-09: perluas narasi/rute tur menggunakan data dan kontrol existing.
 - [ ] P3-10: rancang Galaxy Scene dan lifecycle resource sebagai tugas tersendiri bila disetujui.
@@ -145,3 +149,65 @@ Langkah implementasi berikutnya, bukan pekerjaan pada audit ini:
 5. Catat hasil dalam dokumen ini sebelum memperluas ke bulan berikutnya.
 
 Definition of done P3-01: panel Europa menampilkan tambahan data bersumber, tidak mengubah tampilan/orbit/kamera existing, dan pemeriksaan terkait lulus. Bila suatu nilai tidak dapat diverifikasi, kelengkapan palsu bukan syarat selesai.
+
+
+## 8. Implementasi orbit elips - 11 Oktober 2026
+
+Cakupan yang disetujui: sistem orbit saja. Tidak ada perubahan aset/tekstur, narasi tur, panel atau layout UI, dependency maupun commit Git.
+
+### Perubahan
+
+- Delapan planet dan 22 bulan memakai elemen orbit terpisah: `semiMajorAxis` dalam unit scene, `eccentricity`, `inclination` dalam radian, `orbitalPeriod` dalam hari simulasi bertanda, dan `initialAngle` sebagai mean anomaly awal dalam radian.
+- Persamaan Kepler `M = E - e sin(E)` diselesaikan dengan Newton yang dibatasi interval dan fallback bisection. Posisi relatif terhadap fokus: `x=a(cos(E)-e)`, dengan sumbu minor diputar sesuai inclination. Kecepatan orbit bertambah di periapsis dan berkurang di apoapsis; bukan simulasi gravitasi n-body.
+- Garis orbit menggunakan persamaan geometri yang sama, 160 segmen seperti sebelumnya. Titik garis dibuat sekali; update posisi memakai Vector3 existing tanpa membuat object baru per-frame.
+- Semi-major axis planet tetap `orbitRadiusFromAu(orbitAu)` dan bulan tetap `distance` katalog. Radius objek dan periode katalog tidak berubah. Bulan dengan eccentricity sumber 0 tetap memiliki orbit lingkaran, sebagai kasus khusus elips.
+- Parent planet adalah group Matahari; frame bulan berada di group pusat planet masing-masing. Kemiringan badan planet, atmosfer dan cincin dipindahkan ke subgroup visual; revolusi planet tidak lagi memutar orientasi seluruh sistem bulan. Garis orbit bulan ikut berpindah bersama induknya.
+- Waktu posisi dihitung dari `elapsedDays`. Pause memberi delta 0 dan membekukan seluruh gerakan SolarSystem, termasuk rotasi Matahari dan sabuk asteroid. Resume tidak mengatur ulang fase. Slider waktu tetap memakai alur UI/main existing; rotasi dekoratif Matahari/sabuk sekarang ikut pengali waktu, dengan laju 1x sebelumnya dipertahankan.
+- OrbitMotion memakai geometry/material yang tetap terjangkau traversal dispose existing; referensi motion/orbit dibersihkan saat dispose.
+
+### Sumber dan batas ilmiah
+
+Diperiksa 11 Oktober 2026:
+
+- [NASA Planetary Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/): inclination planet dan eccentricity/inclination Bulan. Eccentricity planet, AU dan periode memakai katalog existing; ini elemen sederhana, bukan satu set osculating elements dengan epoch yang sama.
+- [JPL Mean Orbital Elements of Planetary Satellites](https://ssd.jpl.nasa.gov/sats/elem/sep.html): eccentricity dan inclination bulan lain, dibulatkan sesuai tabel. Data sumber disimpan terpisah dari penyesuaian visual.
+
+Batas model:
+
+- Fase awal deterministik memakai hash ID planet dan distribusi indeks bulan existing, bukan posisi langit pada tanggal tertentu. Tidak ada precession, perturbasi, longitude ascending node, argument of periapsis, n-body atau ephemeris.
+- Planet, Bulan Bumi dan Nereid memakai bidang referensi ekliptika scene. Satelit lain memakai pendekatan bidang ekuator planet; bidang Laplace JPL tidak direkonstruksi lengkap. Kemiringan global scene -2,5 derajat tetap untuk presentasi.
+- Triton tetap retrograde melalui periode katalog negatif. Inclination geometris memakai `180 - 157,3 = 22,7` derajat agar arah retrograde tidak diterapkan dua kali; nilai inclination sumber tetap tersedia.
+- Eccentricity sumber Nereid 0,751 akan membuat periapsis menembus Neptunus dalam skala visual existing. Eccentricity visual dibatasi oleh `1 - (radiusParent + radiusMoon + 0,35) / semiMajorAxis` (sekitar 0,6165). Semi-major axis tetap 9,2; `sourceEccentricity` tetap 0,751. Bulan lain tidak membutuhkan pembatasan. Ini penyederhanaan visual eksplisit, bukan koreksi data ilmiah.
+- Rotasi bulan/tidal locking belum dimodelkan secara fisik. Perubahan ini hanya menghitung translasi orbit dan mempertahankan material existing.
+
+### File diubah / ditambahkan
+
+| File | Peran |
+| --- | --- |
+| `src/core/SolarSystem.js` | Integrasi orbit, hirarki parent/visual tilt, pause konsisten dan pembersihan referensi |
+| `src/core/orbitMath.js` (baru) | Validasi, solver Kepler, posisi elips dan inclination tanpa dependency Three.js |
+| `src/core/OrbitMotion.js` (baru) | Frame orbit, garis elips dan group objek yang bergerak |
+| `src/data/orbitalElements.js` (baru) | Elemen orbit sederhana, konversi skala existing dan catatan sumber |
+| `test/orbits.test.js` (baru) | Enam unit test orbit, skala, parent, finite, apsis, arah dan sinkronisasi bidang |
+| `e2e/orbits.spec.js` (baru) | Integrasi SolarSystem nyata, pause/resume, kesetaraan pengali waktu, toggle garis, dispose dan UI clock |
+| `docs/phase-3-progress.md` | Status, checklist, batas ilmiah, hasil verifikasi dan langkah manual |
+
+### Verifikasi
+
+- `npm.cmd test`: **15/15 lulus** (9 existing + 6 orbit).
+- `npm.cmd run build`: **berhasil**, 19 modul; bundle Three.js tetap terpisah (495,34 kB sebelum gzip).
+- Unit test mencakup seluruh 30 orbit: posisi finite hingga waktu sangat besar/negatif, batas jarak, periapsis lebih kecil dari apoapsis untuk e>0, kasus lingkaran e=0, skala dan parent, periodicity, arah retrograde, gerak lebih cepat di periapsis, solver e tinggi, bidang garis dan parent translation.
+- `npm.cmd run test:e2e`: **8/8 lulus**, Edge 1366x768 dan Chrome 1920x1080, 1,4 menit. Vite dev server dipakai oleh konfigurasi Playwright.
+- Skenario baru memeriksa seluruh parent di SolarSystem nyata, pause termasuk rotasi Matahari/sabuk, resume, kesetaraan delta 200x dengan akumulasi 1x, toggle garis, dispose serta tombol waktu/slider UI.
+- Regresi existing lulus untuk Visit/Follow, klik/pencarian, tur, Free Flight, kualitas/HUD, resource berulang dan tekstur Matahari saat startup. Tidak ada pageerror/console error pada skenario normal; pengujian fallback sengaja menggagalkan permintaan tekstur. Tidak dilakukan benchmark FPS/heap menyeluruh.
+
+### Cara menguji manual
+
+1. Jalankan `npm run dev` (PowerShell dapat memakai `npm.cmd run dev`), buka URL Vite. Aktifkan garis orbit dan pilih Merkurius lewat pencarian.
+2. Tekan Visit lalu zoom keluar dan putar kamera agar garis orbit terlihat. Naikkan slider ke 200 hari/detik: Merkurius mengikuti garis elips, jaraknya dari Matahari berubah, dan bidangnya miring terhadap orbit Bumi. Elips planet lain lebih halus karena eccentricity lebih kecil.
+3. Tekan Jeda: planet, bulan, Matahari dan sabuk berhenti; kamera masih bisa dikendalikan. Tekan Lanjutkan: objek meneruskan posisi terakhir. Coba 0,1x, 1x, 10x, 50x dan 200x tanpa reset posisi.
+4. Cari Bumi dan tekan Follow pada 10x/50x: kamera mengikuti Bumi; Bulan dan garis orbitnya tetap mengelilingi Bumi yang bergerak. Ulangi untuk Jupiter/Europa dan Uranus/Miranda untuk melihat sistem bulan miring.
+5. Cari Neptunus/Nereid: lintasan Nereid memanjang tetapi tidak menembus badan Neptunus. Triton bergerak retrograde relatif sistem ekuator Neptunus.
+6. Matikan/nyalakan garis orbit; semua garis planet dan bulan mengikuti toggle. Coba Visit/Follow, klik objek dan jalankan tur singkat untuk memeriksa navigasi tetap nyaman.
+
+Pekerjaan selanjutnya tetap terpisah: epoch/ephemeris, orientasi orbit lengkap, kalender/catch-up, serta model rotasi bulan. Usulan Europa pada bagian 7 adalah rekomendasi audit historis; tugas orbit ini adalah prioritas yang kemudian dipilih pengguna.
