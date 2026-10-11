@@ -38,7 +38,7 @@ npm run preview
 - `Shift`: boost.
 - `F`: fokus ke objek terpilih.
 - `G`: memulai guided tour.
-- `H`: menyembunyikan HUD (akan disempurnakan pada fase berikutnya).
+- `H`: menyembunyikan HUD.
 - `Esc`: melepas pointer.
 
 ## Deployment Vercel
@@ -83,3 +83,74 @@ Data ini merupakan fondasi konten dan perlu ditinjau kembali ketika detail ilmia
 - Guided tour dengan narasi lebih kaya.
 - Planet katai, Sabuk Kuiper, dan komet.
 - Galaxy Scene untuk peta 3D Bima Sakti.
+
+## Phase 2 (11 Oktober 2026)
+
+Pengembangan mempertahankan Vite, Three.js dan JavaScript modular; tidak ada proyek baru.
+
+- Tekstur lokal Matahari, delapan planet dan Bulan; Matahari dimuat saat startup sebelum loading screen ditutup; objek lain dimuat ketika dekat kamera atau dipilih. Startup tetap terbuka setelah maksimal sekitar 4,5 detik jika request tekstur tertahan. Procedural texture tersedia langsung dan tetap dipakai ketika unduhan lokal gagal.
+- Material berpencahayaan, sisi malam, corona lebih redup, cincin Saturnus dengan pita transparansi/celah, cincin Uranus tipis. Pencahayaan disetarakan untuk jarak visual terkompresi, bukan simulasi radiometri.
+- Visit melakukan perjalanan lalu melepas target. Follow memindahkan kamera bersama target bergerak sambil tetap mendukung orbit manual. Input mouse/scroll membatalkan perjalanan; kamera dilindungi dari masuk permukaan benda langit.
+- Free Flight: WASD, Space/Ctrl, scroll mengubah kecepatan dasar 1-180 unit visual/detik, Shift boost 3,5 kali, redaman percepatan dan perlambatan dekat permukaan. Escape melepas pointer; tombol Keluar Free Flight kembali ke observer. Kehilangan fokus mengosongkan tombol/kecepatan tersimpan.
+- Pencarian nama Indonesia/ID Inggris; hasil dikelompokkan Bintang, Planet, Bulan; kategori memfilter hasil. Hit sphere kecil dan indikator seleksi, dengan pembeda klik dan drag.
+- Tur 10 pemberhentian termasuk sabuk asteroid; Start, Pause/Resume, Previous, Next, Lewati, Exit. Durasi baca 12-16 detik setelah transisi. Kontrol kamera manual menjeda tur. Tidak ada audio/TTS.
+- HUD toggle yang selalu dapat diakses, fullscreen dengan error state, bantuan, label, kualitas Low/Medium/High, status fallback, dan pemberitahuan desktop pada mobile.
+- DPR dibatasi 0,85 / 1,25 / 1,75. Low mengurangi partikel dan menonaktifkan atmosfer/corona. Tidak ada post-processing mahal. Asteroid tetap satu particle system. Vector animation loop digunakan ulang; texture procedural pengganti dibuang, seluruh resource scene dibuang saat keluar halaman. Bundle Three.js tetap terpisah.
+
+### Data ilmiah dan batas interpretasi
+
+Sumber diverifikasi pada 11 Oktober 2026:
+
+- [NASA Planetary Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/), snapshot 18 Maret 2025. Diameter planet di panel memakai diameter ekuator dan gravitasi efektif ekuator; radius visual tetap terpisah. Jumlah bulan planet luar ditampilkan dengan tanggal snapshot, bukan diklaim sebagai jumlah penemuan terkini.
+- [NASA Science Solar System](https://science.nasa.gov/solar-system/), [Sun](https://science.nasa.gov/sun/facts/), [Moon](https://science.nasa.gov/moon/facts/), dan halaman facts setiap planet untuk deskripsi/komposisi/fakta.
+- [NASA/JPL Satellite Physical Parameters](https://ssd.jpl.nasa.gov/sats/phys_par/) untuk radius rata-rata 22 bulan. Diameter bulan dihitung 2 kali radius rata-rata; ini bukan diameter ekuator untuk satelit tak beraturan.
+
+Panel menautkan sumbernya. Data ilmiah ditata oleh `src/data/science.js`; `radiusEarth`, `visualRadius`, `size`, `distance` numerik pada katalog bulan, dan helper skala dipakai untuk scene saja. Periode pada katalog simulasi bulan tidak otomatis menjadi nilai ilmiah panel. Selain Bulan, massa/gravitasi/suhu/rotasi/periode yang belum diverifikasi tampil sebagai "Belum diverifikasi". Ukuran, jarak, waktu, orbit melingkar dan fase awal adalah ilustrasi, bukan ephemeris tanggal nyata. Suhu raksasa gas merujuk lapisan atmosfer, bukan permukaan padat.
+
+### Aset lokal dan lisensi
+
+Seluruh JPEG berikut karya **Solar System Scope / INOVE**, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), berbasis data citra/elevasi NASA. Kredit dan URL unduhan tiap berkas dicatat di [public/textures/ATTRIBUTION.md](public/textures/ATTRIBUTION.md).
+
+| Berkas public/textures | Objek | Sumber mirror |
+| --- | --- | --- |
+| sun.jpg | Matahari | homer-jay/solar-system-textures, 1K |
+| earth.jpg | Bumi siang | homer-jay/solar-system-textures, 1K |
+| moon.jpg | Bulan | homer-jay/solar-system-textures, 1K |
+| mercury.jpg | Merkurius | elymas/solar-simulator, 2K |
+| venus.jpg | Venus, visualisasi permukaan | elymas/solar-simulator, 2K |
+| mars.jpg | Mars | elymas/solar-simulator, 2K |
+| jupiter.jpg | Jupiter | elymas/solar-simulator, 2K |
+| saturn.jpg | Saturnus | elymas/solar-simulator, 2K |
+| uranus.jpg | Uranus | elymas/solar-simulator, 2K |
+| neptune.jpg | Neptunus | elymas/solar-simulator, 2K |
+
+[Sumber asli](https://ssi.solarsystemscope.com/textures/), [mirror A dan lisensi](https://github.com/homer-jay/solar-system-textures#license), [mirror B dan lisensi](https://github.com/elymas/solar-simulator#texture-sources). Server unduhan asli mengembalikan HTTP 403, sehingga salinan beratribusi dari mirror dipakai. Berkas hanya diganti nama; mirror A sudah menurunkan resolusi sebelumnya. Peta ditingkatkan warnanya dan beberapa area tak terpetakan diisi ilustrasi oleh pembuat. Venus menggunakan peta permukaan, bukan tampilan optik di atas awan. Seluruh 21 bulan lain, cincin dan corona memakai ilustrasi procedural. Tidak ada hotlink gambar atau font eksternal.
+
+### Verifikasi
+
+```bash
+npm test
+npm run build
+npm run dev
+npm run test:e2e
+```
+
+Pada PowerShell dengan execution policy yang memblokir npm.ps1 gunakan `npm.cmd`.
+E2E memerlukan Chrome dan Edge desktop terinstal; config meluncurkan kedua browser headless dan memakai server dev yang sudah aktif atau menjalankannya sendiri. Screenshot berada di `test-results/` (diabaikan Git). Tidak perlu mengunduh Chromium tambahan.
+
+Baseline: 4 unit test lulus dan build berhasil. Bug yang ditemukan: hidden panel ditimpa CSS, filter hanya memindahkan kamera, Follow tidak membawa kamera, tween menuju posisi lama objek, belum ada asteroid dalam tur, Shift menimpa kecepatan, orbit tidak tepat di garis, serta request font/favicon gagal.
+
+Pengujian Phase 2 mencakup 9 unit test, 4 skenario E2E (termasuk tur otomatis dan fallback tekstur) pada Edge 1366x768 dan Chrome 1920x1080: pencarian/filter/empty state, Visit vs Follow, jarak aman, raycast, kontrol tur/pengambilalihan kamera, pengulangan tur, pointer lock/Escape, scroll/boost, bantuan, HUD, kualitas dan fullscreen. Pengujian resource membandingkan jumlah geometry/texture scene yang tetap sama setelah tur berulang dan memastikan alokasi GPU tidak melebihi resource scene; ini bukan pengganti profiling heap jangka panjang atau benchmark FPS pada GPU fisik.
+
+### File Phase 2
+
+Diubah: `src/main.js`, `src/core/SolarSystem.js`, `src/core/FlightControls.js`, `src/ui/UIController.js`, `src/data/celestialBodies.js`, `src/styles.css`, `index.html`, `package.json`, `package-lock.json`, `.gitignore`, `README.md`.
+
+Ditambahkan: `src/core/cameraMath.js`, `src/data/science.js`, `src/data/search.js`, `src/data/tour.js`, `test/phase2.test.js`, `e2e/observer.spec.js`, `playwright.config.js`, sepuluh JPEG dan `public/textures/ATTRIBUTION.md`.
+
+### Fase berikutnya
+
+- Peta permukaan berlisensi untuk 21 bulan lainnya dan peta awan Venus; verifikasi parameter ilmiah bulan yang masih kosong.
+- Ephemeris dan mode perbandingan ukuran/jarak fisik, orbit elips, serta pembaruan jumlah bulan dengan versi sumber.
+- Profiling heap/FPS jangka panjang pada beberapa GPU desktop; kualitas adaptif bila diperlukan.
+- Planet katai, komet, Sabuk Kuiper dan Galaxy Scene sesuai roadmap awal.

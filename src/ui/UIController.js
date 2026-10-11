@@ -1,4 +1,7 @@
-import { bodies, moons, timeSpeeds, tourStops } from '../data/celestialBodies.js';
+import { tour } from '../data/tour.js';
+import { searchObjects } from '../data/search.js';
+import { scienceFor } from '../data/science.js';
+import { timeSpeeds, tourStops } from '../data/celestialBodies.js';
 
 export class UIController extends EventTarget {
   constructor() {
@@ -27,26 +30,29 @@ export class UIController extends EventTarget {
   }
 
   #populateSearch() {
-    const planetGroup = document.createElement('optgroup');
-    planetGroup.label = 'Matahari & Planet';
-    bodies.forEach((body) => {
-      const option = document.createElement('option');
-      option.value = body.id;
-      option.textContent = body.name;
-      planetGroup.append(option);
-    });
-    const moonGroup = document.createElement('optgroup');
-    moonGroup.label = 'Bulan Utama';
-    moons.forEach((moon) => {
-      const option = document.createElement('option');
-      option.value = moon.id;
-      option.textContent = moon.name;
-      moonGroup.append(option);
-    });
-    this['object-select'].append(planetGroup, moonGroup);
+    const select = this['object-select'];
+    select.replaceChildren(new Option('Pilih hasil pencarian...', ''));
+    const results = searchObjects(document.getElementById('search-input').value, this.filter || 'all');
+    for (const [type, label] of [['star', 'Bintang'], ['planet', 'Planet'], ['moon', 'Bulan']]) {
+      const group = document.createElement('optgroup'); group.label = label;
+      results.filter(body => (body.type || 'moon') === type).forEach(body => group.append(new Option(body.name, body.id)));
+      if (group.children.length) select.append(group);
+    }
+    document.getElementById('search-status').textContent = results.length ? results.length + ' objek' : 'Tidak ada objek yang cocok';
+    if (!results.length) select.options[0].textContent = 'Tidak ada objek yang cocok';
   }
 
   #bindEvents() {
+    document.getElementById('search-input').addEventListener('input', () => this.#populateSearch());
+    document.getElementById('search-input').addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        const result = searchObjects(event.target.value, this.filter || 'all')[0];
+        if (result) this.emit('select', result.id);
+      }
+    });
+    document.getElementById('hud-button').addEventListener('click', () => document.body.classList.toggle('hud-hidden'));
+    document.getElementById('flight-exit').addEventListener('click', () => this.emit('flight-toggle'));
+    document.getElementById('tour-skip').addEventListener('click', () => this.stepTour(1));
     this['object-select'].addEventListener('change', (event) => {
       if (event.target.value) this.emit('select', event.target.value);
     });
@@ -67,8 +73,8 @@ export class UIController extends EventTarget {
     this['help-button'].addEventListener('click', () => this['help-dialog'].showModal());
     this['close-help'].addEventListener('click', () => this['help-dialog'].close());
     this['fullscreen-button'].addEventListener('click', () => {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-      else document.exitFullscreen?.();
+      const request = !document.fullscreenElement ? document.documentElement.requestFullscreen?.() : document.exitFullscreen?.();
+      request?.catch(() => this.status('Layar penuh tidak tersedia pada browser ini.'));
     });
     this['time-toggle'].addEventListener('click', () => {
       this.paused = !this.paused;
@@ -95,16 +101,16 @@ export class UIController extends EventTarget {
     this['tour-prev'].addEventListener('click', () => this.stepTour(-1));
     this['tour-next'].addEventListener('click', () => this.stepTour(1));
     this['tour-pause'].addEventListener('click', () => {
-      this.tourPaused = !this.tourPaused;
-      this['tour-pause'].textContent = this.tourPaused ? '▶' : 'Ⅱ';
-      this.emit('tour-pause', this.tourPaused);
+      this.pauseTour(!this.tourPaused);
     });
     this['tour-exit'].addEventListener('click', () => this.stopTour());
     document.querySelectorAll('.rail-button').forEach((button) => {
       button.addEventListener('click', () => {
         document.querySelectorAll('.rail-button').forEach((item) => item.classList.remove('active'));
         button.classList.add('active');
-        this.emit('filter', button.dataset.filter);
+        this.filter = button.dataset.filter;
+        this.#populateSearch();
+        this.emit('filter', this.filter);
       });
     });
     window.addEventListener('keydown', (event) => {
@@ -139,6 +145,7 @@ export class UIController extends EventTarget {
   }
 
   showInfo(data) {
+    data = scienceFor(data);
     this.hideWelcome();
     this.selectedId = data.id;
     this['object-symbol'].textContent = data.symbol || '●';
@@ -148,31 +155,38 @@ export class UIController extends EventTarget {
     this['object-description'].textContent = data.description;
     this['object-fact'].textContent = data.fact;
     const stats = [
-      ['Diameter', typeof data.radiusKm === 'number' ? `${(data.radiusKm * 2).toLocaleString('id-ID')} km` : data.radiusKm],
+      ['Diameter', data.diameterKm ? `${data.diameterKm.toLocaleString('id-ID')} km` : null],
       ['Massa', data.mass], ['Gravitasi', data.gravity], ['Suhu', data.temperature],
-      ['Jarak', data.distance], ['Rotasi', data.rotation], ['Revolusi', data.orbitPeriod], ['Bulan', data.moons]
+      ['Jarak', data.distance], ['Rotasi', data.rotation], ['Revolusi', data.orbitPeriod], ['Bulan', data.moons], ['Komposisi', data.composition]
     ];
     this['object-stats'].replaceChildren(...stats.map(([label, value]) => {
       const wrapper = document.createElement('div');
       const dt = document.createElement('dt');
       const dd = document.createElement('dd');
       dt.textContent = label;
-      dd.textContent = value ?? '—';
+      dd.textContent = value ?? 'Belum diverifikasi';
       wrapper.append(dt, dd);
       return wrapper;
     }));
+    document.getElementById('object-sources').replaceChildren(...data.sources.map(source => {
+      const link = document.createElement('a'); link.href = source.url; link.textContent = source.label; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
+    }));
     this['object-select'].value = data.id;
+    this['info-panel'].inert = false;
+    this['info-panel'].scrollTop = 0;
     this['info-panel'].classList.add('open');
     this['info-panel'].setAttribute('aria-hidden', 'false');
   }
 
   closeInfo() {
+    this['info-panel'].inert = true;
     this['info-panel'].classList.remove('open');
     this['info-panel'].setAttribute('aria-hidden', 'true');
   }
 
   setFlight(active, speed = 18) {
     this['flight-hud'].hidden = !active;
+    document.getElementById('flight-exit').hidden = !active;
     this['flight-button'].classList.toggle('active', active);
     this['flight-button'].title = active ? 'Keluar dari mode terbang bebas' : 'Aktifkan mode terbang bebas';
     this['flight-speed'].textContent = `${(speed / 18).toFixed(1)}×`;
@@ -184,22 +198,35 @@ export class UIController extends EventTarget {
     this.tourIndex = 0;
     this.tourPaused = false;
     this['tour-pause'].textContent = 'Ⅱ';
+    this['tour-pause'].setAttribute('aria-label', 'Jeda tur');
     this['tour-panel'].hidden = false;
     this.updateTourCopy();
     this.emit('tour-start', tourStops[this.tourIndex]);
   }
 
   stepTour(direction) {
+    if (this.tourPaused) this.pauseTour(false);
+    if (this.tourIndex + direction >= tourStops.length) { this.stopTour(); return; }
     this.tourIndex = Math.max(0, Math.min(tourStops.length - 1, this.tourIndex + direction));
     this.updateTourCopy();
     this.emit('tour-step', tourStops[this.tourIndex]);
   }
 
   updateTourCopy() {
-    const body = bodies.find((item) => item.id === tourStops[this.tourIndex]);
+    const body = tour[this.tourIndex];
+    this['tour-prev'].disabled = this.tourIndex === 0;
     this['tour-progress'].textContent = `${this.tourIndex + 1} / ${tourStops.length}`;
-    this['tour-title'].textContent = body.name;
-    this['tour-copy'].textContent = body.description;
+    this['tour-title'].textContent = body.title;
+    this['tour-copy'].textContent = body.narration;
+  }
+
+  status(message) { document.getElementById('app-status').textContent = message; }
+
+  pauseTour(paused) {
+    this.tourPaused = paused;
+    this['tour-pause'].textContent = paused ? '▶' : 'Ⅱ';
+    this['tour-pause'].setAttribute('aria-label', paused ? 'Lanjutkan tur' : 'Jeda tur');
+    this.emit('tour-pause', paused);
   }
 
   stopTour() {

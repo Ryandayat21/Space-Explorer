@@ -1,0 +1,148 @@
+import { test, expect } from '@playwright/test';
+
+test('desktop navigation, tours, picking, flight and resources', async ({ page }, testInfo) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.goto('/');
+  await expect(page.locator('#loading-screen')).toHaveClass(/done/);
+  await expect(page.locator('#tour-panel')).toBeHidden();
+  const snapshot = () => page.evaluate(() => window.__observer.snapshot());
+  await page.locator('#search-input').fill('xyz-no-match');
+  await expect(page.locator('#object-select')).toContainText('Tidak ada objek');
+  await page.locator('#search-input').fill('');
+  await page.locator('[data-filter="moon"]').click();
+  await expect(page.locator('#object-select optgroup')).toHaveCount(1);
+  await expect(page.locator('#object-select option')).toHaveCount(23);
+  await page.locator('[data-filter="planet"]').click();
+  await expect(page.locator('#object-select option')).toHaveCount(9);
+  await page.locator('[data-filter="star"]').click();
+  await expect(page.locator('#object-select option')).toHaveCount(2);
+  await page.locator('[data-filter="all"]').click();
+  await page.locator('#search-input').fill('earth');
+  await page.locator('#search-input').press('Enter');
+  await expect(page.locator('#object-name')).toHaveText('Bumi');
+  await expect.poll(async () => (await snapshot()).tween).toBe(false);
+  expect((await snapshot()).followed).toBeUndefined();
+  await page.locator('#follow-button').click();
+  await expect.poll(async () => (await snapshot()).followed).toBe('earth');
+  const first = await snapshot(); await page.waitForTimeout(400);
+  const second = await snapshot();
+  expect(second.camera).not.toEqual(first.camera);
+  const distance = v => Math.hypot(...v.camera.map((x, i) => x - v.target[i]));
+  expect(Math.abs(distance(second) - distance(first))).toBeLessThan(.15);
+  await page.locator('#visit-button').click();
+  await expect.poll(async () => (await snapshot()).tween).toBe(false);
+  expect((await snapshot()).followed).toBeUndefined();
+  expect((await snapshot()).clearance).toBeGreaterThan(0);
+  await page.locator('#time-toggle').click();
+  const position = await page.evaluate(() => window.__observer.project('earth'));
+  await page.mouse.click(position.x, position.y);
+  expect((await snapshot()).selected).toBe('earth');
+  await page.mouse.click(1050, 690); // Empty space must remain harmless.
+  await page.locator('#tour-button').click();
+  await expect(page.locator('#tour-title')).toHaveText('Matahari');
+  await page.locator('#tour-pause').click();
+  expect((await snapshot()).tourPaused).toBe(true);
+  const paused = await snapshot(); await page.waitForTimeout(200);
+  expect((await snapshot()).camera).toEqual(paused.camera);
+  await page.locator('#tour-pause').click();
+  for (let i = 0; i < 5; i++) await page.locator('#tour-next').click();
+  await expect(page.locator('#tour-title')).toHaveText('Sabuk asteroid');
+  await page.locator('#tour-prev').click();
+  await expect(page.locator('#tour-title')).toHaveText('Mars');
+  await page.locator('#tour-skip').click();
+  await page.locator('#tour-next').click();
+  await expect(page.locator('#tour-title')).toHaveText('Jupiter dan bulan Galilea');
+  await expect.poll(async () => (await snapshot()).tween).toBe(false);
+  await page.screenshot({ path: testInfo.outputPath('jupiter.png') });
+  await page.mouse.move(800, 480); await page.mouse.down(); await page.mouse.move(840, 500); await page.mouse.up();
+  expect((await snapshot()).tourPaused).toBe(true);
+  expect((await snapshot()).tween).toBe(false);
+  await page.locator('#tour-exit').click();
+  await page.locator('#tour-button').click();
+  await expect(page.locator('#tour-pause')).toHaveAttribute('aria-label', 'Jeda tur');
+  await page.locator('#tour-exit').click();
+  const memory = await page.evaluate(() => window.__observer.resources());
+  for (let repeat = 0; repeat < 3; repeat++) {
+    await page.locator('#tour-button').click();
+    for (let i = 0; i < 10; i++) await page.locator('#tour-next').click();
+  }
+  await expect(page.locator('#tour-panel')).toBeHidden();
+  expect(await page.evaluate(() => window.__observer.resources())).toEqual(memory);
+  // Three uploads geometries lazily as they enter the view; uploaded count is bounded.
+  expect((await snapshot()).memory.geometries).toBeLessThanOrEqual(memory.geometries);
+  expect((await snapshot()).memory.textures).toBeLessThanOrEqual(memory.textures);
+  await page.locator('#flight-button').click();
+  await expect(page.locator('#flight-exit')).toBeVisible();
+  await expect.poll(async () => (await snapshot()).pointerLocked).toBe(true);
+  const before = await snapshot();
+  await page.mouse.wheel(0, -400);
+  expect((await snapshot()).speed).toBeGreaterThan(before.speed);
+  await page.keyboard.down('w'); await page.waitForTimeout(300);
+  await page.keyboard.down('Shift'); await page.waitForTimeout(100);
+  expect((await snapshot()).camera).not.toEqual(before.camera);
+  await page.keyboard.up('Shift'); await page.keyboard.up('w');
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await snapshot()).pointerLocked).toBe(false);
+  await page.locator('#flight-exit').click();
+  expect((await snapshot()).flight).toBe(false);
+  for (const quality of ['Medium', 'Low', 'High']) {
+    await page.locator('#quality-button').click();
+    await expect(page.locator('#quality-button')).toContainText(quality);
+  }
+  await page.locator('#help-button').click(); await expect(page.locator('#help-dialog')).toBeVisible();
+  await page.locator('#close-help').click();
+  await page.locator('#hud-button').click(); await expect(page.locator('body')).toHaveClass(/hud-hidden/);
+  await page.locator('#hud-button').click();
+  await page.locator('#fullscreen-button').click();
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
+  await page.locator('#fullscreen-button').click();
+  await page.screenshot({ path: testInfo.outputPath('desktop.png') });
+  expect(errors).toEqual([]);
+});
+
+ test('tour advances after reading time and failed texture keeps simulation usable', async ({ page }) => {
+  let moonRequests = 0;
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.route('**/textures/moon.jpg', async route => {
+    moonRequests++;
+    await route.fulfill({ status: 200, contentType: 'image/jpeg', body: 'invalid-image-for-fallback-check' });
+  });
+  await page.goto('/');
+  await expect(page.locator('#loading-screen')).toHaveClass(/done/);
+  await page.locator('#object-select').selectOption('moon');
+  await expect(page.locator('#app-status')).toContainText('procedural');
+  await expect(page.locator('#object-name')).toHaveText('Bulan');
+  await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
+  await page.locator('#visit-button').click();
+  expect(moonRequests).toBe(1);
+  await page.locator('#tour-button').click();
+  await expect(page.locator('#tour-title')).toHaveText('Merkurius', { timeout: 25000 });
+  await page.locator('#tour-pause').click();
+  await page.waitForTimeout(800);
+  await expect(page.locator('#tour-title')).toHaveText('Merkurius');
+  await page.locator('#tour-exit').click();
+  expect(errors).toEqual([]);
+});
+
+test('Sun texture is ready at startup without clicking and startup failure falls back', async ({ page }) => {
+  let sunRequests = 0;
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', request => { if (request.url().endsWith('/textures/sun.jpg')) sunRequests++; });
+  await page.goto('/');
+  await expect(page.locator('#loading-screen')).toHaveClass(/done/);
+  expect(await page.evaluate(() => window.__observer.snapshot().sunTextureLoaded)).toBe(true);
+  expect(await page.evaluate(() => window.__observer.snapshot().selected)).toBeUndefined();
+  expect(sunRequests).toBe(1);
+  await page.locator('#object-select').selectOption('sun');
+  expect(sunRequests).toBe(1);
+  await page.route('**/textures/sun.jpg', route => route.fulfill({ status: 200, contentType: 'image/jpeg', body: 'invalid-image' }));
+  await page.reload();
+  await expect(page.locator('#loading-screen')).toHaveClass(/done/);
+  await expect(page.locator('#app-status')).toContainText('procedural');
+  expect(await page.evaluate(() => window.__observer.snapshot().sunTextureLoaded)).toBe(false);
+  expect(errors).toEqual([]);
+});

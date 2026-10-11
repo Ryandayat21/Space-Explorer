@@ -1,3 +1,4 @@
+import { tour } from './tour.js';
 export const bodies = [
   {
     id: 'sun', name: 'Matahari', type: 'star', symbol: '☀', color: '#ffb53d', radiusEarth: 109.2,
@@ -98,7 +99,8 @@ export const moons = [
   { id: 'proteus', name: 'Proteus', parent: 'neptune', color: '#777a80', size: 0.23, distance: 4.7, period: 1.12 }
 ];
 
-export const tourStops = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+export { tour };
+export const tourStops = tour.map(stop => stop.id);
 
 export const timeSpeeds = [0.1, 1, 10, 50, 200];
 
