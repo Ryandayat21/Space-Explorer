@@ -4,6 +4,7 @@ import { bodies, moons, orbitRadiusFromAu, visualRadiusFromEarth } from '../data
 import { orbitalElements } from '../data/orbitalElements.js';
 import { OrbitMotion } from './OrbitMotion.js';
 import { dwarfPlanets } from '../data/dwarfPlanets.js';
+import { createPlanetRings } from './PlanetRings.js';
 
 const DEG = Math.PI / 180;
 
@@ -247,33 +248,13 @@ export class SolarSystem {
         this.effects.push(atmosphere);
       }
 
-      if (data.rings) this.#addRings(visual, radius, data.id);
+      if (data.rings) mesh.add(createPlanetRings(data.id, radius));
 
       const object = { data, group, mesh, radius, parentObject, motion, orbitRadius };
       this.objects.set(data.id, object);
       this.pickables.push(mesh);
       this.#createMoonsForPlanet(object);
     }
-  }
-
-  #addRings(group, radius, planetId) {
-    const saturn = planetId === 'saturn';
-    const inner = radius * (saturn ? 1.25 : 1.55);
-    const outer = radius * (saturn ? 2.25 : 1.62);
-    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 1;
-    const ctx = canvas.getContext('2d');
-    const random = seededRandom(73);
-    for (let x = 0; x < 512; x++) {
-      const gap = x > 300 && x < 324;
-      ctx.fillStyle = 'rgba(210,193,156,' + (gap ? .02 : .2 + random() * .65) + ')';
-      ctx.fillRect(x, 0, 1, 1);
-    }
-    const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace;
-    const geometry = new THREE.RingGeometry(inner, outer, 128);
-    const pos = geometry.attributes.position, uv = geometry.attributes.uv;
-    for (let i = 0; i < pos.count; i++) uv.setXY(i, (Math.hypot(pos.getX(i), pos.getY(i)) - inner) / (outer - inner), .5);
-    const ring = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ map, color: saturn ? 0xffffff : 0x687474, roughness: 1, side: THREE.DoubleSide, transparent: true, opacity: saturn ? .8 : .18, depthWrite: false }));
-    ring.rotation.x = Math.PI / 2; group.add(ring);
   }
 
   #createMoonsForPlanet(parentObject) {

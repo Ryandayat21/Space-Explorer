@@ -1,7 +1,7 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **audit selesai; orbit elips, 17 bulan utama dan lima planet katai selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-10.
+Status: **audit selesai; orbit elips, 17 bulan utama, lima planet katai dan peningkatan cincin selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-11.
 
 Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
 
@@ -310,3 +310,40 @@ Diperiksa 11 Oktober 2026; sumber juga tampil di panel:
 - Regresi bulan, orbit/waktu, guided tour, Free Flight, resource dan fallback/startup tekstur lulus. Tidak ada pageerror/console error pada skenario planet katai. `git diff --check` tidak menemukan whitespace error; hanya pemberitahuan normal konversi LF/CRLF Windows.
 
 Manual: jalankan `npm run dev`, pilih Katai, cari kelima nama, tekan Enter/Visit, tutup panel dan klik objek untuk membuka kembali. Pastikan label dan tipe PLANET KATAI benar. Coba Follow Eris pada 200 hari/detik; pause/resume dan toggle Orbit/Label tetap berfungsi. Orbit objek jauh bergerak lambat sesuai periodenya. Baca scale-note dan sumber di panel untuk membedakan ilustrasi dari data fisik.
+
+
+## 11. Sistem cincin planet - 11 Oktober 2026
+
+### Audit baseline
+
+- Saturnus dan Uranus sudah memiliki cincin; tidak membuat cincin Uranus duplikat.
+- Implementasi sebelumnya: satu RingGeometry 128 segmen dan CanvasTexture 512x1 per planet, variasi alpha acak dan satu celah. Uranus sudah memakai rentang radius lebih kecil dan opacity rendah.
+- Cincin berada di subgroup kemiringan planet sehingga mengikuti posisi/axial tilt, tetapi menjadi sibling mesh planet dan tidak mengikuti rotasi mesh.
+- Cincin tidak masuk daftar pickables; picker main menggunakan recursive=false. Dispose existing sudah menelusuri geometry/material/texture scene.
+
+### Implementasi
+
+- Modul `src/core/PlanetRings.js` membuat cincin procedural sepenuhnya lokal menggunakan strip RGBA DataTexture 512x1 (2048 byte data mentah). Tidak memakai gambar eksternal, Canvas 2D atau TextureLoader; tampilan fallback selalu tersedia tanpa jaringan.
+- Saturnus: lima pita radial dengan warna/kepadatan berbeda, detail halus dan celah transparan lebar. Seluruh lapisan merupakan variasi tekstur pada **satu mesh**, bukan tumpukan geometri.
+- Uranus: empat pita sempit dengan alpha lebih rendah dan warna abu-abu redup. Rentang radius tetap 1,55-1,62 kali radius planet, dibanding Saturnus 1,25-2,25; mempertahankan skala existing.
+- Tiap sistem tetap satu geometry 128 segmen (256 triangle), satu material dan satu texture. MeshStandardMaterial menggunakan roughness=1, transparansi, depthTest aktif dan depthWrite nonaktif; forceSinglePass menghindari dua pass untuk permukaan tipis double-sided. Tidak ada object/tekstur yang dibuat pada animation loop.
+- Cincin kini menjadi child mesh planet dengan orientasi lokal ekuatorial. Posisi, axial tilt dan spin diwarisi langsung, termasuk arah retrograde Uranus. Pause waktu menghentikan spin bersama planet. Ini pendekatan visual; bukan simulasi kecepatan diferensial partikel cincin.
+- Cincin tetap di luar pickables dan raycast-nya dinonaktifkan, sehingga juga tidak menghalangi pemilihan jika kelak picker memakai recursive=true.
+- Geometry, material dan DataTexture tetap terjangkau traversal dispose existing. Uji integrasi memverifikasi enam resource dari dua cincin menerima dispose.
+- Profil pita adalah ilustrasi visual, bukan rekonstruksi radius/ketebalan cincin ilmiah. Tidak ada aset/sumber eksternal baru. Orbit, data bulan, guided tour, layout UI dan dependency tidak diubah. Tidak ada git commit.
+
+### File
+
+- Baru: `src/core/PlanetRings.js`, `test/rings.test.js`, `e2e/rings.spec.js`.
+- Diubah: `src/core/SolarSystem.js` (mengganti helper cincin lama dan parenting), `docs/phase-3-progress.md`.
+
+### Verifikasi
+
+- `npm.cmd test`: **24/24 lulus**. Tiga test baru memeriksa budget geometry/texture, pita/celah/alpha, Uranus yang tipis/redup, transformasi parent, raycasting recursive, disposal dan validasi input.
+- `npm.cmd run build`: **berhasil**, 22 modul, aplikasi 72,31 kB dan bundle Three.js terpisah 495,59 kB sebelum gzip.
+- `npm.cmd run test:e2e -- e2e/rings.spec.js e2e/observer.spec.js e2e/orbits.spec.js`: **10/10 lulus** dalam 1,7 menit; Edge 1366x768 dan Chrome 1920x1080. Tidak ada pageerror/console error pada skenario cincin.
+- Browser menguji parenting/posisi/spin/pause aktual SolarSystem, disposal, serta klik Saturnus dan Uranus setelah Visit. Regresi kamera, tour, Free Flight, orbit/waktu dan startup/fallback tekstur lulus. Suite khusus bulan/planet katai tidak dijalankan ulang karena modul tersebut tidak berubah; unit test datanya tetap dijalankan.
+- Tangkapan layar kedua cincin dibuat pada kedua browser; inspeksi gambar Edge mengonfirmasi lapisan/celah Saturnus dan cincin Uranus yang tipis/redup. Tidak dilakukan benchmark FPS penuh; jumlah mesh/material/segmen tetap seperti baseline.
+- `git diff --check`: bersih.
+
+Manual: jalankan `npm run dev`, cari Saturnus lalu Visit. Putar kamera untuk melihat pita/celah dan transparansi; tutup panel lalu klik planet. Ulangi untuk Uranus (cincin sengaja jauh lebih redup). Coba Follow, ganti kecepatan waktu dan pause/resume: cincin tetap terpusat dan miring mengikuti planet. Matikan koneksi jaringan setelah aplikasi lokal termuat; cincin tetap tersedia karena procedural.
