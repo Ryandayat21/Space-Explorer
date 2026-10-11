@@ -8,6 +8,7 @@
       content="Jelajahi Tata Surya melalui simulasi 3D ilmiah dan sinematik."
     />
     <meta name="theme-color" content="#030712" />
+    <link rel="icon" href="data:," />
     <title>Milky Way Observer</title>
   </head>
   <body>
@@ -33,7 +34,9 @@
         <div class="object-search">
           <label class="sr-only" for="object-select">Cari objek langit</label>
           <span aria-hidden="true">⌕</span>
-          <select id="object-select">
+          <input id="search-input" type="search" placeholder="Cari nama objek..." aria-label="Cari nama objek" autocomplete="off" />
+          <span id="search-status" class="sr-only" aria-live="polite"></span>
+          <select id="object-select" aria-label="Hasil pencarian">
             <option value="">Cari objek langit…</option>
           </select>
         </div>
@@ -67,10 +70,10 @@
           <button id="explore-button" class="button button-primary" type="button">Mulai Menjelajah <span>→</span></button>
           <button id="sun-button" class="button button-ghost" type="button">Kunjungi Matahari</button>
         </div>
-        <p class="scale-note">◉ Visualisasi memakai skala jarak dan ukuran yang disederhanakan.</p>
+        <p class="scale-note">◉ Visualisasi memakai skala jarak, kecepatan, dan ukuran yang disederhanakan.</p>
       </section>
 
-      <aside id="info-panel" class="info-panel glass-panel" aria-live="polite" aria-hidden="true">
+      <aside id="info-panel" class="info-panel glass-panel" aria-live="polite" aria-hidden="true" inert>
         <button id="close-info" class="panel-close" type="button" aria-label="Tutup informasi">×</button>
         <div class="object-heading">
           <span id="object-symbol" class="object-symbol">●</span>
@@ -82,6 +85,8 @@
         <p id="object-description" class="object-description"></p>
         <dl id="object-stats" class="stat-grid"></dl>
         <div id="object-fact" class="fact-box"></div>
+        <p class="scale-note">Ukuran, jarak, dan kecepatan visual disederhanakan. Diameter planet: ekuator; suhu raksasa gas: lapisan atmosfer. Data bulan yang belum diverifikasi ditandai.</p>
+        <div id="object-sources" class="sources"></div>
         <div class="panel-actions">
           <button id="visit-button" class="button button-primary" type="button">Kunjungi objek</button>
           <button id="follow-button" class="button button-ghost" type="button">Ikuti orbit</button>
@@ -98,6 +103,7 @@
           <button id="tour-prev" class="icon-button" type="button" aria-label="Objek sebelumnya">←</button>
           <button id="tour-pause" class="icon-button" type="button" aria-label="Jeda tur">Ⅱ</button>
           <button id="tour-next" class="icon-button" type="button" aria-label="Objek berikutnya">→</button>
+          <button id="tour-skip" class="text-link" type="button">Lewati</button>
           <button id="tour-exit" class="text-link" type="button">Keluar</button>
         </div>
       </div>
@@ -124,6 +130,9 @@
         </div>
       </div>
 
+      <button id="flight-exit" class="button button-ghost flight-exit" hidden>Keluar Free Flight</button>
+      <button id="hud-button" class="button button-ghost hud-button">HUD · H</button>
+      <p id="app-status" role="status"></p>
       <div id="labels-layer" class="labels-layer" aria-hidden="true"></div>
 
       <dialog id="help-dialog" class="help-dialog glass-panel">
@@ -135,6 +144,7 @@
           <div><kbd>Mouse</kbd><span>Lihat sekitar</span></div>
           <div><kbd>Shift</kbd><span>Percepat</span></div>
           <div><kbd>Space / Ctrl</kbd><span>Naik / turun</span></div>
+          <div><kbd>Scroll</kbd><span>Kecepatan terbang / zoom</span></div><div><kbd>G / H</kbd><span>Tur / sembunyikan HUD</span></div>
           <div><kbd>F</kbd><span>Fokus objek</span></div>
           <div><kbd>Esc</kbd><span>Lepas pointer</span></div>
         </div>

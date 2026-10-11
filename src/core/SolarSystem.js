@@ -126,6 +126,11 @@ export class SolarSystem {
     this.orbits = [];
     this.moonSystems = [];
     this.elapsedDays = 0;
+    this.textureLoader = new THREE.TextureLoader();
+    this.loadedTextures = new Map();
+    this.effects = [];
+    this.scratch = new THREE.Vector3();
+    this.disposed = false;
     this.orbitsVisible = true;
 
     this.root = new THREE.Group();
@@ -137,11 +142,21 @@ export class SolarSystem {
     this.#createSun();
     this.#createPlanets();
     this.#createAsteroidBelt();
+    this.selection = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), new THREE.MeshBasicMaterial({ color: 0x66d9ff, transparent: true, opacity: 0.16, side: THREE.BackSide, depthWrite: false }));
+    this.selection.visible = false;
+    scene.add(this.selection);
+    for (const object of this.objects.values()) {
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(Math.max(object.radius, 0.75), 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
+      hit.userData.bodyId = object.data.id;
+      object.group.add(hit);
+      this.pickables.push(hit);
+    }
   }
 
   #createLighting() {
     this.scene.add(new THREE.HemisphereLight(0x18284e, 0x020204, 0.22));
-    const sunLight = new THREE.PointLight(0xffefcb, 6200, 0, 1.65);
+    // Constant visual exposure: compressed orbital distances are not physical light distances.
+    const sunLight = new THREE.PointLight(0xfff4e4, 3.2, 0, 0);
     sunLight.position.set(0, 0, 0);
     this.root.add(sunLight);
   }
@@ -169,6 +184,7 @@ export class SolarSystem {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     const stars = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 1.15, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.88, depthWrite: false }));
     this.scene.add(stars);
+    this.stars = stars;
 
     const haze = new THREE.Mesh(
       new THREE.SphereGeometry(1000, 48, 32),
@@ -190,13 +206,16 @@ export class SolarSystem {
     const glowMaterial = new THREE.SpriteMaterial({ map: makeGlowTexture(), color: 0xff9b38, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
     const glow = new THREE.Sprite(glowMaterial);
     glow.scale.set(32, 32, 1);
+    glow.material.opacity = 0.32;
     group.add(glow);
+    this.effects.push(glow);
 
     const corona = new THREE.Mesh(
       new THREE.SphereGeometry(data.visualRadius * 1.08, 48, 32),
       new THREE.MeshBasicMaterial({ color: 0xffb140, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide })
     );
     group.add(corona);
+    this.effects.push(corona);
 
     this.root.add(group);
     this.objects.set(data.id, { data, group, mesh, radius: data.visualRadius, pivot: null });
@@ -218,7 +237,7 @@ export class SolarSystem {
       this.orbits.push(orbit);
 
       const group = new THREE.Group();
-      group.position.x = orbitRadius * (1 - data.eccentricity);
+      group.position.x = orbitRadius;
       group.rotation.z = data.axialTilt * DEG;
       pivot.add(group);
 
@@ -238,7 +257,10 @@ export class SolarSystem {
           new THREE.SphereGeometry(radius * 1.045, 40, 28),
           new THREE.MeshBasicMaterial({ color: atmosphereColor, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide })
         );
+        atmosphere.material.opacity = 0.065;
+        atmosphere.material.depthWrite = false;
         group.add(atmosphere);
+        this.effects.push(atmosphere);
       }
 
       if (data.rings) this.#addRings(group, radius, data.id);
@@ -251,20 +273,23 @@ export class SolarSystem {
   }
 
   #addRings(group, radius, planetId) {
-    const outer = planetId === 'saturn' ? radius * 2.05 : radius * 1.62;
-    const inner = planetId === 'saturn' ? radius * 1.25 : radius * 1.25;
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(inner, outer, 96),
-      new THREE.MeshBasicMaterial({
-        color: planetId === 'saturn' ? 0xd5c393 : 0x8bcbd0,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: planetId === 'saturn' ? 0.6 : 0.28,
-        depthWrite: false
-      })
-    );
-    ring.rotation.x = Math.PI / 2;
-    group.add(ring);
+    const saturn = planetId === 'saturn';
+    const inner = radius * (saturn ? 1.25 : 1.55);
+    const outer = radius * (saturn ? 2.25 : 1.62);
+    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    const random = seededRandom(73);
+    for (let x = 0; x < 512; x++) {
+      const gap = x > 300 && x < 324;
+      ctx.fillStyle = 'rgba(210,193,156,' + (gap ? .02 : .2 + random() * .65) + ')';
+      ctx.fillRect(x, 0, 1, 1);
+    }
+    const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace;
+    const geometry = new THREE.RingGeometry(inner, outer, 128);
+    const pos = geometry.attributes.position, uv = geometry.attributes.uv;
+    for (let i = 0; i < pos.count; i++) uv.setXY(i, (Math.hypot(pos.getX(i), pos.getY(i)) - inner) / (outer - inner), .5);
+    const ring = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ map, color: saturn ? 0xffffff : 0x687474, roughness: 1, side: THREE.DoubleSide, transparent: true, opacity: saturn ? .8 : .18, depthWrite: false }));
+    ring.rotation.x = Math.PI / 2; group.add(ring);
   }
 
   #createMoonsForPlanet(parentObject) {
@@ -276,7 +301,7 @@ export class SolarSystem {
 
       const mesh = new THREE.Mesh(
         new THREE.SphereGeometry(moon.size, 20, 14),
-        new THREE.MeshStandardMaterial({ color: moon.color, roughness: 1 })
+        new THREE.MeshStandardMaterial({ map: makePlanetTexture(moon), roughness: 1 })
       );
       mesh.position.x = moon.distance;
       mesh.userData.bodyId = moon.id;
@@ -290,7 +315,7 @@ export class SolarSystem {
       const data = {
         ...moon,
         type: 'moon', symbol: '◐', radiusKm: '—', mass: '—', gravity: '—', temperature: '—',
-        distance: `Mengorbit ${parentObject.data.name}`, rotation: 'Terkunci pasang surut', orbitPeriod: `${Math.abs(moon.period)} hari`, moons: '—',
+        distance: `Mengorbit ${parentObject.data.name}`, rotation: 'Belum diverifikasi', orbitPeriod: `${Math.abs(moon.period)} hari`, moons: '—',
         description: `${moon.name} adalah salah satu satelit alami utama ${parentObject.data.name}. Detail ilmiah lengkap akan ditambahkan pada fase konten berikutnya.`,
         fact: `Bulan ini mengelilingi ${parentObject.data.name} dalam sekitar ${Math.abs(moon.period)} hari.`
       };
@@ -341,6 +366,79 @@ export class SolarSystem {
       moon.pivot.rotation.y += direction * (Math.PI * 2 / Math.abs(moon.period)) * deltaDays;
     }
     if (this.asteroidBelt) this.asteroidBelt.rotation.y += realDelta * 0.002;
+  }
+
+  select(id) {
+    this.selectedId = id;
+    this.selection.visible = !!this.getObject(id);
+    this.loadTexture(id);
+  }
+
+  loadTexture(id) {
+    if (this.loadedTextures.has(id)) return this.loadedTextures.get(id);
+    if (!(bodies.some(body => body.id === id) || id === 'moon') || this.disposed) return;
+    const request = new Promise(resolve => {
+      this.textureLoader.load(import.meta.env.BASE_URL + 'textures/' + id + '.jpg', texture => {
+        if (this.disposed) { texture.dispose(); resolve(false); return; }
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 4;
+        const material = this.getObject(id).mesh.material;
+        material.map?.dispose(); material.map = texture; material.color.set(0xffffff); material.needsUpdate = true;
+        resolve(true);
+      }, undefined, () => {
+        window.dispatchEvent(new CustomEvent('texture-fallback', { detail: id }));
+        resolve(false);
+      });
+    });
+    this.loadedTextures.set(id, request);
+    return request;
+  }
+
+  updateDetail(camera) {
+    for (const object of this.objects.values()) {
+      object.group.getWorldPosition(this.scratch);
+      if (camera.position.distanceTo(this.scratch) < 70) this.loadTexture(object.data.id);
+    }
+    if (this.selectedId) {
+      const object = this.getObject(this.selectedId);
+      object.group.getWorldPosition(this.selection.position);
+      this.selection.scale.setScalar(object.radius * 1.09);
+    }
+  }
+
+  clearance(position, resolve = false) {
+    let nearest = Infinity;
+    for (const object of this.objects.values()) {
+      object.group.getWorldPosition(this.scratch);
+      this.scratch.subVectors(position, this.scratch);
+      const distance = this.scratch.length(), safe = object.radius + Math.max(.25, object.radius * .08);
+      nearest = Math.min(nearest, distance - object.radius);
+      if (resolve && distance < safe) {
+        if (distance < .00001) this.scratch.set(0, 1, 0); else this.scratch.divideScalar(distance);
+        position.addScaledVector(this.scratch, safe - distance);
+      }
+    }
+    return nearest;
+  }
+
+  setQuality(quality) {
+    this.effects.forEach(effect => { effect.visible = quality !== 'low'; });
+    this.stars.geometry.setDrawRange(0, quality === 'low' ? 2500 : quality === 'medium' ? 5000 : 9000);
+    this.asteroidBelt.geometry.setDrawRange(0, quality === 'low' ? 600 : 1900);
+  }
+
+  dispose() {
+    this.disposed = true;
+    const textures = new Set(), materials = new Set(), geometries = new Set();
+    this.scene.traverse(object => {
+      if (object.geometry) geometries.add(object.geometry);
+      if (object.material) for (const material of [object.material].flat()) {
+        materials.add(material);
+        for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+      }
+    });
+    textures.forEach(item => item.dispose()); materials.forEach(item => item.dispose()); geometries.forEach(item => item.dispose());
+    this.scene.clear(); this.objects.clear(); this.pickables.length = 0;
   }
 
   setOrbitsVisible(visible) {
