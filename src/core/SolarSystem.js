@@ -290,13 +290,7 @@ export class SolarSystem {
       mesh.userData.bodyId = moon.id;
       motion.group.add(mesh);
 
-      const data = {
-        ...moon,
-        type: 'moon', symbol: '◐', radiusKm: '—', mass: '—', gravity: '—', temperature: '—',
-        distance: `Mengorbit ${parentObject.data.name}`, rotation: 'Belum diverifikasi', orbitPeriod: `${Math.abs(moon.period)} hari`, moons: '—',
-        description: `${moon.name} adalah salah satu satelit alami utama ${parentObject.data.name}. Detail ilmiah lengkap akan ditambahkan pada fase konten berikutnya.`,
-        fact: `Bulan ini mengelilingi ${parentObject.data.name} dalam sekitar ${Math.abs(moon.period)} hari.`
-      };
+      const data = { ...moon, type: 'moon', symbol: '\u25d0' };
       this.objects.set(moon.id, { data, group: motion.group, mesh, radius: moon.size, motion, parentObject });
       this.pickables.push(mesh);
     });

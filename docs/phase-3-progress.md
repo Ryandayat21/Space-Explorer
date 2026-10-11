@@ -1,7 +1,7 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **audit selesai; implementasi orbit elips Phase 3 selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8.
+Status: **audit selesai; orbit elips dan pelengkapan 17 bulan utama selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-9.
 
 Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
 
@@ -110,8 +110,9 @@ Tidak ada alasan saat ini untuk mengganti Vite/Three.js, membuat proyek baru, me
 ### Checklist implementasi - diperbarui setelah tugas orbit
 
 - [x] Tetapkan cakupan tugas pertama: orbit elips, inclination, relasi parent, waktu, garis orbit dan pengujiannya; Galaxy Scene tidak termasuk.
-- [ ] P3-01: lengkapi data ilmiah **satu bulan pilot, Europa**, dengan sumber resmi, definisi/unit dan test; gunakan panel existing.
-- [ ] P3-02: perluas pola terverifikasi ke bulan Galilea lain dan Titan, kemudian sisa katalog tanpa mengarang nilai kosong.
+- [x] P3-01: data ilmiah Europa bersumber, definisi/unit dan test tersedia melalui panel existing (bagian 9).
+- [x] P3-02a: lengkapi 17 bulan utama yang diminta pengguna, tanpa duplikat atau angka rekaan.
+- [ ] P3-02b: verifikasi suhu/rotasi yang masih kosong dan detail lima bulan tambahan di luar daftar tugas.
 - [ ] P3-03: tambahkan peta bulan/awan Venus yang berlisensi; integrasikan dengan cache, fallback dan atribusi existing.
 - [ ] P3-04: ukur frame-time, heap dan resource pada skenario berulang sebelum menambah efek visual atau kualitas adaptif.
 - [x] P3-05a: semua gerakan SolarSystem memakai delta hari simulasi; pause/resume dan pengali waktu diuji deterministik.
@@ -211,3 +212,57 @@ Batas model:
 6. Matikan/nyalakan garis orbit; semua garis planet dan bulan mengikuti toggle. Coba Visit/Follow, klik objek dan jalankan tur singkat untuk memeriksa navigasi tetap nyaman.
 
 Pekerjaan selanjutnya tetap terpisah: epoch/ephemeris, orientasi orbit lengkap, kalender/catch-up, serta model rotasi bulan. Usulan Europa pada bagian 7 adalah rekomendasi audit historis; tugas orbit ini adalah prioritas yang kemudian dipilih pengguna.
+
+
+## 9. Bulan-bulan utama - 11 Oktober 2026
+
+### Audit sebelum perubahan
+
+- Katalog existing berisi 22 bulan dengan ID unik; **semua 17 bulan yang diminta sudah ada**. Tidak ditambahkan objek baru maupun entri katalog duplikat.
+- Daftar cakupan: Bulan; Phobos, Deimos; Io, Europa, Ganymede, Callisto; Titan, Enceladus, Rhea, Iapetus; Titania, Oberon, Ariel, Umbriel, Miranda; Triton.
+- Mimas, Tethys, Dione, Nereid dan Proteus tetap tersedia; detail ilmiah tambahan kelimanya di luar cakupan tugas ini.
+- OrbitMotion existing sudah menempelkan tiap bulan ke pusat planet induknya. Mesh dan invisible hit area sudah masuk pickables. Pencarian/filter existing sudah menyertakan seluruh bulan. Tidak perlu membuat ulang mekanisme tersebut.
+- Panel sebelumnya hanya memiliki diameter untuk semua bulan, beberapa angka Bulan Bumi, dan placeholder generik untuk bulan lain. Diameter berbasis radius rata-rata JPL sudah tersedia dan dipindahkan ke satu tabel, bukan disalin menjadi katalog baru.
+- Semua bulan sudah memperoleh CanvasTexture procedural saat konstruksi. Hanya Bulan Bumi memiliki JPEG lokal; kegagalan load/decode mempertahankan material procedural, dan permintaan gagal dicache agar tidak berulang tiap frame. Bulan lain memakai material procedural langsung tanpa meminta file yang tidak tersedia.
+
+### Implementasi
+
+- Tambah `src/data/moonScience.js`: pengayaan ilmiah keyed by ID untuk 17 objek existing, radius seluruh 22 bulan, provenance NASA/JPL dan tanggal verifikasi.
+- Lengkapi diameter, estimasi massa/gravitasi, jarak dari pusat induk, periode, komposisi, fakta khusus dan sumber panel. Suhu/rotasi hanya diisi ketika terverifikasi; field lainnya null dan panel existing menampilkan **Belum diverifikasi**.
+- Massa dihitung dari GM/G (GM km^3/s^2 dikonversi ke SI). Gravitasi dihitung dari GM/R^2 pada radius rata-rata. Keduanya dilabeli perkiraan; gravitasi pendekatan bola tidak memodelkan variasi bentuk Phobos/Deimos atau percepatan sentrifugal. Tampilan dibulatkan menjadi tiga angka signifikan.
+- Diameter adalah dua kali radius rata-rata ekuivalen volume; untuk bulan tidak beraturan bukan ukuran sumbu terpanjang. Jarak adalah semi-major axis, bukan tinggi di atas permukaan atau jarak sesaat.
+- Periode bulan selain Bulan Bumi dilabeli **elemen rata-rata JPL**; tidak disamakan dengan periode sideris terukur. Nilainya dipisahkan dari `period` untuk animasi. Bulan Bumi memakai periode sideris NASA Moon Fact Sheet.
+- Nama induk memakai nama Indonesia dari katalog planet. `scienceFor` mendukung data katalog bulan maupun data objek scene; tidak mengambil besaran ilmiah dari size/distance/period visual.
+- Hapus placeholder ilmiah bulan dari SolarSystem; renderer hanya menambahkan tipe/simbol objek. Data dan narasi berada di modul data, bukan UI atau renderer.
+- Sistem orbit, skala, tekstur, tour, layout UI, katalog objek dan dependency tetap. Tidak ada git commit.
+
+### Sumber ilmiah
+
+Diperiksa 11 Oktober 2026; tautan khusus setiap bulan juga tersimpan di dataset dan tampil pada panel:
+
+- [JPL Satellite Physical Parameters](https://ssd.jpl.nasa.gov/sats/phys_par/): radius rata-rata dan GM.
+- [JPL Satellite Mean Elements](https://ssd.jpl.nasa.gov/sats/elem/sep.html): semi-major axis dan periode elemen rata-rata, bukan ephemeris.
+- [JPL Astrodynamic Parameters](https://ssd.jpl.nasa.gov/astro_par.html): G = 6,67430 x 10^-11 m^3 kg^-1 s^-2.
+- [NASA Moon Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html) dan [Moon Facts](https://science.nasa.gov/moon/facts/): periode/rotasi, jarak, rentang suhu ekuator, komposisi dan fakta Bulan Bumi.
+- NASA Science halaman tiap bulan Mars/Jupiter/Saturnus/Uranus/Neptunus: narasi, komposisi dan suhu/rotasi yang terverifikasi. Komposisi umum bulan besar Uranus memakai [halaman Ariel](https://science.nasa.gov/uranus/moons/ariel/) sebagai sumber tambahan; detail persentase tidak diasumsikan.
+
+Tidak ada aset baru atau hotlink tekstur. Tetap memakai aset lokal Bulan yang atribusinya sudah tersedia dan ilustrasi procedural untuk bulan lain.
+
+### File terkait
+
+- Baru: `src/data/moonScience.js`, `test/moons.test.js`, `e2e/moons.spec.js`.
+- Diubah: `src/data/science.js`, `src/core/SolarSystem.js` (hanya metadata bulan), `test/phase2.test.js`, `docs/phase-3-progress.md`.
+- Tidak diubah: `celestialBodies.js`, `orbitalElements.js`, `OrbitMotion.js`, `orbitMath.js`, `main.js`, `UIController.js`, `styles.css`.
+
+### Pengujian dan cara memeriksa
+
+- Unit test memvalidasi 17 target hanya muncul sekali, total katalog tetap 22, induk benar, pencarian/filter, data wajib/nilai null eksplisit, angka finite positif, satuan/konversi fisik, sumber, dan independensi data dari skala simulasi.
+- E2E baru mencari dan mengunjungi setiap target, memeriksa panel, menutup panel lalu membuka kembali melalui klik objek. Skenario lain memeriksa parent/material/pickables seluruh 22 bulan dan kegagalan loader mempertahankan material serta cache.
+- `npm.cmd test`: **18/18 lulus**.
+- `npm.cmd run build`: **berhasil**, 20 modul, bundle aplikasi 68,77 kB dan Three.js tetap terpisah 495,34 kB sebelum gzip.
+- Suite lengkap browser pertama: 11/12 lulus; satu skenario klik Chrome terganggu reload Vite ketika data terakhir disimpan, yang menghapus status pause.
+- Setelah seluruh kode stabil, `npm.cmd run test:e2e -- e2e/moons.spec.js`: **4/4 lulus** pada Edge 1366x768 dan Chrome 1920x1080 (1,4 menit), termasuk pencarian/panel/klik seluruh 17 target. Delapan skenario regresi existing (orbit, tur, kamera, flight, startup/fallback) lulus pada eksekusi lengkap sebelumnya.
+- Tidak ada pageerror atau console error pada skenario interaksi bulan normal. Pengujian kegagalan loader mempertahankan CanvasTexture dan cache permintaan. `git diff --check` bersih.
+- Manual: jalankan `npm run dev`, pilih kategori Bulan, cari masing-masing nama, Visit, tutup panel dan klik bulannya. Panel harus menampilkan nama, jenis, data dan sumber sesuai objek. Coba Follow dengan waktu berjalan untuk melihat bulan tetap mengikuti induk. Blokir `textures/moon.jpg` di DevTools lalu reload dan kunjungi Bulan: material procedural tetap terlihat dan panel tetap berfungsi.
+
+Sisa pekerjaan: verifikasi suhu/rotasi yang masih null, lengkapi data lima bulan tambahan jika diminta, dan peta tekstur lokal bersumber untuk bulan selain Bulan Bumi. Tidal locking visual tetap merupakan pekerjaan orbit terpisah; informasi rotasi di panel bukan klaim bahwa renderer telah memodelkannya.
