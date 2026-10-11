@@ -1,5 +1,6 @@
 import { bodies, moons, orbitRadiusFromAu, visualRadiusFromEarth } from './celestialBodies.js';
 import { validateOrbit } from '../core/orbitMath.js';
+import { dwarfPlanets, dwarfPlanetScience } from './dwarfPlanets.js';
 
 const DEG = Math.PI / 180;
 // NASA Planetary Fact Sheet: https://nssdc.gsfc.nasa.gov/planetary/factsheet/
@@ -17,6 +18,15 @@ const satelliteElements = {
 };
 
 export const orbitalElements = Object.fromEntries([
+  ...dwarfPlanets.map(body => {
+    const science = dwarfPlanetScience[body.id];
+    return [body.id, validateOrbit({
+      parent: 'sun', semiMajorAxis: orbitRadiusFromAu(science.semiMajorAxisAu),
+      eccentricity: science.eccentricity, inclination: science.inclinationDegrees * DEG,
+      orbitalPeriod: science.orbitalPeriodDays, initialAngle: body.initialAngle,
+      referencePlane: 'ecliptic'
+    })];
+  }),
   ...bodies.filter(body => body.type === 'planet').map(body => [body.id, validateOrbit({
     parent: 'sun', semiMajorAxis: orbitRadiusFromAu(body.orbitAu),
     eccentricity: body.eccentricity, inclination: planetInclinations[body.id] * DEG,

@@ -19,7 +19,7 @@ test('elliptical scene preserves parents, pause/resume and simulation speed', as
     });
     const parentsValid = [...system.objects.values()].every(object => {
       if (object.data.id === 'sun') return true;
-      const expected = object.data.type === 'planet' ? 'sun' : moons.find(moon => moon.id === object.data.id).parent;
+      const expected = object.data.type !== 'moon' ? 'sun' : moons.find(moon => moon.id === object.data.id).parent;
       return object.parentObject.data.id === expected && object.motion.frame.parent === object.parentObject.group;
     });
     system.update(15, 15);

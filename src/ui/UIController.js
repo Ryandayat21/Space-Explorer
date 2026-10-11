@@ -33,7 +33,7 @@ export class UIController extends EventTarget {
     const select = this['object-select'];
     select.replaceChildren(new Option('Pilih hasil pencarian...', ''));
     const results = searchObjects(document.getElementById('search-input').value, this.filter || 'all');
-    for (const [type, label] of [['star', 'Bintang'], ['planet', 'Planet'], ['moon', 'Bulan']]) {
+    for (const [type, label] of [['star', 'Bintang'], ['planet', 'Planet'], ['dwarf-planet', 'Planet katai'], ['moon', 'Bulan']]) {
       const group = document.createElement('optgroup'); group.label = label;
       results.filter(body => (body.type || 'moon') === type).forEach(body => group.append(new Option(body.name, body.id)));
       if (group.children.length) select.append(group);
@@ -150,7 +150,7 @@ export class UIController extends EventTarget {
     this.selectedId = data.id;
     this['object-symbol'].textContent = data.symbol || '●';
     this['object-symbol'].style.color = data.color || '#66d9ff';
-    this['object-type'].textContent = data.type === 'star' ? 'BINTANG' : data.type === 'moon' ? 'SATELIT ALAMI' : 'PLANET';
+    this['object-type'].textContent = { star: 'BINTANG', moon: 'SATELIT ALAMI', planet: 'PLANET', 'dwarf-planet': 'PLANET KATAI' }[data.type] ?? 'OBJEK';
     this['object-name'].textContent = data.name;
     this['object-description'].textContent = data.description;
     this['object-fact'].textContent = data.fact;

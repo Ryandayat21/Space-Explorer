@@ -1,7 +1,7 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **audit selesai; orbit elips dan pelengkapan 17 bulan utama selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-9.
+Status: **audit selesai; orbit elips, 17 bulan utama dan lima planet katai selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-10.
 
 Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
 
@@ -120,7 +120,8 @@ Tidak ada alasan saat ini untuk mengganti Vite/Three.js, membuat proyek baru, me
 - [ ] P3-06: rancang perbandingan ukuran/jarak dengan angka ilmiah yang terpisah dari skala scene.
 - [x] P3-07a: orbit elips sederhana dengan inclination, fase awal, periode dan garis tersinkronisasi.
 - [ ] P3-07b: epoch kalender, orientasi node/periapsis dan ephemeris presisi (di luar tugas ini).
-- [ ] P3-08: perluas katalog ke planet katai/komet/Sabuk Kuiper hanya setelah tipe, pencarian, panel dan kamera siap.
+- [x] P3-08a: lima planet katai dengan kategori, orbit, label, pencarian, seleksi dan panel.
+- [ ] P3-08b: Charon/pendamping lain, komet dan Sabuk Kuiper (tugas terpisah).
 - [ ] P3-09: perluas narasi/rute tur menggunakan data dan kontrol existing.
 - [ ] P3-10: rancang Galaxy Scene dan lifecycle resource sebagai tugas tersendiri bila disetujui.
 - [ ] Selaraskan README, jumlah skenario test, daftar aset, tanggal sumber dan batas ilmiah setelah tiap tugas.
@@ -266,3 +267,46 @@ Tidak ada aset baru atau hotlink tekstur. Tetap memakai aset lokal Bulan yang at
 - Manual: jalankan `npm run dev`, pilih kategori Bulan, cari masing-masing nama, Visit, tutup panel dan klik bulannya. Panel harus menampilkan nama, jenis, data dan sumber sesuai objek. Coba Follow dengan waktu berjalan untuk melihat bulan tetap mengikuti induk. Blokir `textures/moon.jpg` di DevTools lalu reload dan kunjungi Bulan: material procedural tetap terlihat dan panel tetap berfungsi.
 
 Sisa pekerjaan: verifikasi suhu/rotasi yang masih null, lengkapi data lima bulan tambahan jika diminta, dan peta tekstur lokal bersumber untuk bulan selain Bulan Bumi. Tidal locking visual tetap merupakan pekerjaan orbit terpisah; informasi rotasi di panel bukan klaim bahwa renderer telah memodelkannya.
+
+
+## 10. Lima planet katai - 11 Oktober 2026
+
+### Cakupan dan integrasi
+
+- Tambah Ceres, Pluto, Haumea, Makemake dan Eris, semuanya bertipe `dwarf-planet`. Total scene menjadi 36 objek: Matahari, 8 planet, 5 planet katai dan 22 bulan; 35 orbit.
+- Katalog planet katai terpisah di `src/data/dwarfPlanets.js`. Delapan planet utama dan 22 bulan existing tidak diubah/ditambah duplikat.
+- Kelimanya memakai OrbitMotion/solver elips existing, parent Matahari, inclination, periode dan fase awal ilustratif. Toggle garis, pause/resume dan pengali waktu tetap melalui mekanisme existing.
+- Tambah tombol kategori Katai, optgroup Planet katai, dan klasifikasi PLANET KATAI pada panel. Label, raycasting/hit area, Visit/Follow dan pencarian memakai mekanisme existing.
+- Material procedural lokal tersedia tanpa unduhan atau permintaan JPEG yang belum ada. Bentuk semua objek masih disederhanakan menjadi bola, termasuk Haumea; tidak mengklaim peta permukaan ilmiah.
+- Charon bersifat opsional dan belum dimodelkan. Panel Pluto tetap menyebut lima bulan dan menyatakan pendamping belum dimodelkan. Parent bulan existing masih dibatasi katalog planet utama; perlu perluasan data/validasi tersendiri untuk Charon. Tidak ada perubahan sabuk asteroid, penambahan Sabuk Kuiper, guided tour atau layout besar UI.
+
+### Data dan skala
+
+- Data ilmiah (`dwarfPlanetScience`) terpisah dari radius scene (`visualRadius`: 1,1 sampai 1,5 unit), fase dan orientasi visual. Jarak memakai fungsi kompresi existing `22 + sqrt(AU) * 37`, bukan AU linear. Orbit masih ilustratif: elemen dibulatkan, node/periapsis tidak dimodelkan dan fase awal bukan posisi tanggal saat ini.
+- Catatan pada panel dan scale-note UI menyatakan ukuran diperbesar/jarak dikompresi, tidak proporsional. Diameter diberi konteks perkiraan NASA; Haumea disebut memiliki bentuk memanjang meskipun mesh masih bola.
+- Massa/gravitasi dan sebagian suhu belum diisi, menggunakan null dan pesan Belum diverifikasi. Rotasi Eris juga belum dipastikan: angka lama pada halaman ringkasan NASA tidak diperlakukan sebagai nilai terbaru yang pasti; Eris tidak diberi putaran rekaan. Pluto memakai arah rotasi retrograde, sedangkan orientasi sumbu scene tetap ilustratif.
+- Tidak ada angka panel yang dihitung dari ukuran atau jarak scene. Jumlah bulan adalah snapshot halaman NASA pada tanggal verifikasi, bukan jumlah mesh pendamping.
+
+### Sumber
+
+Diperiksa 11 Oktober 2026; sumber juga tampil di panel:
+
+- [NASA Ceres](https://science.nasa.gov/dwarf-planets/ceres/facts/), [NASA Pluto](https://science.nasa.gov/dwarf-planets/pluto/facts/), [NASA Haumea](https://science.nasa.gov/dwarf-planets/haumea/), [NASA Makemake](https://science.nasa.gov/dwarf-planets/makemake/), [NASA Eris](https://science.nasa.gov/dwarf-planets/eris/): ukuran perkiraan, komposisi/fakta, periode rotasi yang digunakan dan jumlah bulan.
+- JPL SBDB API dibaca via HTTPS: `https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=NUMBER`, NUMBER = 1, 134340, 136108, 136472, 136199. Snapshot a/e/i/per: Ceres 2,77 AU / 0,0797 / 10,6 derajat / 1680 hari; Pluto 39,6 / 0,252 / 17,1 / 91000; Haumea 43,1 / 0,194 / 28,2 / 103000; Makemake 45,6 / 0,159 / 29 / 112000; Eris 67,9 / 0,438 / 43,9 / 205000.
+- Epoch elemen JPL JD 2461200,5 kecuali Pluto JD 2457588,5. Bukan ephemeris dengan satu epoch bersama. Kegagalan akses melalui Python (sertifikat lokal) diselesaikan dengan pembacaan resmi HTTPS melalui sertifikat Windows; tidak menonaktifkan verifikasi sertifikat.
+
+### File
+
+- Baru: `src/data/dwarfPlanets.js`, `test/dwarfPlanets.test.js`, `e2e/dwarfPlanets.spec.js`.
+- Integrasi: `src/data/orbitalElements.js`, `src/data/search.js`, `src/data/science.js`, `src/core/SolarSystem.js`, `src/ui/UIController.js`, `index.html`.
+- Penyesuaian validasi jumlah orbit/jenis parent: `test/orbits.test.js`, `e2e/orbits.spec.js`.
+- Dokumentasi: `docs/phase-3-progress.md`. Tidak ada dependency baru atau git commit.
+
+### Verifikasi
+
+- `npm.cmd test`: 21/21 lulus, termasuk ID unik lintas seluruh kategori, pencarian/filter, parent, skala, posisi finite, data wajib, sumber dan pemisahan data ilmiah/visual.
+- `npm.cmd run build`: berhasil, 21 modul; bundle aplikasi 71,71 kB, Three.js tetap terpisah 495,34 kB sebelum gzip.
+- `npm.cmd run test:e2e`: **14/14 lulus** dalam 3,1 menit pada Edge 1366x768 dan Chrome 1920x1080. Skenario baru memeriksa kategori/optgroup, label, pencarian, panel skala/sumber, Visit, klik ulang kelima objek dan Follow Eris pada 200 hari/detik.
+- Regresi bulan, orbit/waktu, guided tour, Free Flight, resource dan fallback/startup tekstur lulus. Tidak ada pageerror/console error pada skenario planet katai. `git diff --check` tidak menemukan whitespace error; hanya pemberitahuan normal konversi LF/CRLF Windows.
+
+Manual: jalankan `npm run dev`, pilih Katai, cari kelima nama, tekan Enter/Visit, tutup panel dan klik objek untuk membuka kembali. Pastikan label dan tipe PLANET KATAI benar. Coba Follow Eris pada 200 hari/detik; pause/resume dan toggle Orbit/Label tetap berfungsi. Orbit objek jauh bergerak lambat sesuai periodenya. Baca scale-note dan sumber di panel untuk membedakan ilustrasi dari data fisik.
