@@ -27,7 +27,8 @@ test('moon parent is a planet and unknown science is not derived from scene unit
     assert.ok(bodies.some(body => body.id === moon.parent && body.type === 'planet'));
     const data = scienceFor({ ...moon, type: 'moon' });
     assert.notEqual(data.distance, moon.distance);
-    if (moon.id !== 'moon') assert.equal(data.mass, null);
+    assert.equal(scienceFor({ ...moon, type: 'moon', size: 999, distance: 999, period: 999 }).mass, data.mass);
+    assert.equal(scienceFor({ ...moon, type: 'moon', distance: 999 }).distance, data.distance);
   }
 });
 test('search supports Indonesian names, aliases, case and category intersections', () => {

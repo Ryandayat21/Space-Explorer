@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { bodies, moons, orbitRadiusFromAu, visualRadiusFromEarth } from '../data/celestialBodies.js';
 
+import { orbitalElements } from '../data/orbitalElements.js';
+import { OrbitMotion } from './OrbitMotion.js';
+
 const DEG = Math.PI / 180;
 
 function seededRandom(seed) {
@@ -104,27 +107,13 @@ function makeGlowTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
-function createOrbitLine(radius, eccentricity = 0, color = 0x315177) {
-  const points = [];
-  for (let i = 0; i <= 160; i += 1) {
-    const angle = (i / 160) * Math.PI * 2;
-    const x = radius * (Math.cos(angle) - eccentricity);
-    const z = radius * Math.sqrt(1 - eccentricity * eccentricity) * Math.sin(angle);
-    points.push(new THREE.Vector3(x, 0, z));
-  }
-  return new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(points),
-    new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.28, depthWrite: false })
-  );
-}
-
 export class SolarSystem {
   constructor(scene) {
     this.scene = scene;
     this.objects = new Map();
     this.pickables = [];
     this.orbits = [];
-    this.moonSystems = [];
+    this.orbitMotions = [];
     this.elapsedDays = 0;
     this.textureLoader = new THREE.TextureLoader();
     this.loadedTextures = new Map();
@@ -226,20 +215,14 @@ export class SolarSystem {
     for (const data of bodies.slice(1)) {
       const orbitRadius = orbitRadiusFromAu(data.orbitAu);
       const radius = visualRadiusFromEarth(data.radiusEarth);
-      const pivot = new THREE.Group();
-      pivot.rotation.y = this.#initialAngle(data.id);
-      this.root.add(pivot);
-
-      // Orbit visual uses a circle in the MVP. Eccentric orbits are planned for
-      // the scientific-scale mode so the rendered line and movement stay aligned.
-      const orbit = createOrbitLine(orbitRadius);
-      this.root.add(orbit);
-      this.orbits.push(orbit);
-
-      const group = new THREE.Group();
-      group.position.x = orbitRadius;
-      group.rotation.z = data.axialTilt * DEG;
-      pivot.add(group);
+      const parentObject = this.objects.get('sun');
+      const motion = new OrbitMotion(parentObject.group, orbitalElements[data.id]);
+      this.orbitMotions.push(motion);
+      this.orbits.push(motion.line);
+      const group = motion.group;
+      const visual = new THREE.Group();
+      visual.rotation.z = data.axialTilt * DEG;
+      group.add(visual);
 
       const material = new THREE.MeshStandardMaterial({
         map: makePlanetTexture(data),
@@ -249,7 +232,7 @@ export class SolarSystem {
       });
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 32), material);
       mesh.userData.bodyId = data.id;
-      group.add(mesh);
+      visual.add(mesh);
 
       if (['earth', 'venus', 'uranus', 'neptune'].includes(data.id)) {
         const atmosphereColor = data.id === 'earth' ? 0x4ca6ff : data.id === 'venus' ? 0xffc779 : data.id === 'uranus' ? 0x7df0ff : 0x376dff;
@@ -259,13 +242,13 @@ export class SolarSystem {
         );
         atmosphere.material.opacity = 0.065;
         atmosphere.material.depthWrite = false;
-        group.add(atmosphere);
+        visual.add(atmosphere);
         this.effects.push(atmosphere);
       }
 
-      if (data.rings) this.#addRings(group, radius, data.id);
+      if (data.rings) this.#addRings(visual, radius, data.id);
 
-      const object = { data, group, mesh, radius, pivot, orbitRadius };
+      const object = { data, group, mesh, radius, parentObject, motion, orbitRadius };
       this.objects.set(data.id, object);
       this.pickables.push(mesh);
       this.#createMoonsForPlanet(object);
@@ -294,34 +277,22 @@ export class SolarSystem {
 
   #createMoonsForPlanet(parentObject) {
     const planetMoons = moons.filter((moon) => moon.parent === parentObject.data.id);
-    planetMoons.forEach((moon, index) => {
-      const pivot = new THREE.Group();
-      pivot.rotation.y = (index / Math.max(planetMoons.length, 1)) * Math.PI * 2;
-      parentObject.group.add(pivot);
-
+    planetMoons.forEach((moon) => {
+      const motion = new OrbitMotion(parentObject.group, orbitalElements[moon.id], {
+        equatorialTilt: parentObject.data.axialTilt * DEG, color: 0x3f5067, opacity: 0.16
+      });
+      this.orbitMotions.push(motion);
+      this.orbits.push(motion.line);
       const mesh = new THREE.Mesh(
         new THREE.SphereGeometry(moon.size, 20, 14),
         new THREE.MeshStandardMaterial({ map: makePlanetTexture(moon), roughness: 1 })
       );
-      mesh.position.x = moon.distance;
       mesh.userData.bodyId = moon.id;
-      pivot.add(mesh);
+      motion.group.add(mesh);
 
-      const orbit = createOrbitLine(moon.distance, 0, 0x3f5067);
-      orbit.material.opacity = 0.16;
-      parentObject.group.add(orbit);
-      this.orbits.push(orbit);
-
-      const data = {
-        ...moon,
-        type: 'moon', symbol: '◐', radiusKm: '—', mass: '—', gravity: '—', temperature: '—',
-        distance: `Mengorbit ${parentObject.data.name}`, rotation: 'Belum diverifikasi', orbitPeriod: `${Math.abs(moon.period)} hari`, moons: '—',
-        description: `${moon.name} adalah salah satu satelit alami utama ${parentObject.data.name}. Detail ilmiah lengkap akan ditambahkan pada fase konten berikutnya.`,
-        fact: `Bulan ini mengelilingi ${parentObject.data.name} dalam sekitar ${Math.abs(moon.period)} hari.`
-      };
-      this.objects.set(moon.id, { data, group: mesh, mesh, radius: moon.size, pivot, parentObject });
+      const data = { ...moon, type: 'moon', symbol: '\u25d0' };
+      this.objects.set(moon.id, { data, group: motion.group, mesh, radius: moon.size, motion, parentObject });
       this.pickables.push(mesh);
-      this.moonSystems.push({ pivot, period: moon.period });
     });
   }
 
@@ -345,27 +316,22 @@ export class SolarSystem {
     this.asteroidBelt = belt;
   }
 
-  #initialAngle(id) {
-    return [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) * 0.13;
-  }
-
-  update(deltaDays, realDelta) {
+  update(deltaDays) {
+    if (!Number.isFinite(deltaDays) || !Number.isFinite(this.elapsedDays + deltaDays)) {
+      throw new RangeError('Simulation time must remain finite');
+    }
     this.elapsedDays += deltaDays;
+    for (const motion of this.orbitMotions) motion.update(this.elapsedDays);
     for (const object of this.objects.values()) {
       if (object.data.type === 'planet') {
-        object.pivot.rotation.y += (Math.PI * 2 / object.data.orbitalPeriodDays) * deltaDays;
         const rotationPeriod = Math.abs(object.data.rotationDays) || 1;
         const direction = object.data.rotationDays < 0 ? -1 : 1;
         object.mesh.rotation.y += direction * (Math.PI * 2 / rotationPeriod) * deltaDays;
       } else if (object.data.type === 'star') {
-        object.mesh.rotation.y += realDelta * 0.03;
+        object.mesh.rotation.y += deltaDays * 0.03;
       }
     }
-    for (const moon of this.moonSystems) {
-      const direction = moon.period < 0 ? -1 : 1;
-      moon.pivot.rotation.y += direction * (Math.PI * 2 / Math.abs(moon.period)) * deltaDays;
-    }
-    if (this.asteroidBelt) this.asteroidBelt.rotation.y += realDelta * 0.002;
+    if (this.asteroidBelt) this.asteroidBelt.rotation.y += deltaDays * 0.002;
   }
 
   select(id) {
@@ -439,6 +405,7 @@ export class SolarSystem {
     });
     textures.forEach(item => item.dispose()); materials.forEach(item => item.dispose()); geometries.forEach(item => item.dispose());
     this.scene.clear(); this.objects.clear(); this.pickables.length = 0;
+    this.orbitMotions.length = 0; this.orbits.length = 0;
   }
 
   setOrbitsVisible(visible) {
