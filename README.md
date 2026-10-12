@@ -4,9 +4,10 @@ Prototype simulasi 3D Tata Surya yang menggabungkan eksplorasi sinematik dan inf
 
 ## Fitur saat ini
 
-- Matahari dan delapan planet dengan orbit serta rotasi.
+- Matahari dan delapan planet dengan orbit elips, inclination, serta rotasi.
 - 22 bulan utama sebagai objek 3D.
-- Sabuk asteroid berbasis partikel.
+- Lima planet katai: Ceres, Pluto, Haumea, Makemake dan Eris.
+- Sabuk asteroid dan Sabuk Kuiper berbasis partikel seeded, dengan toggle terpisah dan batas kualitas.
 - Guided tour dari Matahari sampai Neptunus.
 - Free-flight dengan keyboard dan mouse.
 - Pemilihan objek melalui klik atau pencarian.
@@ -105,7 +106,7 @@ Sumber diverifikasi pada 11 Oktober 2026:
 - [NASA Science Solar System](https://science.nasa.gov/solar-system/), [Sun](https://science.nasa.gov/sun/facts/), [Moon](https://science.nasa.gov/moon/facts/), dan halaman facts setiap planet untuk deskripsi/komposisi/fakta.
 - [NASA/JPL Satellite Physical Parameters](https://ssd.jpl.nasa.gov/sats/phys_par/) untuk radius rata-rata 22 bulan. Diameter bulan dihitung 2 kali radius rata-rata; ini bukan diameter ekuator untuk satelit tak beraturan.
 
-Panel menautkan sumbernya. Data ilmiah ditata oleh `src/data/science.js`; `radiusEarth`, `visualRadius`, `size`, `distance` numerik pada katalog bulan, dan helper skala dipakai untuk scene saja. Periode pada katalog simulasi bulan tidak otomatis menjadi nilai ilmiah panel. Selain Bulan, massa/gravitasi/suhu/rotasi/periode yang belum diverifikasi tampil sebagai "Belum diverifikasi". Ukuran, jarak, waktu, orbit melingkar dan fase awal adalah ilustrasi, bukan ephemeris tanggal nyata. Suhu raksasa gas merujuk lapisan atmosfer, bukan permukaan padat.
+Panel menautkan sumbernya. Data ilmiah ditata oleh `src/data/science.js` dan dataset bulan/planet katai; `radiusEarth`, `visualRadius`, `size`, `distance` numerik pada katalog bulan, dan helper skala dipakai untuk scene saja. Periode pada katalog simulasi bulan tidak otomatis menjadi nilai ilmiah panel. Nilai yang belum diverifikasi tampil sebagai "Belum diverifikasi". Ukuran, jarak, waktu, elemen orbit sederhana dan fase awal adalah ilustrasi, bukan ephemeris tanggal nyata. Suhu raksasa gas merujuk lapisan atmosfer, bukan permukaan padat.
 
 ### Aset lokal dan lisensi
 
@@ -140,7 +141,7 @@ E2E memerlukan Chrome dan Edge desktop terinstal; config meluncurkan kedua brows
 
 Baseline: 4 unit test lulus dan build berhasil. Bug yang ditemukan: hidden panel ditimpa CSS, filter hanya memindahkan kamera, Follow tidak membawa kamera, tween menuju posisi lama objek, belum ada asteroid dalam tur, Shift menimpa kecepatan, orbit tidak tepat di garis, serta request font/favicon gagal.
 
-Pengujian Phase 2 mencakup 9 unit test, 4 skenario E2E (termasuk tur otomatis dan fallback tekstur) pada Edge 1366x768 dan Chrome 1920x1080: pencarian/filter/empty state, Visit vs Follow, jarak aman, raycast, kontrol tur/pengambilalihan kamera, pengulangan tur, pointer lock/Escape, scroll/boost, bantuan, HUD, kualitas dan fullscreen. Pengujian resource membandingkan jumlah geometry/texture scene yang tetap sama setelah tur berulang dan memastikan alokasi GPU tidak melebihi resource scene; ini bukan pengganti profiling heap jangka panjang atau benchmark FPS pada GPU fisik.
+Suite saat ini mencakup 27 unit test dan 9 skenario E2E pada masing-masing Edge 1366x768 dan Chrome 1920x1080 (18 eksekusi): pencarian/filter/empty state, Visit vs Follow, jarak aman, raycast, tur, Free Flight, startup/fallback tekstur, bulan, planet katai, orbit/waktu, cincin dan kedua sabuk. Pengujian resource membandingkan jumlah geometry/texture scene setelah tur berulang dan memastikan alokasi GPU tidak melebihi resource scene; ini bukan pengganti profiling heap jangka panjang atau benchmark FPS pada GPU fisik.
 
 ### File Phase 2
 
@@ -151,6 +152,15 @@ Ditambahkan: `src/core/cameraMath.js`, `src/data/science.js`, `src/data/search.j
 ### Fase berikutnya
 
 - Peta permukaan berlisensi untuk 21 bulan lainnya dan peta awan Venus; verifikasi parameter ilmiah bulan yang masih kosong.
-- Ephemeris dan mode perbandingan ukuran/jarak fisik, orbit elips, serta pembaruan jumlah bulan dengan versi sumber.
+- Ephemeris dan mode perbandingan ukuran/jarak fisik, serta pembaruan jumlah bulan dengan versi sumber.
 - Profiling heap/FPS jangka panjang pada beberapa GPU desktop; kualitas adaptif bila diperlukan.
-- Planet katai, komet, Sabuk Kuiper dan Galaxy Scene sesuai roadmap awal.
+- Charon, komet dan Galaxy Scene sesuai roadmap awal.
+
+### Phase 3 dan pengukuran performa
+
+Progres rinci dan batas ilmiah tersedia di [docs/phase-3-progress.md](docs/phase-3-progress.md).
+Orbit elips menggunakan elemen sederhana, bukan n-body atau ephemeris tanggal nyata. Sebanyak 17 bulan memiliki data terverifikasi di `moonScience.js`; nilai yang belum diverifikasi tetap kosong. Lima planet katai memakai data ilmiah terpisah. Cincin Saturnus/Uranus procedural dan kedua sabuk tidak membutuhkan aset eksternal baru.
+
+Tombol **Asteroid** dan **Kuiper** menyembunyikan/menampilkan partikel masing-masing, tanpa menghilangkan Ceres atau Pluto. Low/Medium/High memakai 600/1200/1900 partikel asteroid dan 900/1800/3600 partikel Kuiper. Distribusi dan ukuran merupakan ilustrasi dengan skala jarak terkompresi; partikel tidak dapat dipilih.
+
+`npm run profile` menjalankan benchmark terpisah di Edge 1366×768 dan Chrome 1920×1080, membuka server Vite lokal, lalu menulis `docs/benchmarks/phase-3-performance.json`. Jalankan tanpa browser/test berat lain agar hasil sebanding. Benchmark mengukur interval animation frame, heap setelah garbage collection dan jumlah resource setelah Visit/tur/toggle berulang. Hasil headless hanya baseline mesin pengujian; bukan jaminan FPS atau bukti tidak adanya memory leak jangka panjang. Tidak ada dependency baru.

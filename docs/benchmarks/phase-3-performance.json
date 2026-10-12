@@ -1,0 +1,272 @@
+{
+  "date": "2026-10-12T17:31:27.427Z",
+  "platform": "win32 10.0.26200",
+  "cpu": "AMD Ryzen 7 7435HS                             ",
+  "node": "v22.20.0",
+  "runs": [
+    {
+      "channel": "msedge",
+      "version": "155.0.4283.45",
+      "width": 1366,
+      "height": 768,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4050 Laptop GPU (0x000028E1) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "frameTimes": [
+        {
+          "quality": "high",
+          "samples": 180,
+          "medianMs": 6.900000000001455,
+          "p95Ms": 7,
+          "maxMs": 7.100000000005821,
+          "over33ms": 0
+        },
+        {
+          "quality": "medium",
+          "samples": 180,
+          "medianMs": 6.900000000001455,
+          "p95Ms": 7,
+          "maxMs": 7.200000000004366,
+          "over33ms": 0
+        },
+        {
+          "quality": "low",
+          "samples": 180,
+          "medianMs": 6.900000000001455,
+          "p95Ms": 7,
+          "maxMs": 7.400000000001455,
+          "over33ms": 0
+        }
+      ],
+      "samples": [
+        {
+          "heap": {
+            "usedSize": 7245676,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2678792,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 116,
+            "textures": 36
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7282560,
+            "totalSize": 8151040,
+            "embedderHeapUsedSize": 2679944,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7321944,
+            "totalSize": 8151040,
+            "embedderHeapUsedSize": 2565944,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7332800,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2387480,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7336780,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2676376,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7342148,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2611248,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "channel": "chrome",
+      "version": "154.0.8037.98",
+      "width": 1920,
+      "height": 1080,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4050 Laptop GPU (0x000028E1) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "frameTimes": [
+        {
+          "quality": "high",
+          "samples": 180,
+          "medianMs": 6.900000000001455,
+          "p95Ms": 7,
+          "maxMs": 7.100000000005821,
+          "over33ms": 0
+        },
+        {
+          "quality": "medium",
+          "samples": 180,
+          "medianMs": 6.900000000001455,
+          "p95Ms": 7,
+          "maxMs": 7.100000000005821,
+          "over33ms": 0
+        },
+        {
+          "quality": "low",
+          "samples": 180,
+          "medianMs": 6.900000000001455,
+          "p95Ms": 7,
+          "maxMs": 27.69999999999709,
+          "over33ms": 0
+        }
+      ],
+      "samples": [
+        {
+          "heap": {
+            "usedSize": 7195684,
+            "totalSize": 8151040,
+            "embedderHeapUsedSize": 2496096,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 116,
+            "textures": 36
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7229736,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2534560,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7275756,
+            "totalSize": 8151040,
+            "embedderHeapUsedSize": 2562920,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7279588,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2568936,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7286000,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2403608,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        },
+        {
+          "heap": {
+            "usedSize": 7295736,
+            "totalSize": 8413184,
+            "embedderHeapUsedSize": 2572608,
+            "backingStorageSize": 4642981
+          },
+          "resources": {
+            "geometries": 120,
+            "textures": 39
+          },
+          "gpuResources": {
+            "geometries": 118,
+            "textures": 37
+          }
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

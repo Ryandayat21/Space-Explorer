@@ -1,7 +1,7 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **audit selesai; orbit elips, 17 bulan utama, lima planet katai dan peningkatan cincin selesai (11 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-11.
+Status: **orbit elips, 17 bulan utama, lima planet katai, cincin dan kedua small-body regions selesai; 27 unit test dan 18 E2E lulus (13 Oktober 2026)**. Rincian dan kelanjutan baseline performa ada di bagian 8-13.
 
 Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
 
@@ -114,14 +114,16 @@ Tidak ada alasan saat ini untuk mengganti Vite/Three.js, membuat proyek baru, me
 - [x] P3-02a: lengkapi 17 bulan utama yang diminta pengguna, tanpa duplikat atau angka rekaan.
 - [ ] P3-02b: verifikasi suhu/rotasi yang masih kosong dan detail lima bulan tambahan di luar daftar tugas.
 - [ ] P3-03: tambahkan peta bulan/awan Venus yang berlisensi; integrasikan dengan cache, fallback dan atribusi existing.
-- [ ] P3-04: ukur frame-time, heap dan resource pada skenario berulang sebelum menambah efek visual atau kualitas adaptif.
+- [x] P3-04a: baseline frame-time, heap setelah GC dan resource pada skenario berulang, dua browser desktop (bagian 13).
+- [ ] P3-04b: profiling interaktif jangka panjang pada beberapa GPU, diagnosis retained heap bila pertumbuhan berlanjut, lalu evaluasi kualitas adaptif.
 - [x] P3-05a: semua gerakan SolarSystem memakai delta hari simulasi; pause/resume dan pengali waktu diuji deterministik.
 - [ ] P3-05b: kalender, kebijakan tab background/catch-up dan jam waktu dinding (di luar tugas ini).
 - [ ] P3-06: rancang perbandingan ukuran/jarak dengan angka ilmiah yang terpisah dari skala scene.
 - [x] P3-07a: orbit elips sederhana dengan inclination, fase awal, periode dan garis tersinkronisasi.
 - [ ] P3-07b: epoch kalender, orientasi node/periapsis dan ephemeris presisi (di luar tugas ini).
 - [x] P3-08a: lima planet katai dengan kategori, orbit, label, pencarian, seleksi dan panel.
-- [ ] P3-08b: Charon/pendamping lain, komet dan Sabuk Kuiper (tugas terpisah).
+- [x] P3-08b: sabuk asteroid dan Sabuk Kuiper seeded, quality budget dan toggle mandiri.
+- [ ] P3-08c: Charon/pendamping lain dan komet (tugas terpisah).
 - [ ] P3-09: perluas narasi/rute tur menggunakan data dan kontrol existing.
 - [ ] P3-10: rancang Galaxy Scene dan lifecycle resource sebagai tugas tersendiri bila disetujui.
 - [ ] Selaraskan README, jumlah skenario test, daftar aset, tanggal sumber dan batas ilmiah setelah tiap tugas.
@@ -347,3 +349,52 @@ Manual: jalankan `npm run dev`, pilih Katai, cari kelima nama, tekan Enter/Visit
 - `git diff --check`: bersih.
 
 Manual: jalankan `npm run dev`, cari Saturnus lalu Visit. Putar kamera untuk melihat pita/celah dan transparansi; tutup panel lalu klik planet. Ulangi untuk Uranus (cincin sengaja jauh lebih redup). Coba Follow, ganti kecepatan waktu dan pause/resume: cincin tetap terpusat dan miring mengikuti planet. Matikan koneksi jaringan setelah aplikasi lokal termuat; cincin tetap tersedia karena procedural.
+
+## 12. Small-body regions dan penutupan regresi - 13 Oktober 2026
+
+- Sabuk asteroid existing dipindahkan ke modul `SmallBodyRegion`; tidak membuat sabuk duplikat. Sabuk Kuiper menggunakan modul yang sama. Keduanya merupakan `THREE.Points`, masing-masing satu geometry/material. Posisi dibuat sekali dengan seeded random dan distribusi annulus, terkonsentrasi di bidang tengah, bukan bola.
+- Konfigurasi terpisah `smallBodyRegions.js`: asteroid 2,1–3,25 AU visual, Kuiper 32–50 AU visual. Keduanya memakai fungsi kompresi jarak existing. Acuan bentuk/rentang Kuiper: [NASA Kuiper Belt Facts](https://science.nasa.gov/solar-system/kuiper-belt/facts/). Batas dalam digeser secara ilustratif untuk memisahkannya dari orbit visual Neptunus. Tidak ada aset unduhan baru.
+- Budget Low/Medium/High: asteroid 600/1200/1900 dan Kuiper 900/1800/3600. Buffer posisi maksimum gabungan 66.000 byte; pergantian kualitas hanya mengganti draw range. Ini ukuran buffer posisi, bukan seluruh memori aplikasi.
+- Tombol Asteroid/Kuiper memiliki aria-pressed dan toggle terpisah. Visibility bertahan saat kualitas berubah. Ceres dan lima planet katai tetap di registry objek mandiri, dengan label/pencarian/panel/raycast existing. Partikel dekoratif tidak masuk pickables dan raycast-nya dinonaktifkan.
+- Update hanya memutar transformasi tiap sabuk berdasarkan delta hari simulasi; pause/resume/kecepatan tetap berfungsi. Tidak ada alokasi vector/array per partikel per frame. Gerak ini ilustrasi kolektif, bukan orbit Kepler per asteroid. Dispose menggunakan traversal SolarSystem existing.
+- File implementasi sabuk: `src/core/SmallBodyRegion.js`, `src/data/smallBodyRegions.js`, `src/core/SolarSystem.js`, `src/main.js`, `src/ui/UIController.js`, `index.html`, `test/regions.test.js`, `e2e/regions.spec.js`. Sebagian sudah tersimpan dalam baseline workspace saat tugas lanjutan dimulai; perubahan tersebut dipertahankan.
+
+### Regresi kamera/klik
+
+- Uji sebelumnya gagal karena ekspektasi urutan kualitas tidak sesuai kontrol High → Medium → Low → High; ekspektasi telah diperbaiki.
+- Pengujian klik bulan juga menemukan occlusion pada skala terkompresi: Bumi/Mars dan sebagian bulan dapat berdekatan atau saling menutupi pada fase awal. Ini bukan intersepsi partikel sabuk. Tidak mengubah data orbit untuk menghilangkan overlap tersebut.
+- `cameraMath.clearApproach` memeriksa jalur pandang/tujuan terhadap sphere objek lain. Visit mempertahankan arah masuk jika aman; bila terhalang mencoba maksimum 64 arah pada jarak framing sama. Dilakukan hanya saat Visit/Follow dimulai. Perlindungan permukaan per-frame existing tetap aktif; bukan path planning seluruh lintasan tween.
+- Jika objek benar-benar berada di dalam volume visual objek lain, tidak selalu ada sudut pandang bebas. Uji klik bulan memajukan simulasi setidaknya 40 hari sebelum pause agar menguji objek yang terpisah. Raycaster tetap memilih objek terdekat, tidak menembus objek di depannya. Diagnostik waktu hanya tersedia pada DEV.
+- File penutupan: `src/core/cameraMath.js`, `src/main.js`, `test/cameraApproach.test.js`, `e2e/moons.spec.js`, README dan dokumen ini.
+- Unit test terakhir: **27/27 lulus**. Production build: **berhasil**, 24 modul; aplikasi 74,26 kB dan Three.js terpisah 495,59 kB sebelum gzip.
+- Suite E2E lengkap terakhir: **18/18 lulus dalam 3,7 menit**, Edge 1366×768 dan Chrome 1920×1080. Seluruh skenario bulan, planet katai, kamera/flight/tur, startup/fallback, orbit/waktu, sabuk dan cincin lulus. Kedua skenario sabuk tidak mencatat pageerror/console error; tombol dock berada di dalam viewport kedua resolusi. Screenshot Edge diperiksa untuk keterbacaan panel/dock.
+
+Manual: jalankan `npm run dev`, matikan/nyalakan Asteroid dan Kuiper, lalu ubah Low/Medium/High. Pastikan partikel berubah jumlah tanpa muncul kembali jika disembunyikan. Pause/resume dan ubah kecepatan; kedua sabuk mengikuti waktu. Cari Ceres dan Pluto saat sabuk tersembunyi, Visit, tutup panel dan klik objek. Untuk objek yang tertutup planet lain, majukan waktu atau putar kamera terlebih dahulu.
+
+## 13. Langkah berikutnya: baseline performa P3-04
+
+Dipilih sebagai kelanjutan aman berdasarkan instruksi melanjutkan progres berikutnya: ukur sebelum menambahkan efek/kualitas adaptif. Tidak ada efek visual, dependency atau layout baru.
+
+- `scripts/profile.mjs` dan `npm run profile` menjalankan Edge 1366×768 serta Chrome 1920×1080 secara berurutan dengan server Vite yang ditutup setelah selesai.
+- Dua siklus warm-up diikuti lima siklus Visit Bumi/Jupiter/Pluto, start/next/exit tur, dan toggle kedua sabuk. Heap diambil lewat CDP setelah garbage collection; geometry/texture scene dan GPU dicatat terpisah.
+- Frame-time memakai 180 interval requestAnimationFrame per kualitas setelah 30 frame warm-up, pada kamera Matahari dan simulasi paused. Median, p95, maksimum dan jumlah interval >33,34 ms dicatat. Ini interval frame end-to-end, bukan GPU timing query.
+- JSON menyimpan tanggal, OS/CPU, versi Node/browser, renderer GPU, sampel heap/resource dan console/page errors. Hasil headless, jumlah siklus terbatas dan satu mesin tidak membuktikan bebas kebocoran atau FPS stabil lintas GPU. Profiling interaktif panjang pada GPU nyata tetap diperlukan.
+
+### Hasil baseline
+
+`npm.cmd run profile` selesai dengan exit code 0; data lengkap: [benchmarks/phase-3-performance.json](benchmarks/phase-3-performance.json). Timestamp UTC 12 Oktober 17:31 setara 13 Oktober 00:31 WIB. Sampel diambil berurutan setelah suite E2E selesai.
+
+| Pengukuran | Edge 1366×768 | Chrome 1920×1080 |
+| --- | --- | --- |
+| Median frame High / Medium / Low | 6,9 / 6,9 / 6,9 ms | 6,9 / 6,9 / 6,9 ms |
+| p95 tiap kualitas | 7,0 ms | 7,0 ms |
+| Maksimum High / Medium / Low | 7,1 / 7,2 / 7,4 ms | 7,1 / 7,1 / 27,7 ms |
+| Interval >33,34 ms, seluruh kualitas | 0 dari 540 | 0 dari 540 |
+| Heap setelah GC, awal → akhir | 7.245.676 → 7.342.148 byte | 7.195.684 → 7.295.736 byte |
+| Geometry / texture scene, keenam sampel | 120 / 39, tetap | 120 / 39, tetap |
+| Geometry / texture GPU | 116 / 36 → 118 / 37, lalu tetap | 116 / 36 → 118 / 37, lalu tetap |
+| Page/console error | 0 | 0 |
+
+Interpretasi: resource scene tidak tumbuh selama lima pengulangan. GPU sempat mengunggah resource tambahan secara lazy sebelum stabil. Heap meningkat sekitar 96–100 kB (1,3–1,4%) dan tidak diklaim konstan; perlu pengukuran lebih panjang/retained-object inspection sebelum menyimpulkan leak atau bebas leak. Interval sekitar 6,9 ms menunjukkan pengukuran terbatas cadence requestAnimationFrame pada mesin ini, bukan bukti perbedaan biaya GPU antarkualitas. Sampel frame menggunakan satu view Matahari, bukan stress test semua sudut scene.
+
+P3-04a selesai. Langkah aman berikutnya adalah P3-04b (profiling interaktif panjang lintas GPU), atau memilih fitur produk berikutnya dari backlog; kalender, tekstur tambahan, perbandingan, Charon/komet dan Galaxy Scene tetap belum dikerjakan. Tidak ada git commit dalam tugas lanjutan ini.
