@@ -1,10 +1,12 @@
 import * as THREE from 'three';
-import { bodies, moons, orbitRadiusFromAu, visualRadiusFromEarth } from '../data/celestialBodies.js';
+import { bodies, moons, visualRadiusFromEarth } from '../data/celestialBodies.js';
 
 import { orbitalElements } from '../data/orbitalElements.js';
 import { OrbitMotion } from './OrbitMotion.js';
 import { dwarfPlanets } from '../data/dwarfPlanets.js';
 import { createPlanetRings } from './PlanetRings.js';
+import { smallBodyRegions } from '../data/smallBodyRegions.js';
+import { SmallBodyRegion } from './SmallBodyRegion.js';
 
 const DEG = Math.PI / 180;
 
@@ -132,7 +134,12 @@ export class SolarSystem {
     this.#createStarfield();
     this.#createSun();
     this.#createPlanets();
-    this.#createAsteroidBelt();
+    this.regions = new Map(smallBodyRegions.map(config => {
+      const region = new SmallBodyRegion(config);
+      this.root.add(region);
+      return [config.id, region];
+    }));
+    this.asteroidBelt = this.regions.get('asteroid-belt');
     this.selection = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), new THREE.MeshBasicMaterial({ color: 0x66d9ff, transparent: true, opacity: 0.16, side: THREE.BackSide, depthWrite: false }));
     this.selection.visible = false;
     scene.add(this.selection);
@@ -278,26 +285,6 @@ export class SolarSystem {
     });
   }
 
-  #createAsteroidBelt() {
-    const count = 1900;
-    const positions = new Float32Array(count * 3);
-    const random = seededRandom(81517);
-    const inner = orbitRadiusFromAu(2.1);
-    const outer = orbitRadiusFromAu(3.25);
-    for (let i = 0; i < count; i += 1) {
-      const angle = random() * Math.PI * 2;
-      const radius = inner + random() * (outer - inner);
-      positions[i * 3] = Math.cos(angle) * radius;
-      positions[i * 3 + 1] = (random() - 0.5) * 2.1;
-      positions[i * 3 + 2] = Math.sin(angle) * radius;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const belt = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x7f8793, size: 0.18, transparent: true, opacity: 0.48, depthWrite: false }));
-    this.root.add(belt);
-    this.asteroidBelt = belt;
-  }
-
   update(deltaDays) {
     if (!Number.isFinite(deltaDays) || !Number.isFinite(this.elapsedDays + deltaDays)) {
       throw new RangeError('Simulation time must remain finite');
@@ -313,7 +300,7 @@ export class SolarSystem {
         object.mesh.rotation.y += deltaDays * 0.03;
       }
     }
-    if (this.asteroidBelt) this.asteroidBelt.rotation.y += deltaDays * 0.002;
+    for (const region of this.regions.values()) region.update(deltaDays);
   }
 
   select(id) {
@@ -372,7 +359,12 @@ export class SolarSystem {
   setQuality(quality) {
     this.effects.forEach(effect => { effect.visible = quality !== 'low'; });
     this.stars.geometry.setDrawRange(0, quality === 'low' ? 2500 : quality === 'medium' ? 5000 : 9000);
-    this.asteroidBelt.geometry.setDrawRange(0, quality === 'low' ? 600 : 1900);
+    for (const region of this.regions.values()) region.setQuality(quality);
+  }
+
+  setRegionVisible(id, visible) {
+    const region = this.regions.get(id);
+    if (region) region.visible = !!visible;
   }
 
   dispose() {
@@ -388,6 +380,7 @@ export class SolarSystem {
     textures.forEach(item => item.dispose()); materials.forEach(item => item.dispose()); geometries.forEach(item => item.dispose());
     this.scene.clear(); this.objects.clear(); this.pickables.length = 0;
     this.orbitMotions.length = 0; this.orbits.length = 0;
+    this.regions.clear(); this.asteroidBelt = null;
   }
 
   setOrbitsVisible(visible) {
