@@ -98,6 +98,13 @@ export class UIController extends EventTarget {
       this['labels-layer'].hidden = !this.labelsVisible;
     });
     this['quality-button'].addEventListener('click', () => this.#cycleQuality());
+    document.querySelectorAll('[data-region]').forEach(button => {
+      button.addEventListener('click', () => {
+        const visible = button.classList.toggle('active');
+        button.setAttribute('aria-pressed', String(visible));
+        this.emit('region-toggle', { id: button.dataset.region, visible });
+      });
+    });
     this['tour-prev'].addEventListener('click', () => this.stepTour(-1));
     this['tour-next'].addEventListener('click', () => this.stepTour(1));
     this['tour-pause'].addEventListener('click', () => {

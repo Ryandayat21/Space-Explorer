@@ -183,6 +183,7 @@ ui.addEventListener('overview', () => {
 });
 ui.addEventListener('time-change', (event) => { timeScale = event.detail; });
 ui.addEventListener('orbits-toggle', (event) => solarSystem.setOrbitsVisible(event.detail));
+ui.addEventListener('region-toggle', event => solarSystem.setRegionVisible(event.detail.id, event.detail.visible));
 ui.addEventListener('filter', (event) => {
   ui.hideWelcome();
   ui.status(event.detail === 'all' ? '' : 'Kategori aktif: pilih objek pada hasil pencarian.');
@@ -295,6 +296,7 @@ solarSystem.loadTexture('sun').then(() => {
 frameId = requestAnimationFrame(animate);
 // Read-only diagnostics for browser regression and allocation checks.
 if (import.meta.env.DEV) window.__observer = {
+  regions: () => [...solarSystem.regions].map(([id, region]) => ({ id, visible: region.visible, count: region.geometry.drawRange.count, rotation: region.rotation.y })),
   resources: () => {
     const geometries = new Set(), textures = new Set();
     scene.traverse(object => {
