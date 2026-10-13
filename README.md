@@ -7,6 +7,7 @@ Prototype simulasi 3D Tata Surya yang menggabungkan eksplorasi sinematik dan inf
 - Matahari dan delapan planet dengan orbit serta rotasi.
 - 22 bulan utama sebagai objek 3D.
 - Sabuk asteroid berbasis partikel.
+- Komet Halley dengan orbit elips miring, nucleus, coma dan ekor anti-Matahari; cari `Halley` atau `1P/Halley` pada kategori Semua.
 - Guided tour dari Matahari sampai Neptunus.
 - Free-flight dengan keyboard dan mouse.
 - Pemilihan objek melalui klik atau pencarian.

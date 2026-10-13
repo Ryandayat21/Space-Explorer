@@ -88,7 +88,7 @@ function setCameraDestination(id, duration = 1.65, follow = false, framing = 5.2
   const target = solarSystem.getWorldPosition(id, new THREE.Vector3());
   const direction = camera.position.clone().sub(target).normalize();
   if (!Number.isFinite(direction.x) || direction.lengthSq() < 0.1) direction.set(1, 0.4, 1).normalize();
-  const distance = visitDistance(object.radius, framing);
+  const distance = visitDistance(object.radius, object.data.visitFraming ?? framing);
   const destination = target.clone().add(direction.multiplyScalar(distance)).add(new THREE.Vector3(0, object.radius * 0.65, 0));
   cameraTween = {
     start: performance.now(),
