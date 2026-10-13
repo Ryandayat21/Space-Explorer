@@ -9,6 +9,10 @@ test('major moons are searchable, have sourced panels, and can be clicked after 
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto('/');
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
+  // Initial compressed Earth/Mars orbits can visually overlap. Advance to a
+  // separated phase before testing unobscured clicking; picking is not x-ray.
+  await page.locator('#time-speed').fill('4');
+  await page.waitForFunction(() => window.__observer.elapsedDays() >= 40);
   await page.locator('#time-toggle').click();
   await page.locator('[data-filter="moon"]').click();
   for (const id of Object.keys(moonScience)) {

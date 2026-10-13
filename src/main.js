@@ -1,5 +1,5 @@
 import { tour } from './data/tour.js';
-import { visitDistance } from './core/cameraMath.js';
+import { visitDistance, clearApproach } from './core/cameraMath.js';
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -90,6 +90,24 @@ function setCameraDestination(id, duration = 1.65, follow = false, framing = 5.2
   if (!Number.isFinite(direction.x) || direction.lengthSq() < 0.1) direction.set(1, 0.4, 1).normalize();
   const distance = visitDistance(object.radius, object.data.visitFraming ?? framing);
   const destination = target.clone().add(direction.multiplyScalar(distance)).add(new THREE.Vector3(0, object.radius * 0.65, 0));
+  const obstacles = [...solarSystem.objects.values()].filter(body => body !== object).map(body => ({
+    center: solarSystem.getWorldPosition(body.data.id).toArray(),
+    radius: Math.max(body.radius + Math.max(.25, body.radius * .08), .75)
+  }));
+  if (!clearApproach(target.toArray(), destination.toArray(), obstacles)) {
+    // Compressed orbits can place another planet across the incoming view.
+    // Search a bounded set of directions at the same framing distance.
+    for (let index = 0; index < 64; index++) {
+      const y = 1 - 2 * (index + .5) / 64;
+      const radial = Math.sqrt(1 - y * y), angle = index * 2.399963229728653;
+      const candidate = target.clone().add(new THREE.Vector3(
+        radial * Math.cos(angle), y, radial * Math.sin(angle)).multiplyScalar(distance));
+      if (clearApproach(target.toArray(), candidate.toArray(), obstacles)) {
+        destination.copy(candidate);
+        break;
+      }
+    }
+  }
   cameraTween = {
     start: performance.now(),
     duration: duration * 1000,
@@ -183,6 +201,7 @@ ui.addEventListener('overview', () => {
 });
 ui.addEventListener('time-change', (event) => { timeScale = event.detail; });
 ui.addEventListener('orbits-toggle', (event) => solarSystem.setOrbitsVisible(event.detail));
+ui.addEventListener('region-toggle', event => solarSystem.setRegionVisible(event.detail.id, event.detail.visible));
 ui.addEventListener('filter', (event) => {
   ui.hideWelcome();
   ui.status(event.detail === 'all' ? '' : 'Kategori aktif: pilih objek pada hasil pencarian.');
@@ -295,6 +314,8 @@ solarSystem.loadTexture('sun').then(() => {
 frameId = requestAnimationFrame(animate);
 // Read-only diagnostics for browser regression and allocation checks.
 if (import.meta.env.DEV) window.__observer = {
+  elapsedDays: () => solarSystem.elapsedDays,
+  regions: () => [...solarSystem.regions].map(([id, region]) => ({ id, visible: region.visible, count: region.geometry.drawRange.count, rotation: region.rotation.y })),
   resources: () => {
     const geometries = new Set(), textures = new Set();
     scene.traverse(object => {
