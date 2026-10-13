@@ -1,6 +1,7 @@
 import { tour } from '../data/tour.js';
 import { searchObjects } from '../data/search.js';
 import { scienceFor } from '../data/science.js';
+import { ExplorationUI } from './ExplorationUI.js';
 import { timeSpeeds, tourStops } from '../data/celestialBodies.js';
 
 export class UIController extends EventTarget {
@@ -15,6 +16,7 @@ export class UIController extends EventTarget {
     this.#cacheElements();
     this.#populateSearch();
     this.#bindEvents();
+    this.exploration = new ExplorationUI(this);
   }
 
   #cacheElements() {
@@ -121,6 +123,7 @@ export class UIController extends EventTarget {
       });
     });
     window.addEventListener('keydown', (event) => {
+      if (document.querySelector('dialog[open]')) return;
       if (event.code === 'KeyG' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) this.startTour();
       if (event.code === 'KeyH' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) document.body.classList.toggle('hud-hidden');
     });
@@ -155,6 +158,7 @@ export class UIController extends EventTarget {
     data = scienceFor(data);
     this.hideWelcome();
     this.selectedId = data.id;
+    this.exploration.refresh();
     this['object-symbol'].textContent = data.symbol || '●';
     this['object-symbol'].style.color = data.color || '#66d9ff';
     this['object-type'].textContent = { star: 'BINTANG', moon: 'SATELIT ALAMI', planet: 'PLANET', 'dwarf-planet': 'PLANET KATAI', comet: 'KOMET' }[data.type] ?? 'OBJEK';
