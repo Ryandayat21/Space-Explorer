@@ -259,6 +259,7 @@ function goTour(id) {
 }
 
 window.addEventListener('keydown', (event) => {
+  if (document.querySelector('dialog[open]')) return;
   if (event.code === 'KeyF' && selectedObject && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) {
     if (tourActive) ui.stopTour();
     setCameraDestination(selectedObject.data.id);

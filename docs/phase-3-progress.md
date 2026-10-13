@@ -1,7 +1,7 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **orbit elips, bulan utama, planet katai, cincin, sabuk asteroid/Kuiper dan Halley terintegrasi (13 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-15.
+Status: **orbit elips, bulan utama, planet katai, cincin, sabuk asteroid/Kuiper, Halley serta bookmark/perbandingan tersedia (13 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-16.
 
 Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
 
@@ -118,7 +118,8 @@ Tidak ada alasan saat ini untuk mengganti Vite/Three.js, membuat proyek baru, me
 - [ ] P3-04b: profiling interaktif jangka panjang pada beberapa GPU, diagnosis retained heap bila pertumbuhan berlanjut, lalu evaluasi kualitas adaptif.
 - [x] P3-05a: semua gerakan SolarSystem memakai delta hari simulasi; pause/resume dan pengali waktu diuji deterministik.
 - [ ] P3-05b: kalender, kebijakan tab background/catch-up dan jam waktu dinding (di luar tugas ini).
-- [ ] P3-06: rancang perbandingan ukuran/jarak dengan angka ilmiah yang terpisah dari skala scene.
+- [x] P3-06a: perbandingan maksimal dua objek, tabel ilmiah dan visual rasio diameter tanpa mengubah scene (bagian 16).
+- [x] P3-06b: bookmark dan daftar favorit persisten dengan penanganan storage rusak/tidak tersedia (bagian 16).
 - [x] P3-07a: orbit elips sederhana dengan inclination, fase awal, periode dan garis tersinkronisasi.
 - [ ] P3-07b: epoch kalender, orientasi node/periapsis dan ephemeris presisi (di luar tugas ini).
 - [x] P3-08a: lima planet katai dengan kategori, orbit, label, pencarian, seleksi dan panel.
@@ -444,3 +445,26 @@ Manual: jalankan `npm run dev`, pilih kategori Semua, cari `Halley` atau `1P/Hal
 - `npm.cmd test`: **30/30 lulus**. `npm.cmd run build`: **berhasil**, 26 modul, bundle aplikasi 77,65 kB dan Three.js 499,85 kB sebelum gzip.
 - Seluruh **22 skenario E2E** mencatat hasil lulus pada Edge 1366×768 dan Chrome 1920×1080, termasuk komet, sabuk, bulan, planet katai, cincin, kamera/flight/tur dan orbit. Runner tertahan pada cleanup server setelah skenario selesai (perilaku Windows yang juga tercatat pada tugas komet); dihentikan manual, sehingga bukan klaim exit code 0 untuk perintah E2E lengkap. Tidak ada kegagalan skenario pada eksekusi akhir.
 - Tidak membuat commit atau push. Hasil resolusi disiapkan di branch PR; GitHub baru dapat memperbarui status konflik setelah merge lokal diselesaikan dengan commit dan branch di-push.
+
+## 16. Eksplorasi pengguna: bookmark dan perbandingan - 13 Oktober 2026
+
+### Implementasi
+
+- Panel objek mempunyai Bookmark dengan aria-pressed serta tombol Bandingkan. Tombol bintang di header membuka daftar favorit, tersedia sebelum pengguna memilih objek. Daftar menyediakan Kunjungi, Hapus, empty state dan akses perbandingan. Tidak ada redesign scene/layout utama.
+- `src/data/exploration.js` memisahkan model penyimpanan dan pembentukan perbandingan dari DOM. Key `milky-way-observer.favorites.v1` menyimpan array ID saja. ID tidak dikenal, non-string dan duplikat disaring; JSON rusak atau bentuk selain array tidak diteruskan ke UI. Kegagalan getter/read/write localStorage ditangkap. Jika storage ditolak atau kuota habis, favorit tetap berfungsi dalam memori sesi dengan pesan yang jelas. Tidak ada sinkronisasi akun/server atau antar-tab pada fase ini.
+- `src/ui/ExplorationUI.js` menggunakan dialog native, button/select/label, fokus awal, Escape dan pengembalian fokus. Menghapus favorit memindahkan fokus ke tombol Tutup agar tidak hilang ke elemen yang dihapus. Shortcut F/G/H diabaikan saat dialog terbuka. Input/output dinamis memakai textContent, bukan HTML dari storage.
+- Dua dropdown dari katalog lengkap menyediakan maksimal dua objek berbeda. Tabel menampilkan diameter, massa, gravitasi, jarak dari Matahari dan periode orbit. Helper murni membatasi dua ID valid/unik, menggunakan scienceFor dan sumber existing; tidak memakai radius/jarak visual scene sebagai angka ilmiah.
+- Jarak bulan pada katalog adalah terhadap parent, sehingga kolom jarak dari Matahari secara eksplisit menyatakan belum tersedia. Periode bulan diberi nama planet induk. Matahari memakai 0 km sebagai pusat acuan dan periode heliosentris tidak berlaku. Nilai kosong seperti massa Pluto tetap Belum diverifikasi; tidak ada angka baru yang diarang.
+- Dua lingkaran DOM memakai rasio diameter linear terhadap objek terbesar (maksimum 140 px). Tidak memberi batas minimum palsu: objek sangat kecil bisa nyaris tidak terlihat, dengan nilai numerik/penjelasan tetap tersedia. Bentuk non-bola dan definisi diameter mengikuti keterbatasan sumber existing. Perbandingan hanya visual 2D, bukan mode skala fisik pada scene.
+- Membuka/mengubah/menutup perbandingan tidak memanggil select/Visit/Follow, mengubah timeScale, membuat mesh atau memindahkan kamera. Simulasi yang sedang berjalan tetap berjalan; modal membatasi interaksi latar. Kunjungi dari daftar favorit memang menggunakan alur navigasi existing.
+
+### File dan validasi
+
+- Baru: `src/data/exploration.js`, `src/ui/ExplorationUI.js`, `test/exploration.test.js`, `e2e/exploration.spec.js`.
+- Diubah: `index.html`, `src/ui/UIController.js`, `src/styles.css`, `src/main.js` (guard shortcut saat dialog terbuka), README dan dokumen ini.
+- Unit test: sanitasi ID/JSON, persistensi/toggle, getter storage gagal dan quota error, pembatasan dua objek, rasio diameter ilmiah serta semantik jarak/periode bulan dan Matahari.
+- `npm.cmd test`: **34/34 lulus**. `npm.cmd run build`: **berhasil**, 28 modul; aplikasi 83,68 kB dan bundle Three.js terpisah 499,85 kB sebelum gzip.
+- Enam skenario regresi observer pada Edge/Chrome lulus: navigasi, tur, Free Flight, startup/fallback, HUD dan fullscreen. Pengujian awal perbandingan menemukan assertion Playwright untuk disabled pada option tidak sesuai DOM; diganti pemeriksaan properti disabled native. Tidak mengubah perilaku dropdown demi test.
+- Eksekusi akhir `npm.cmd run test:e2e -- e2e/exploration.spec.js`: **6/6 lulus**, exit code 0, 39,7 detik, Edge 1366×768 dan Chrome 1920×1080. Pengujian mencakup persistensi/reload, tombol keyboard/focus return, storage rusak/ditolak, tabel/rasio diameter dan snapshot kamera/target/seleksi/waktu/resource scene yang identik sebelum/sesudah perbandingan pada simulasi paused. Tidak ada pageerror; skenario perbandingan juga tidak mencatat console error. Screenshot 1366×768 diperiksa; dialog scroll menampung tabel dan sumber tanpa mengubah layout utama.
+
+Manual: pilih Bumi dan tekan Bookmark; buka tombol bintang header untuk melihat favorit, lalu reload dan pastikan tersimpan. Hapus dengan keyboard. Tekan Bandingkan, pilih Jupiter, periksa lima parameter dan rasio lingkaran; coba Bulan untuk melihat keterangan jarak parent. Gunakan Tab/Enter/Space/Escape dan pastikan fokus kembali setelah dialog ditutup. Jeda simulasi sebelum membuka dialog untuk membandingkan posisi kamera sebelum/sesudah. Isi key localStorage dengan JSON rusak di DevTools lalu reload: aplikasi tetap terbuka, daftar kosong dan pesan muncul. Tidak ada git commit.

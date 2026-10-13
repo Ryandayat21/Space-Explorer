@@ -13,6 +13,7 @@ Prototype simulasi 3D Tata Surya yang menggabungkan eksplorasi sinematik dan inf
 - Free-flight dengan keyboard dan mouse.
 - Pemilihan objek melalui klik atau pencarian.
 - Panel informasi astronomi.
+- Bookmark objek dan daftar favorit lokal; perbandingan maksimal dua objek dengan rasio diameter ilmiah.
 - Kontrol waktu, orbit, label, dan kualitas render.
 - Tampilan desktop-first dan pemeriksaan WebGL 2.
 
@@ -81,7 +82,7 @@ Data ini merupakan fondasi konten dan perlu ditinjau kembali ketika detail ilmia
 
 - Detail ilmiah lengkap untuk 22 bulan utama.
 - Tekstur planet berkualitas tinggi dengan lisensi yang sesuai.
-- Mode perbandingan skala ilmiah.
+- Mode perbandingan dua objek tersedia; perluasan visualisasi skala ilmiah dapat dilakukan terpisah.
 - Guided tour dengan narasi lebih kaya.
 - Planet katai, Sabuk Kuiper, dan komet Halley sudah tersedia; perluasan objek berikutnya sesuai checklist Phase 3.
 - Galaxy Scene untuk peta 3D Bima Sakti.
@@ -142,7 +143,7 @@ E2E memerlukan Chrome dan Edge desktop terinstal; config meluncurkan kedua brows
 
 Baseline: 4 unit test lulus dan build berhasil. Bug yang ditemukan: hidden panel ditimpa CSS, filter hanya memindahkan kamera, Follow tidak membawa kamera, tween menuju posisi lama objek, belum ada asteroid dalam tur, Shift menimpa kecepatan, orbit tidak tepat di garis, serta request font/favicon gagal.
 
-Suite saat ini mencakup 30 unit test dan 11 skenario E2E pada masing-masing Edge 1366x768 dan Chrome 1920x1080 (22 eksekusi): pencarian/filter/empty state, Visit vs Follow, jarak aman, raycast, tur, Free Flight, startup/fallback tekstur, bulan, planet katai, orbit/waktu, cincin dan kedua sabuk. Pengujian resource membandingkan jumlah geometry/texture scene setelah tur berulang dan memastikan alokasi GPU tidak melebihi resource scene; ini bukan pengganti profiling heap jangka panjang atau benchmark FPS pada GPU fisik.
+Suite saat ini mencakup 34 unit test dan 14 skenario E2E pada masing-masing Edge 1366x768 dan Chrome 1920x1080 (28 eksekusi): pencarian/filter/empty state, Visit vs Follow, jarak aman, raycast, tur, Free Flight, startup/fallback tekstur, bulan, planet katai, orbit/waktu, cincin dan kedua sabuk. Pengujian resource membandingkan jumlah geometry/texture scene setelah tur berulang dan memastikan alokasi GPU tidak melebihi resource scene; ini bukan pengganti profiling heap jangka panjang atau benchmark FPS pada GPU fisik.
 
 ### File Phase 2
 
@@ -153,7 +154,7 @@ Ditambahkan: `src/core/cameraMath.js`, `src/data/science.js`, `src/data/search.j
 ### Fase berikutnya
 
 - Peta permukaan berlisensi untuk 21 bulan lainnya dan peta awan Venus; verifikasi parameter ilmiah bulan yang masih kosong.
-- Ephemeris dan mode perbandingan ukuran/jarak fisik, serta pembaruan jumlah bulan dengan versi sumber.
+- Ephemeris, perluasan perbandingan jarak fisik, serta pembaruan jumlah bulan dengan versi sumber.
 - Profiling heap/FPS jangka panjang pada beberapa GPU desktop; kualitas adaptif bila diperlukan.
 - Charon dan Galaxy Scene sesuai roadmap awal; Halley sudah tersedia sebagai komet representatif.
 

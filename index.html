@@ -42,6 +42,7 @@
         </div>
 
         <nav class="top-actions" aria-label="Kontrol aplikasi">
+          <button id="favorites-button" class="icon-button" type="button" aria-label="Buka favorit" title="Favorit">☆</button>
           <button id="tour-button" class="button button-primary" type="button">
             <span aria-hidden="true">▶</span> Guided Tour
           </button>
@@ -84,6 +85,11 @@
           </div>
         </div>
         <p id="object-description" class="object-description"></p>
+        <div class="panel-actions">
+          <button id="bookmark-button" class="button button-ghost" type="button" aria-pressed="false">☆ Bookmark</button>
+          <button id="compare-button" class="button button-ghost" type="button">Bandingkan</button>
+        </div>
+        <p id="bookmark-status" class="scale-note" role="status"></p>
         <dl id="object-stats" class="stat-grid"></dl>
         <div id="object-fact" class="fact-box"></div>
         <p class="scale-note">Ukuran diperbesar dan jarak dikompresi, tidak proporsional; kecepatan visual disederhanakan. Diameter planet utama: ekuator; suhu raksasa gas: lapisan atmosfer. Data yang belum diverifikasi ditandai.</p>
@@ -93,6 +99,28 @@
           <button id="follow-button" class="button button-ghost" type="button">Ikuti orbit</button>
         </div>
       </aside>
+
+      <dialog id="favorites-dialog" class="exploration-dialog" aria-labelledby="favorites-title">
+        <h2 id="favorites-title">Objek favorit</h2>
+        <button id="close-favorites" class="button button-ghost" type="button" autofocus>Tutup favorit</button>
+        <p id="favorites-status" role="status"></p>
+        <p id="favorites-empty">Belum ada favorit. Buka panel objek lalu tekan Bookmark.</p>
+        <ul id="favorites-list"></ul>
+        <button id="favorites-compare" class="button button-primary" type="button">Bandingkan objek</button>
+      </dialog>
+      <dialog id="comparison-dialog" class="exploration-dialog" aria-labelledby="comparison-title">
+        <h2 id="comparison-title">Perbandingan objek</h2>
+        <button id="close-comparison" class="button button-ghost" type="button" autofocus>Tutup perbandingan</button>
+        <div class="comparison-selects">
+          <label>Objek pertama<select id="compare-first"></select></label>
+          <label>Objek kedua<select id="compare-second"></select></label>
+        </div>
+        <p id="comparison-empty" role="status">Pilih dua objek berbeda untuk membandingkan.</p>
+        <div id="comparison-visual" aria-label="Perbandingan diameter"></div>
+        <p class="scale-note">Diameter lingkaran memakai rasio data ilmiah, bukan ukuran scene. Objek sangat kecil dapat nyaris tak terlihat. Bentuk memanjang disederhanakan; definisi diameter mengikuti sumber. Jarak dan periode bukan posisi tanggal saat ini.</p>
+        <table id="comparison-table" aria-label="Data perbandingan ilmiah"></table>
+        <div id="comparison-sources" class="sources"></div>
+      </dialog>
 
       <div id="tour-panel" class="tour-panel glass-panel" hidden>
         <div>
