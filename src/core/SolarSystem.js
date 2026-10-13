@@ -5,6 +5,8 @@ import { orbitalElements } from '../data/orbitalElements.js';
 import { OrbitMotion } from './OrbitMotion.js';
 import { dwarfPlanets } from '../data/dwarfPlanets.js';
 import { createPlanetRings } from './PlanetRings.js';
+import { comets } from '../data/comets.js';
+import { CometVisual } from './CometVisual.js';
 import { smallBodyRegions } from '../data/smallBodyRegions.js';
 import { SmallBodyRegion } from './SmallBodyRegion.js';
 
@@ -134,6 +136,7 @@ export class SolarSystem {
     this.#createStarfield();
     this.#createSun();
     this.#createPlanets();
+    this.#createComets();
     this.regions = new Map(smallBodyRegions.map(config => {
       const region = new SmallBodyRegion(config);
       this.root.add(region);
@@ -264,6 +267,22 @@ export class SolarSystem {
     }
   }
 
+  #createComets() {
+    for (const data of comets) {
+      const parentObject = this.objects.get('sun');
+      const motion = new OrbitMotion(parentObject.group, orbitalElements[data.id]);
+      this.orbitMotions.push(motion); this.orbits.push(motion.line);
+      const visual = new CometVisual(data.visualRadius);
+      motion.group.add(visual);
+      visual.nucleus.userData.bodyId = data.id;
+      this.objects.set(data.id, { data, group: motion.group, mesh: visual.nucleus,
+        radius: data.visualRadius, parentObject, motion, cometVisual: visual });
+      this.pickables.push(visual.nucleus);
+      this.effects.push(visual.coma);
+      visual.update(motion.group.position);
+    }
+  }
+
   #createMoonsForPlanet(parentObject) {
     const planetMoons = moons.filter((moon) => moon.parent === parentObject.data.id);
     planetMoons.forEach((moon) => {
@@ -292,6 +311,7 @@ export class SolarSystem {
     this.elapsedDays += deltaDays;
     for (const motion of this.orbitMotions) motion.update(this.elapsedDays);
     for (const object of this.objects.values()) {
+      if (object.cometVisual) object.cometVisual.update(object.group.position);
       if (object.data.type === 'planet' || object.data.type === 'dwarf-planet') {
         const rotationPeriod = Math.abs(object.data.rotationDays) || 1;
         const direction = object.data.rotationDays < 0 ? -1 : 1;

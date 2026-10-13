@@ -1,7 +1,7 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **orbit elips, 17 bulan utama, lima planet katai, cincin dan kedua small-body regions selesai; 27 unit test dan 18 E2E lulus (13 Oktober 2026)**. Rincian dan kelanjutan baseline performa ada di bagian 8-13.
+Status: **orbit elips, bulan utama, planet katai, cincin, sabuk asteroid/Kuiper dan Halley terintegrasi (13 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-15.
 
 Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
 
@@ -123,7 +123,8 @@ Tidak ada alasan saat ini untuk mengganti Vite/Three.js, membuat proyek baru, me
 - [ ] P3-07b: epoch kalender, orientasi node/periapsis dan ephemeris presisi (di luar tugas ini).
 - [x] P3-08a: lima planet katai dengan kategori, orbit, label, pencarian, seleksi dan panel.
 - [x] P3-08b: sabuk asteroid dan Sabuk Kuiper seeded, quality budget dan toggle mandiri.
-- [ ] P3-08c: Charon/pendamping lain dan komet (tugas terpisah).
+- [x] P3-08c: komet Halley, orbit, nucleus/coma/ekor, pencarian dan panel (bagian 14).
+- [ ] P3-08d: Charon/pendamping lain (tugas terpisah).
 - [ ] P3-09: perluas narasi/rute tur menggunakan data dan kontrol existing.
 - [ ] P3-10: rancang Galaxy Scene dan lifecycle resource sebagai tugas tersendiri bila disetujui.
 - [ ] Selaraskan README, jumlah skenario test, daftar aset, tanggal sumber dan batas ilmiah setelah tiap tugas.
@@ -397,4 +398,49 @@ Dipilih sebagai kelanjutan aman berdasarkan instruksi melanjutkan progres beriku
 
 Interpretasi: resource scene tidak tumbuh selama lima pengulangan. GPU sempat mengunggah resource tambahan secara lazy sebelum stabil. Heap meningkat sekitar 96–100 kB (1,3–1,4%) dan tidak diklaim konstan; perlu pengukuran lebih panjang/retained-object inspection sebelum menyimpulkan leak atau bebas leak. Interval sekitar 6,9 ms menunjukkan pengukuran terbatas cadence requestAnimationFrame pada mesin ini, bukan bukti perbedaan biaya GPU antarkualitas. Sampel frame menggunakan satu view Matahari, bukan stress test semua sudut scene.
 
-P3-04a selesai. Langkah aman berikutnya adalah P3-04b (profiling interaktif panjang lintas GPU), atau memilih fitur produk berikutnya dari backlog; kalender, tekstur tambahan, perbandingan, Charon/komet dan Galaxy Scene tetap belum dikerjakan. Tidak ada git commit dalam tugas lanjutan ini.
+P3-04a selesai. Langkah aman berikutnya adalah P3-04b (profiling interaktif panjang lintas GPU), atau memilih fitur produk berikutnya dari backlog; kalender, tekstur tambahan, perbandingan, Charon dan Galaxy Scene tetap belum dikerjakan. Komet kemudian ditambahkan pada bagian 14. Tidak ada git commit dalam tugas lanjutan ini.
+
+## 14. Sistem komet Halley - 13 Oktober 2026
+
+### Baseline dan cakupan
+
+Workspace awal bersih, berisi implementasi hingga cincin (bagian 11); modul sabuk Kuiper/benchmark yang disebut percakapan sebelumnya tidak ada pada snapshot ini. Tidak mengembalikan, menghapus atau mereset perubahan apa pun. Tugas hanya menambahkan satu komet; guided tour, orbit planet/bulan dan layout besar tetap menggunakan implementasi existing. Scene menjadi 37 objek dan 36 orbit.
+
+- `src/data/comets.js`: identitas `halley`, tipe `comet`, parameter visual terpisah dari data ilmiah dan formatter panel. Nilai massa/gravitasi/suhu yang belum diverifikasi tetap null. Pencarian mendukung Halley, Komet Halley, 1P/Halley dan Halley's Comet; hasil dikelompokkan sebagai Komet pada kategori Semua.
+- `src/data/orbitalElements.js`: komet mengorbit parent Matahari menggunakan OrbitMotion/solver Kepler existing dan garis orbit yang sama dengan geraknya. Sumbu semi-mayor menggunakan kompresi jarak existing, inclination 162,2 derajat dan periode positif menghasilkan gerak retrograde. Pause, resume dan pengali waktu tetap melalui delta hari simulasi.
+- Eksentrisitas ilmiah 0,967 disimpan terpisah; visual 0,92 menjaga perihelion di luar radius Matahari yang diperbesar. Tetap sangat elips, tetapi tidak diklaim sebagai ephemeris atau skala fisik proporsional. Fase awal ilustratif, tanpa epoch/node/periapsis presisi. Panel menjelaskan simplifikasi ini.
+- `src/core/CometVisual.js`: tiga mesh/material lokal untuk nucleus, coma dan ekor ion lurus. Ekor satu cylinder terbuka dengan alpha vertex memudar; tidak ada particle simulation, gambar eksternal atau alokasi vector/material/geometry pada update. Panjang/opacity meredup terhadap jarak visual secara ilustratif, bukan model sublimasi fisik. Coma dimatikan pada Low; nucleus dan ekor ringan tetap tampak.
+- Arah ekor dinormalisasi dari posisi komet dikurangi posisi Matahari dalam frame yang sama. Transformasi root diwarisi keduanya; diuji kembali di koordinat dunia. Kasus posisi berimpit menggunakan arah fallback finite. Coma/ekor tidak menangkap raycast; nucleus dan hit area mengikuti picker existing.
+- Label, indikator seleksi, panel, Visit dan Follow memakai jalur existing. TextureLoader tidak meminta file Halley yang tidak ada; material procedural selalu tersedia. Traversal dispose existing membebaskan tiga geometry dan tiga material.
+
+### Sumber dan batas ilmiah
+
+Diperiksa 13 Oktober 2026, juga ditautkan pada panel:
+
+- [NASA Comet Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/cometfact.html), tabel historis diperbarui 2016: a=17,94 AU, e=0,967, i=162,2°, periode 76,1 tahun. Konversi renderer memakai 365,25 hari/tahun. Bukan elemen osculating terbaru.
+- [NASA 1P/Halley](https://science.nasa.gov/solar-system/comets/1p-halley/): inti sekitar 15 × 8 km, diameter ringkasan 11 km, rotasi ringkasan 2,2 hari, orbit retrograde dan komposisi dasar. Bentuk nucleus mesh tetap ilustrasi; tidak mengklaim rekonstruksi bentuk atau peta permukaan.
+
+### File dan pengujian
+
+Baru: `src/data/comets.js`, `src/core/CometVisual.js`, `test/comets.test.js`, `e2e/comets.spec.js`.
+Integrasi: `src/core/SolarSystem.js`, `src/data/orbitalElements.js`, `src/data/search.js`, `src/data/science.js`, `src/ui/UIController.js`, `src/main.js`, `test/orbits.test.js`, README dan dokumen ini. Kamera hanya menerima override jarak `visitFraming` milik komet, supaya nucleus dan ekor terlihat bersama; tidak ada perubahan arsitektur kamera.
+
+Unit test memeriksa ID unik lintas katalog, pencarian/filter, data wajib/sumber, pemisahan ukuran ilmiah/visual, parent, orbit finite dan perihelion aman, arah ekor termasuk Matahari yang ditranslasikan dan posisi berimpit, serta reuse geometry/material. E2E memeriksa pencarian/panel/Visit/klik/Follow, arah ekor world-space, pause, Low dan enam disposal event.
+
+- `npm.cmd test`: **27/27 lulus** pada kode akhir.
+- `npm.cmd run build`: **berhasil**, 24 modul; aplikasi 75,70 kB dan Three.js tetap terpisah 499,85 kB sebelum gzip.
+- Browser mencatat 12 skenario komet, orbit/waktu dan observer (tur/flight/startup/fallback) lulus pada Edge 1366×768 dan Chrome 1920×1080. Runner pertama tertahan saat cleanup setelah seluruh skenario selesai; dihentikan setelah hasil skenario tercatat.
+- Setelah penyesuaian framing dan opacity ekor, `npm.cmd run test:e2e -- e2e/comets.spec.js`: **4/4 lulus**, exit code 0, 24,5 detik. Tidak ada pageerror/console error pada uji interaksi komet. Screenshot Edge diperiksa: inti, coma, ekor dan panel terlihat; tidak menambahkan shader/texture eksternal.
+- `git diff --check`: tidak menemukan whitespace error. Tidak ada dependency baru, reset atau git commit.
+
+Manual: jalankan `npm run dev`, pilih kategori Semua, cari `Halley` atau `1P/Halley`, lalu Enter. Putar kamera untuk melihat nucleus/coma dan ekor lurus menjauhi Matahari. Tutup panel dan klik inti untuk membuka kembali; coba Visit dan Follow. Ubah waktu ke 200 hari/detik, pause/resume dan toggle Orbit. Pada Low, coma hilang tetapi nucleus dan ekor tetap tersedia. Ekor adalah ilustrasi ion; ekor debu melengkung dan aktivitas fisik presisi belum dimodelkan. Tidak ada git commit.
+
+## 15. Integrasi konflik PR #6 - 13 Oktober 2026
+
+- PR memakai head `feat/phase-3-komet` (9127f3c) dan base `master` (684d1d2). Master sudah memuat PR #5 untuk kedua sabuk dan perbaikan kamera. Konflik terjadi karena kedua cabang menambah import/inisialisasi SolarSystem dan memperluas bagian dokumentasi yang sama.
+- Resolusi `SolarSystem.js` mempertahankan CometVisual dan SmallBodyRegion sekaligus. Constructor membuat komet sebelum registry kedua sabuk; helper asteroid lama tidak dihidupkan kembali. Update, quality dan dispose dari master tetap tersedia bersama update ekor komet.
+- README menyertakan seluruh fitur. Catatan sabuk/benchmark tetap di bagian 12-13; komet dipindah ke bagian 14. Catatan baseline masing-masing tugas merupakan riwayat sebelum integrasi, bukan klaim bahwa fitur sabuk masih hilang.
+- Merge otomatis `main.js` diperiksa: `visitFraming` komet dan `clearApproach` master sama-sama dipertahankan. UI memiliki kelompok pencarian Komet sekaligus kedua toggle sabuk.
+- `npm.cmd test`: **30/30 lulus**. `npm.cmd run build`: **berhasil**, 26 modul, bundle aplikasi 77,65 kB dan Three.js 499,85 kB sebelum gzip.
+- Seluruh **22 skenario E2E** mencatat hasil lulus pada Edge 1366×768 dan Chrome 1920×1080, termasuk komet, sabuk, bulan, planet katai, cincin, kamera/flight/tur dan orbit. Runner tertahan pada cleanup server setelah skenario selesai (perilaku Windows yang juga tercatat pada tugas komet); dihentikan manual, sehingga bukan klaim exit code 0 untuk perintah E2E lengkap. Tidak ada kegagalan skenario pada eksekusi akhir.
+- Tidak membuat commit atau push. Hasil resolusi disiapkan di branch PR; GitHub baru dapat memperbarui status konflik setelah merge lokal diselesaikan dengan commit dan branch di-push.
