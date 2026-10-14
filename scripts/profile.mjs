@@ -78,5 +78,5 @@ try {
 } finally {
   await server.close();
   await mkdir('docs/benchmarks', { recursive: true });
-  await writeFile('docs/benchmarks/phase-3-performance.json', JSON.stringify(results, null, 2) + '\n');
+  await writeFile(process.argv[2] ?? 'docs/benchmarks/phase-3-performance.json', JSON.stringify(results, null, 2) + '\n');
 }

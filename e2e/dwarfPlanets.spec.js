@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 import { dwarfPlanets } from '../src/data/dwarfPlanets.js';
 
 test('dwarf planets have category, labels, panels, picking and Follow', async ({ page }) => {

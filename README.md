@@ -1,6 +1,6 @@
 # Milky Way Observer
 
-Prototype simulasi 3D Tata Surya yang menggabungkan eksplorasi sinematik dan informasi ilmiah. Dibangun dengan Vite, Three.js, dan JavaScript modular untuk deployment statis di Vercel.
+Simulasi 3D Tata Surya yang menggabungkan eksplorasi sinematik dan informasi ilmiah. Dibangun dengan Vite, Three.js, dan JavaScript modular untuk deployment statis di Vercel. Cakupan Phase 3: 37 objek mandiri, 36 orbit dan dua sabuk dekoratif; audit final 14 Oktober 2026 dicatat di [progres proyek](docs/phase-3-progress.md#17-finalisasi-phase-3---14-oktober-2026).
 
 ## Fitur saat ini
 
@@ -35,6 +35,12 @@ npm run preview
 
 - Klik objek: membuka detail.
 - Pencarian: memilih dan mengunjungi objek.
+- **Kunjungi objek / F**: transisi kamera lalu melepas target; **Ikuti orbit**: kamera mengikuti posisi objek.
+- **Bookmark** di panel: tambah/hapus favorit. **☆** pada header: buka daftar favorit dan kunjungi objek tersimpan.
+- **Bandingkan**: pilih maksimal dua objek untuk tabel diameter, massa, gravitasi, jarak dari Matahari dan periode orbit; lingkaran memakai rasio diameter ilmiah. Scene tidak diganti atau diatur ulang.
+- **Jeda / slider waktu**: pause/resume atau pilih 0,1 / 1 / 10 / 50 / 200 hari simulasi per detik.
+- **Orbit / Label / Asteroid / Kuiper**: tampilkan/sembunyikan masing-masing; **Kualitas**: High → Medium → Low.
+- **Guided Tour**: mulai, jeda/lanjut, sebelumnya, berikutnya, lewati, keluar; input kamera manual mengambil alih.
 - `W A S D`: bergerak dalam mode Free Flight.
 - Mouse: melihat sekeliling.
 - `Space` / `Ctrl`: naik / turun.
@@ -42,7 +48,11 @@ npm run preview
 - `F`: fokus ke objek terpilih.
 - `G`: memulai guided tour.
 - `H`: menyembunyikan HUD.
-- `Esc`: melepas pointer.
+- `Esc`: melepas pointer atau menutup dialog. Tombol **Keluar Free Flight** kembali ke observer.
+- `Tab` / `Shift+Tab`, `Enter` / `Space`: navigasi dan aktivasi tombol; panah memilih opsi dropdown. Kontrol HUD tersembunyi tidak menerima fokus. Shortcut F/G/H tidak aktif saat dialog terbuka.
+- Scroll: zoom pada observer, ubah kecepatan pada Free Flight. Tombol `?` membuka bantuan; tombol layar penuh mengaktifkan fullscreen.
+
+Favorit hanya menyimpan ID di localStorage pada browser/origin yang sama, tanpa akun. Data rusak diabaikan; bila storage ditolak, favorit berlaku selama sesi dengan pesan. Jarak bulan pada katalog relatif planet induk, sehingga perbandingan tidak menyebutnya sebagai jarak dari Matahari. Angka yang belum diverifikasi tetap ditandai.
 
 ## Deployment Vercel
 
@@ -76,16 +86,15 @@ Ukuran dan jarak visual sengaja disederhanakan agar seluruh Tata Surya tetap dap
 - NASA Solar System Exploration: https://science.nasa.gov/solar-system/
 - NASA Planetary Fact Sheet: https://nssdc.gsfc.nasa.gov/planetary/factsheet/
 
-Data ini merupakan fondasi konten dan perlu ditinjau kembali ketika detail ilmiah tiap bulan ditambahkan.
+Data sumber dan tanggal verifikasi tersimpan dalam modul data serta panel. Dari 22 bulan, 17 mempunyai pengayaan sains; nilai yang belum diverifikasi tidak diisi dengan nilai visual. Finalisasi ini tidak memperbarui angka astronomi atau mengklaim posisi ephemeris saat ini.
 
-## Roadmap
+## Ditunda ke Phase 4
 
-- Detail ilmiah lengkap untuk 22 bulan utama.
-- Tekstur planet berkualitas tinggi dengan lisensi yang sesuai.
-- Mode perbandingan dua objek tersedia; perluasan visualisasi skala ilmiah dapat dilakukan terpisah.
-- Guided tour dengan narasi lebih kaya.
-- Planet katai, Sabuk Kuiper, dan komet Halley sudah tersedia; perluasan objek berikutnya sesuai checklist Phase 3.
-- Galaxy Scene untuk peta 3D Bima Sakti.
+- Melengkapi parameter ilmiah yang masih kosong, lima bulan tambahan, serta aset bulan/awan Venus berlisensi.
+- Kalender/epoch, elemen orbit lengkap, ephemeris, kebijakan tab background/catch-up dan tidal locking.
+- Charon/pendamping lain, rute tur tambahan dan Galaxy Scene beserta lifecycle lintas-scene.
+- Perluasan perbandingan jarak fisik; sinkronisasi favorit antar-tab/perangkat jika diperlukan.
+- Profiling interaktif panjang lintas GPU, retained-heap analysis dan kualitas adaptif. Benchmark headless satu mesin tidak menggantikannya.
 
 ## Phase 2 (11 Oktober 2026)
 
@@ -143,7 +152,7 @@ E2E memerlukan Chrome dan Edge desktop terinstal; config meluncurkan kedua brows
 
 Baseline: 4 unit test lulus dan build berhasil. Bug yang ditemukan: hidden panel ditimpa CSS, filter hanya memindahkan kamera, Follow tidak membawa kamera, tween menuju posisi lama objek, belum ada asteroid dalam tur, Shift menimpa kecepatan, orbit tidak tepat di garis, serta request font/favicon gagal.
 
-Suite saat ini mencakup 34 unit test dan 14 skenario E2E pada masing-masing Edge 1366x768 dan Chrome 1920x1080 (28 eksekusi): pencarian/filter/empty state, Visit vs Follow, jarak aman, raycast, tur, Free Flight, startup/fallback tekstur, bulan, planet katai, orbit/waktu, cincin dan kedua sabuk. Pengujian resource membandingkan jumlah geometry/texture scene setelah tur berulang dan memastikan alokasi GPU tidak melebihi resource scene; ini bukan pengganti profiling heap jangka panjang atau benchmark FPS pada GPU fisik.
+Suite mencakup 34 unit test dan 16 skenario E2E pada masing-masing Edge 1366×768 dan Chrome 1920×1080 (32 eksekusi): seluruh jenis objek/orbit, cincin/sabuk/komet, bookmark/storage/perbandingan, kamera/tur/flight, resize, keyboard, HUD, startup dan kegagalan tekstur. Fixture bersama memeriksa pageerror serta console error/warning; tidak menonaktifkan console. Untuk Windows, jalankan `npm run dev` di terminal pertama lalu `npm run test:e2e` di terminal kedua agar runner memakai server existing dan tidak tertahan cleanup proses npm. Pengujian resource bukan pengganti profiling heap jangka panjang atau benchmark FPS lintas GPU.
 
 ### File Phase 2
 
@@ -159,6 +168,8 @@ Ditambahkan: `src/core/cameraMath.js`, `src/data/science.js`, `src/data/search.j
 - Charon dan Galaxy Scene sesuai roadmap awal; Halley sudah tersedia sebagai komet representatif.
 
 ### Phase 3 dan pengukuran performa
+
+Finalisasi 14 Oktober 2026: **34/34 unit test**, **32/32 E2E** pada Edge/Chrome dan production build berhasil. Seluruh skenario E2E bebas console warning/error dan pageerror, termasuk fallback tekstur, resize dan keyboard. Laporan [benchmark final](docs/benchmarks/phase-3-final.json) mencatat resource stabil selama pengulangan; heap masih meningkat sedikit, sehingga bukan klaim bebas leak jangka panjang. Untuk menulis laporan terpisah gunakan `npm run profile -- docs/benchmarks/phase-3-final.json`.
 
 Progres rinci dan batas ilmiah tersedia di [docs/phase-3-progress.md](docs/phase-3-progress.md).
 Orbit elips menggunakan elemen sederhana, bukan n-body atau ephemeris tanggal nyata. Sebanyak 17 bulan memiliki data terverifikasi di `moonScience.js`; nilai yang belum diverifikasi tetap kosong. Lima planet katai memakai data ilmiah terpisah. Cincin Saturnus/Uranus procedural dan kedua sabuk tidak membutuhkan aset eksternal baru.

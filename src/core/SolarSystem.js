@@ -11,6 +11,7 @@ import { smallBodyRegions } from '../data/smallBodyRegions.js';
 import { SmallBodyRegion } from './SmallBodyRegion.js';
 
 const DEG = Math.PI / 180;
+const textureIds = new Set([...bodies.map(body => body.id), 'moon']);
 
 function seededRandom(seed) {
   let value = seed % 2147483647;
@@ -308,6 +309,7 @@ export class SolarSystem {
     if (!Number.isFinite(deltaDays) || !Number.isFinite(this.elapsedDays + deltaDays)) {
       throw new RangeError('Simulation time must remain finite');
     }
+    if (deltaDays === 0) return;
     this.elapsedDays += deltaDays;
     for (const motion of this.orbitMotions) motion.update(this.elapsedDays);
     for (const object of this.objects.values()) {
@@ -331,7 +333,7 @@ export class SolarSystem {
 
   loadTexture(id) {
     if (this.loadedTextures.has(id)) return this.loadedTextures.get(id);
-    if (!(bodies.some(body => body.id === id) || id === 'moon') || this.disposed) return;
+    if (!textureIds.has(id) || this.disposed) return;
     const request = new Promise(resolve => {
       this.textureLoader.load(import.meta.env.BASE_URL + 'textures/' + id + '.jpg', texture => {
         if (this.disposed) { texture.dispose(); resolve(false); return; }
@@ -350,9 +352,11 @@ export class SolarSystem {
   }
 
   updateDetail(camera) {
-    for (const object of this.objects.values()) {
+    for (const id of textureIds) {
+      if (this.loadedTextures.has(id)) continue;
+      const object = this.objects.get(id);
       object.group.getWorldPosition(this.scratch);
-      if (camera.position.distanceTo(this.scratch) < 70) this.loadTexture(object.data.id);
+      if (camera.position.distanceToSquared(this.scratch) < 4900) this.loadTexture(id);
     }
     if (this.selectedId) {
       const object = this.getObject(this.selectedId);
