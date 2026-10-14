@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 import { moons } from '../src/data/celestialBodies.js';
 import { moonScience } from '../src/data/moonScience.js';
 
@@ -41,7 +41,7 @@ test('all moon materials remain usable without external textures; Moon decode fa
   await page.goto('/');
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   const result = await page.evaluate(async () => {
-    const THREE = await import('/node_modules/three/build/three.module.js');
+    const THREE = await import('/e2e/browserThree.js');
     const { SolarSystem } = await import('/src/core/SolarSystem.js');
     const { moons } = await import('/src/data/celestialBodies.js');
     const system = new SolarSystem(new THREE.Scene());

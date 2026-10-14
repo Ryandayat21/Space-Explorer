@@ -1,9 +1,9 @@
 ﻿# Phase 3 - Audit dan rencana pengembangan
 
 Tanggal audit: 11 Oktober 2026 (Asia/Jakarta). Baseline Git: `be4251a`.
-Status: **orbit elips, bulan utama, planet katai, cincin, sabuk asteroid/Kuiper, Halley serta bookmark/perbandingan tersedia (13 Oktober 2026)**. Rincian implementasi dan verifikasi ada di bagian 8-16.
+Status: **cakupan Phase 3 selesai difinalisasi pada 14 Oktober 2026**: orbit elips, bulan utama, planet katai, cincin, sabuk asteroid/Kuiper, Halley serta bookmark/perbandingan. Hasil audit, verifikasi akhir dan batas cakupan ada di bagian 17; backlog Phase 4 tetap ditandai belum selesai.
 
-Bagian 1-7 berikut menyimpan baseline audit sebelum implementasi. Pengguna kemudian memprioritaskan sistem orbit saja; usulan lain belum dikerjakan.
+Bagian 1-7 menyimpan audit awal; checklist bagian 6 diperbarui saat finalisasi. Temuan/angka baseline pada bagian historis bukan status aplikasi terkini. Ringkasan final dan penundaan Phase 4 ada di bagian 17.
 
 Dokumen audit ini merupakan hasil pemeriksaan workspace, bukan spesifikasi fitur baru yang sudah disetujui. Karena permintaan belum menetapkan daftar fitur Phase 3 secara rinci, backlog di bawah adalah usulan berdasarkan bagian Roadmap dan Fase berikutnya dalam README. Prioritas dan kriteria penerimaan perlu ditetapkan sebelum implementasi masing-masing fitur.
 
@@ -107,38 +107,38 @@ Tidak ada alasan saat ini untuk mengganti Vite/Three.js, membuat proyek baru, me
 - [x] Catat gap, risiko, file terdampak dan usulan prioritas.
 - [x] Simpan audit ini tanpa perubahan aplikasi, reset atau commit.
 
-### Checklist implementasi - diperbarui setelah tugas orbit
+### Checklist implementasi - finalisasi 14 Oktober 2026
 
 - [x] Tetapkan cakupan tugas pertama: orbit elips, inclination, relasi parent, waktu, garis orbit dan pengujiannya; Galaxy Scene tidak termasuk.
 - [x] P3-01: data ilmiah Europa bersumber, definisi/unit dan test tersedia melalui panel existing (bagian 9).
 - [x] P3-02a: lengkapi 17 bulan utama yang diminta pengguna, tanpa duplikat atau angka rekaan.
-- [ ] P3-02b: verifikasi suhu/rotasi yang masih kosong dan detail lima bulan tambahan di luar daftar tugas.
-- [ ] P3-03: tambahkan peta bulan/awan Venus yang berlisensi; integrasikan dengan cache, fallback dan atribusi existing.
+- [ ] Phase 4 / P3-02b: verifikasi suhu/rotasi yang masih kosong dan detail lima bulan tambahan di luar daftar tugas.
+- [ ] Phase 4 / P3-03: tambahkan peta bulan/awan Venus yang berlisensi; integrasikan dengan cache, fallback dan atribusi existing.
 - [x] P3-04a: baseline frame-time, heap setelah GC dan resource pada skenario berulang, dua browser desktop (bagian 13).
-- [ ] P3-04b: profiling interaktif jangka panjang pada beberapa GPU, diagnosis retained heap bila pertumbuhan berlanjut, lalu evaluasi kualitas adaptif.
+- [ ] Phase 4 / P3-04b: profiling interaktif jangka panjang pada beberapa GPU, diagnosis retained heap bila pertumbuhan berlanjut, lalu evaluasi kualitas adaptif.
 - [x] P3-05a: semua gerakan SolarSystem memakai delta hari simulasi; pause/resume dan pengali waktu diuji deterministik.
-- [ ] P3-05b: kalender, kebijakan tab background/catch-up dan jam waktu dinding (di luar tugas ini).
+- [ ] Phase 4 / P3-05b: kalender, kebijakan tab background/catch-up dan jam waktu dinding.
 - [x] P3-06a: perbandingan maksimal dua objek, tabel ilmiah dan visual rasio diameter tanpa mengubah scene (bagian 16).
 - [x] P3-06b: bookmark dan daftar favorit persisten dengan penanganan storage rusak/tidak tersedia (bagian 16).
 - [x] P3-07a: orbit elips sederhana dengan inclination, fase awal, periode dan garis tersinkronisasi.
-- [ ] P3-07b: epoch kalender, orientasi node/periapsis dan ephemeris presisi (di luar tugas ini).
+- [ ] Phase 4 / P3-07b: epoch kalender, orientasi node/periapsis, ephemeris presisi dan tidal locking.
 - [x] P3-08a: lima planet katai dengan kategori, orbit, label, pencarian, seleksi dan panel.
 - [x] P3-08b: sabuk asteroid dan Sabuk Kuiper seeded, quality budget dan toggle mandiri.
 - [x] P3-08c: komet Halley, orbit, nucleus/coma/ekor, pencarian dan panel (bagian 14).
-- [ ] P3-08d: Charon/pendamping lain (tugas terpisah).
-- [ ] P3-09: perluas narasi/rute tur menggunakan data dan kontrol existing.
-- [ ] P3-10: rancang Galaxy Scene dan lifecycle resource sebagai tugas tersendiri bila disetujui.
-- [ ] Selaraskan README, jumlah skenario test, daftar aset, tanggal sumber dan batas ilmiah setelah tiap tugas.
+- [ ] Phase 4 / P3-08d: Charon/pendamping lain.
+- [ ] Phase 4 / P3-09: perluas narasi/rute tur menggunakan data dan kontrol existing.
+- [ ] Phase 4 / P3-10: Galaxy Scene dan lifecycle resource lintas-scene.
+- [x] Selaraskan README, jumlah skenario test, daftar aset, tanggal sumber tersimpan dan batas ilmiah. Tidak ada pembaruan angka ilmiah atau aset pada finalisasi.
 
 ### Kriteria penerimaan setiap perubahan implementasi
 
-- [ ] Semua fitur Phase 2 tetap tersedia, termasuk tekstur Matahari tanpa klik.
-- [ ] Nilai ilmiah baru memiliki sumber resmi, unit/definisi dan tanggal pemeriksaan; nilai tidak tersedia tetap eksplisit.
-- [ ] Aset disimpan lokal dengan lisensi/atribusi; kegagalan pemuatan tidak mengunci aplikasi.
-- [ ] Unit test terkait dan production build lulus; tidak menambah test yang hanya menyalin implementasi.
-- [ ] Perubahan interaksi diuji dengan E2E terkait pada Edge 1366x768 dan Chrome 1920x1080; catat error console dan keterbatasan.
-- [ ] Perubahan rendering/lifecycle diperiksa resource dan frame-time dengan baseline yang sebanding.
-- [ ] Tidak mereset perubahan pengguna; tidak membuat commit tanpa instruksi.
+- [x] Semua fitur Phase 2 tetap tersedia, termasuk tekstur Matahari tanpa klik; suite regresi final lulus.
+- [x] Data yang ditambahkan selama Phase 3 memiliki sumber/unit/tanggal dalam modul dan dokumentasi; nilai tidak tersedia tetap eksplisit. Tidak ada angka ilmiah baru pada finalisasi.
+- [x] Aset disimpan lokal dengan lisensi/atribusi; kegagalan pemuatan tidak mengunci aplikasi.
+- [x] Unit test terkait dan production build lulus; pengujian memeriksa perilaku/integrasi.
+- [x] Perubahan interaksi diuji dengan E2E terkait pada Edge 1366x768 dan Chrome 1920x1080; tidak ada error/warning browser pada suite akhir.
+- [x] Perubahan rendering/lifecycle diperiksa resource dan frame-time dengan metode baseline yang sama pada dua browser headless; batas pengukuran dicatat di bagian 17.
+- [x] Tidak mereset perubahan pengguna; tidak membuat commit.
 
 ## 7. Rekomendasi tugas pertama paling aman
 
@@ -468,3 +468,56 @@ Manual: jalankan `npm run dev`, pilih kategori Semua, cari `Halley` atau `1P/Hal
 - Eksekusi akhir `npm.cmd run test:e2e -- e2e/exploration.spec.js`: **6/6 lulus**, exit code 0, 39,7 detik, Edge 1366×768 dan Chrome 1920×1080. Pengujian mencakup persistensi/reload, tombol keyboard/focus return, storage rusak/ditolak, tabel/rasio diameter dan snapshot kamera/target/seleksi/waktu/resource scene yang identik sebelum/sesudah perbandingan pada simulasi paused. Tidak ada pageerror; skenario perbandingan juga tidak mencatat console error. Screenshot 1366×768 diperiksa; dialog scroll menampung tabel dan sumber tanpa mengubah layout utama.
 
 Manual: pilih Bumi dan tekan Bookmark; buka tombol bintang header untuk melihat favorit, lalu reload dan pastikan tersimpan. Hapus dengan keyboard. Tekan Bandingkan, pilih Jupiter, periksa lima parameter dan rasio lingkaran; coba Bulan untuk melihat keterangan jarak parent. Gunakan Tab/Enter/Space/Escape dan pastikan fokus kembali setelah dialog ditutup. Jeda simulasi sebelum membuka dialog untuk membandingkan posisi kamera sebelum/sesudah. Isi key localStorage dengan JSON rusak di DevTools lalu reload: aplikasi tetap terbuka, daftar kosong dan pesan muncul. Tidak ada git commit.
+
+## 17. Finalisasi Phase 3 - 14 Oktober 2026
+
+### Audit integrasi dan perbaikan
+
+Audit dilakukan pada workspace bersih tanpa mengubah teknologi/dependency atau menambah fitur besar. Cakupan: 37 objek mandiri (Matahari, 8 planet, 22 bulan, 5 planet katai, Halley), 36 orbit, cincin Saturnus/Uranus, dua sabuk, bookmark dan perbandingan. Catatan bagian 1-16 tetap merupakan riwayat pengembangan; hasil final di bagian ini menjadi acuan terbaru.
+
+| Area | Pemeriksaan |
+| --- | --- |
+| Orbit/bulan/planet katai | Parent, posisi finite, skala, pause/resume, pengali waktu, garis orbit, pencarian/panel/klik/Visit/Follow |
+| Cincin/sabuk/komet | Transformasi mengikuti parent, arah ekor anti-Matahari dalam world space, partikel/ring/ekor tidak menghalangi picker, quality/toggle dan disposal |
+| Bookmark/perbandingan | ID unik/valid, persistensi, JSON rusak/storage ditolak, keyboard/fokus, dua objek dan sumber ilmiah; membuka perbandingan tidak mengubah scene |
+| Tekstur | Startup Matahari, fallback Bulan dan kegagalan decode seluruh JPEG sekaligus, tanpa crash saat mengunjungi beberapa kategori dan memakai bookmark/perbandingan |
+| Desktop | Resize 1920×1080 ↔ 1366×768, pemilihan setelah resize, dialog tetap dalam viewport, HUD, label waktu, Escape, fullscreen dan Free Flight |
+
+Perbaikan yang ditemukan:
+
+- HUD sebelumnya hanya disembunyikan dengan opacity/pointer-events sehingga masih dapat difokuskan keyboard. Panel HUD kini inert saat tersembunyi, tombol pemulih HUD tetap aktif, dan panel informasi tetap inert jika ditutup. Pemilihan objek saat HUD tersembunyi tidak membuka kembali fokus panel.
+- Slider waktu melanjutkan simulasi tetapi sebelumnya meninggalkan aria-label tombol pada Lanjutkan. Kini label kembali menjadi Jeda simulasi.
+- Placeholder progres tur diselaraskan menjadi 1/10; bantuan menjelaskan keyboard, favorit dan perbandingan.
+- Warning Multiple instances of Three.js berasal dari test yang mengimpor raw node_modules di samping modul Vite aplikasi. `e2e/browserThree.js` memakai resolusi dependency Vite yang sama. `e2e/fixtures.js` memeriksa pageerror dan semua console error/warning pada seluruh suite, tanpa membungkam console atau mengecualikan warning tersebut.
+
+### Animation loop dan performa
+
+- Daftar ID tekstur dibuat sekali sebagai Set. Update detail hanya memeriksa kandidat yang belum diminta, bukan seluruh objek procedural/objek yang teksturnya sudah dimuat; perhitungan jarak memakai distanceToSquared. Tidak membuat callback Array.some berulang untuk objek tanpa tekstur. Kegagalan tetap dicache agar tidak ada retry per-frame.
+- Delta hari nol melewati solver orbit/spin/transformasi sabuk yang tidak berubah; render, kamera, lazy loading dan UI tetap berjalan saat pause.
+- Free Flight tidak lagi menulis class/hidden/title setiap frame. Teks speed hanya diubah saat angka satu desimalnya berubah. Vector scratch, buffer orbit/sabuk dan geometri komet tetap digunakan ulang.
+- Ini pengurangan kerja/alokasi yang tidak diperlukan, bukan klaim seluruh animation loop bebas alokasi (misalnya string posisi label tetap diperlukan). Tidak mengubah skala, data ilmiah, arsitektur kamera atau model orbit.
+- Skrip profil menerima nama file output opsional agar hasil final tidak menimpa laporan baseline historis.
+
+### Berkas
+
+Runtime: `src/core/SolarSystem.js`, `src/ui/UIController.js`, `index.html`. Pengujian: seluruh spec memakai fixture console bersama, `e2e/fixtures.js`, `e2e/browserThree.js`, `e2e/finalization.spec.js`. Pengukuran: `scripts/profile.mjs` dan laporan benchmark final. Dokumentasi: README dan dokumen ini. Tidak ada aset baru, commit, push atau reset perubahan pengguna.
+
+### Verifikasi akhir
+
+- `npm.cmd test`: **34/34 lulus**, exit code 0.
+- `npm.cmd run build`: **berhasil**, exit code 0; 28 modul, aplikasi 84,32 kB dan bundle Three.js terpisah 499,85 kB sebelum gzip.
+- `npm.cmd run test:e2e`: **32/32 lulus dalam 5,3 menit**, exit code 0, Edge 1366×768 dan Chrome 1920×1080. Seluruh skenario melewati pemeriksaan console warning/error dan pageerror tanpa temuan, termasuk kegagalan decode tekstur dan resize.
+- `npm.cmd run profile -- docs/benchmarks/phase-3-final.json`: **berhasil**, exit code 0. Hasil mentah: [phase-3-final.json](benchmarks/phase-3-final.json); laporan baseline historis tidak ditimpa.
+
+| Browser | Median interval frame Low/Medium/High | P95 tertinggi | Geometry/texture selama pengulangan | Heap setelah GC, awal → akhir |
+| --- | --- | --- | --- | --- |
+| Edge 1366×768 | 6,9 / 6,9 / 6,9 ms | 7,2 ms | 125 / 39, stabil | 7.437.688 → 7.543.660 byte |
+| Chrome 1920×1080 | 6,9 / 6,9 / 7,0 ms | 7,3 ms | 125 / 39, stabil | 7.523.816 → 7.641.636 byte |
+
+Benchmark memakai metode bagian 13: dua siklus warmup, lima pengulangan Visit/tur/toggle, enam sampel setelah GC, serta 180 interval frame per kualitas pada view Matahari paused. Tidak ada interval >33 ms atau error browser yang tercatat. Cadence tetap mendekati baseline 6,9 ms; jumlah geometry kini 125 karena scene final mencakup komet. Heap meningkat sekitar 106–118 kB (1,4–1,6%); ini bukan bukti bebas leak atau pengukuran biaya GPU langsung. Profiling panjang dan sudut pandang lain tetap pekerjaan Phase 4.
+
+### Phase 4 yang sengaja ditunda
+
+Checklist belum dicentang tetap belum selesai, bukan syarat tambahan untuk cakupan Phase 3: data ilmiah yang masih null/lima bulan tambahan, tekstur bulan/awan Venus, ephemeris/kalender/node/periapsis/catch-up/tidal locking, Charon dan pendamping lain, rute tur tambahan, Galaxy Scene/lifecycle lintas-scene, serta profiling interaktif panjang lintas GPU dan kualitas adaptif. Perbandingan jarak fisik yang lebih lengkap dan sinkronisasi favorit lintas-tab/perangkat juga belum dimodelkan.
+
+Batas yang tetap berlaku: fase orbit ilustratif; ukuran/jarak dikompresi sehingga objek dapat berdekatan/tertutup pada fase tertentu; Visit bukan path planner sepanjang lintasan; fallback tekstur tidak melakukan retry otomatis dalam sesi yang sama; benchmark headless singkat tidak membuktikan bebas memory leak jangka panjang. Sumber dan lisensi existing dipertahankan, tidak diverifikasi ulang secara daring pada finalisasi ini.

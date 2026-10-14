@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 const key = 'milky-way-observer.favorites.v1';
 async function ready(page) {

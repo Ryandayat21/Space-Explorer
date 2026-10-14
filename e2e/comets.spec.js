@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 test('Halley search, panel, Visit, picking and Follow', async ({ page }, testInfo) => {
   const errors = [];
@@ -34,7 +34,7 @@ test('comet world tail, pause, Low quality and disposal', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   const result = await page.evaluate(async () => {
-    const THREE = await import('/node_modules/three/build/three.module.js');
+    const THREE = await import('/e2e/browserThree.js');
     const { SolarSystem } = await import('/src/core/SolarSystem.js');
     const system = new SolarSystem(new THREE.Scene());
     const object = system.getObject('halley'), visual = object.cometVisual;

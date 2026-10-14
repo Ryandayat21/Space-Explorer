@@ -52,7 +52,7 @@ export class UIController extends EventTarget {
         if (result) this.emit('select', result.id);
       }
     });
-    document.getElementById('hud-button').addEventListener('click', () => document.body.classList.toggle('hud-hidden'));
+    document.getElementById('hud-button').addEventListener('click', () => this.toggleHud());
     document.getElementById('flight-exit').addEventListener('click', () => this.emit('flight-toggle'));
     document.getElementById('tour-skip').addEventListener('click', () => this.stepTour(1));
     this['object-select'].addEventListener('change', (event) => {
@@ -87,6 +87,7 @@ export class UIController extends EventTarget {
     this['time-speed'].addEventListener('input', (event) => {
       this.timeIndex = Number(event.target.value);
       this.paused = false;
+      this['time-toggle'].setAttribute('aria-label', 'Jeda simulasi');
       this['time-toggle'].textContent = 'Ⅱ';
       this.#updateTimeLabel();
       this.emit('time-change', timeSpeeds[this.timeIndex]);
@@ -125,7 +126,7 @@ export class UIController extends EventTarget {
     window.addEventListener('keydown', (event) => {
       if (document.querySelector('dialog[open]')) return;
       if (event.code === 'KeyG' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) this.startTour();
-      if (event.code === 'KeyH' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) document.body.classList.toggle('hud-hidden');
+      if (event.code === 'KeyH' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) this.toggleHud();
     });
   }
 
@@ -135,6 +136,14 @@ export class UIController extends EventTarget {
     this['quality-button'].dataset.quality = next;
     this['quality-button'].textContent = `Kualitas: ${next[0].toUpperCase()}${next.slice(1)}`;
     this.emit('quality-change', next);
+  }
+
+  toggleHud() {
+    const hidden = document.body.classList.toggle('hud-hidden');
+    for (const panel of document.querySelectorAll('.topbar, .left-rail, .welcome-card, .info-panel, .time-dock, .tour-panel')) panel.inert = hidden;
+    this['info-panel'].inert = hidden || !this['info-panel'].classList.contains('open');
+    document.getElementById('hud-button').setAttribute('aria-pressed', String(hidden));
+    document.getElementById('hud-button').focus();
   }
 
   #updateTimeLabel() {
@@ -183,7 +192,7 @@ export class UIController extends EventTarget {
       const link = document.createElement('a'); link.href = source.url; link.textContent = source.label; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
     }));
     this['object-select'].value = data.id;
-    this['info-panel'].inert = false;
+    this['info-panel'].inert = document.body.classList.contains('hud-hidden');
     this['info-panel'].scrollTop = 0;
     this['info-panel'].classList.add('open');
     this['info-panel'].setAttribute('aria-hidden', 'false');
@@ -196,12 +205,19 @@ export class UIController extends EventTarget {
   }
 
   setFlight(active, speed = 18) {
-    this['flight-hud'].hidden = !active;
-    document.getElementById('flight-exit').hidden = !active;
-    this['flight-button'].classList.toggle('active', active);
-    this['flight-button'].title = active ? 'Keluar dari mode terbang bebas' : 'Aktifkan mode terbang bebas';
-    this['flight-speed'].textContent = `${(speed / 18).toFixed(1)}×`;
-    if (active) this.hideWelcome();
+    if (active !== this.flightActive) {
+      this.flightActive = active;
+      this['flight-hud'].hidden = !active;
+      document.getElementById('flight-exit').hidden = !active;
+      this['flight-button'].classList.toggle('active', active);
+      this['flight-button'].title = active ? 'Keluar dari mode terbang bebas' : 'Aktifkan mode terbang bebas';
+      if (active) this.hideWelcome();
+    }
+    const displayedSpeed = Math.round(speed / 18 * 10);
+    if (displayedSpeed !== this.displayedFlightSpeed) {
+      this.displayedFlightSpeed = displayedSpeed;
+      this['flight-speed'].textContent = `${(displayedSpeed / 10).toFixed(1)}×`;
+    }
   }
 
   startTour() {

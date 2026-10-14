@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 test('region toggles, quality limits and standalone dwarf planets work together', async ({ page }, testInfo) => {
   const errors = [];

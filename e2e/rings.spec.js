@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 test('planet rings follow the scene, remain pick-through and release resources', async ({ page }, testInfo) => {
   const errors = [];
@@ -7,7 +7,7 @@ test('planet rings follow the scene, remain pick-through and release resources',
   await page.goto('/');
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   const checks = await page.evaluate(async () => {
-    const THREE = await import('/node_modules/three/build/three.module.js');
+    const THREE = await import('/e2e/browserThree.js');
     const { SolarSystem } = await import('/src/core/SolarSystem.js');
     const scene = new THREE.Scene();
     const system = new SolarSystem(scene);
