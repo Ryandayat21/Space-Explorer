@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **audit dan perencanaan selesai; implementasi Phase 4 belum dimulai**.
+Status: **audit selesai; tahap rendering pipeline dan pencahayaan telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7.
 
 ## 1. Baseline dan batas audit
 
@@ -80,6 +80,8 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 
 ### Implementasi bertahap
 
+- [x] P4-R1 (cakupan tugas pengguna): rendering/color space/exposure/pencahayaan dan resize ber-DPR cap; lihat bagian 7. P4-02/P4-05 tetap belum dicentang karena cakupannya lebih luas dari tugas ini.
+
 - [ ] P4-01: reproduksi dan perbaiki fokus welcome tersembunyi, status toggle/slider dan nama dialog. Tambahkan E2E keyboard targeted.
 - [ ] P4-02: perbaiki sinkronisasi resize/DPR/fullscreen, termasuk keluar fullscreen melalui Escape dan kegagalan API. Uji kedua viewport, cap kualitas, zoom/perpindahan monitor.
 - [ ] P4-03: integrasikan reduced motion pada transisi kamera melalui alur existing; jaga Visit/Follow, pembatalan manual dan tur.
@@ -110,3 +112,33 @@ Tidak perlu proyek/dependency baru atau refactor besar main/UIController untuk m
 ## 6. Backlog lama yang bukan otomatis cakupan polish
 
 README/Phase 3 menyimpan backlog lebih luas: ephemeris/epoch/kalender/node/periapsis, tidal locking, Charon/objek baru, rute tur tambahan, Galaxy Scene/lifecycle lintas-scene, sinkronisasi favorit, perbandingan jarak fisik dan adaptive quality. Semuanya **tetap belum dikerjakan**, tetapi tidak otomatis menjadi syarat Scientific & Cinematic Polish ini. Pisahkan tugas dan kriteria penerimaannya bila kelak diminta. Pelengkapan data ilmiah yang kosong juga harus bertahap dengan sumber terverifikasi, tanpa migrasi besar skema.
+
+## 7. Rendering pipeline dan pencahayaan — 14 Oktober 2026
+
+Implementasi terbatas pada `src/main.js`, `src/core/SolarSystem.js`, pengujian baru `e2e/rendering.spec.js` dan dokumen ini. Tidak mengubah orbit, katalog objek, guided tour, layout UI atau dependency. Tidak melakukan git commit.
+
+| Konfigurasi | Nilai dan alasan |
+| --- | --- |
+| Renderer | WebGLRenderer WebGL2, antialias true, powerPreference high-performance; satu render pass tanpa bloom/shadow map tambahan |
+| Color management | ColorManagement.enabled true, outputColorSpace SRGBColorSpace. JPEG/peta warna procedural tetap sRGB; CanvasTexture glow kini juga ditandai sRGB agar warna CSS gradient tidak dianggap linear. Alpha tetap sebagai transparansi |
+| Tone mapping | ACESFilmicToneMapping dipertahankan, exposure 1,00 (sebelumnya 1,05), menjaga rentang highlight tanpa mengangkat exposure semua planet |
+| DPR | min(devicePixelRatio, cap): Low 0,85; Medium 1,25; High 1,75. Satu fungsi resize mengatur ukuran buffer, aspect/projection dan DPR saat startup, quality-change, resize dan fullscreenchange; ukuran CSS tetap dikelola stylesheet |
+| Sumber utama | PointLight di pusat Matahari, warna 0xfff4e4, intensity 3,0 (sebelumnya 3,2), distance 0, decay 0. Cahaya berarah dari pusat menghasilkan terminator planet; tidak ada lampu yang mengikuti kamera |
+| Fill | HemisphereLight 0xffffff / 0x606878, intensity 0,035; fill netral sangat kecil untuk sisi malam. Menggantikan fill biru 0x18284e / 0x020204 intensity 0,22; angka intensity berbeda warna tidak berarti rasio luminansi yang sama |
+| Permukaan Matahari | MeshBasicMaterial dengan multiplier RGB linear 1,3, tetap tone-mapped. Sama pada fallback dan JPEG; mengangkat tampilan Matahari tanpa mengubah intensitas cahaya yang diterima planet |
+| Corona | Opacity existing 0,12, depthWrite false; glow sprite opacity 0,32 tetap. Efek tidak menulis depth yang berpotensi menutup transparansi di belakang |
+
+`decay=0` adalah keputusan ilustratif untuk jarak scene yang terkompresi, bukan klaim inverse-square fisik. Sisi malam tetap gelap dengan fill kecil; tidak menambahkan city-light map, scattering atmosfer atau bayangan gerhana. Shell atmosfer/seleksi existing tetap dapat terlihat sebagai pita di tepi; polish shader bukan cakupan ini.
+
+API diperiksa terhadap source Three.js lokal **0.180.0** (`WebGLRenderer`, `ColorManagement`, `Material`, `PointLight`) dan [dokumentasi renderer resmi](https://threejs.org/docs/pages/WebGLRenderer.html). Tidak menggunakan outputEncoding, gammaOutput atau physicallyCorrectLights API lama.
+
+### Validasi
+
+- `npm.cmd test`: **34/34 lulus** setelah perubahan akhir.
+- `npm.cmd run build`: berhasil, 28 modul; aplikasi 84,41 kB, Three.js terpisah 499,86 kB sebelum gzip.
+- Suite targeted rendering + finalization: **6/6 lulus**, mencakup resize/keyboard, kegagalan decode seluruh tekstur dan cap DPR semua kualitas. Setelah penandaan sRGB glow, suite rendering dijalankan ulang pada kedua browser: **2/2 lulus**, exit code 0, tanpa console warning/error atau pageerror.
+- Test baru mensimulasikan devicePixelRatio 3 lalu 1, memeriksa drawing buffer dan aspect pada 1366×768 serta 1920×1080. Ini bukan pengujian perpindahan monitor fisik atau status tombol fullscreen.
+- Screenshot Visit Matahari/Bumi/Saturnus dihasilkan di test-results (diabaikan Git). Inspeksi Bumi/Matahari memperlihatkan terminator, detail permukaan sisi terang dan detail Matahari; tidak mengklaim kalibrasi fotometrik/true color. Fixture browser memeriksa console warning/error dan pageerror.
+- Tidak menjalankan ulang seluruh E2E atau benchmark GPU panjang. Tidak menambah render pass, shadow map, particle system atau pekerjaan baru di animation loop.
+
+Manual: jalankan npm run dev, kunjungi Bumi lalu orbitkan kamera untuk membandingkan sisi siang/malam; kunjungi Matahari dan Saturnus. Ubah kualitas High/Medium/Low, resize kedua resolusi, masuk/keluar fullscreen dan cek proporsi planet tetap bulat. Periksa buffer pada monitor DPR tinggi dan pastikan cap kualitas tetap berlaku. Fallback tetap dapat diuji dengan memblokir JPEG lalu reload.

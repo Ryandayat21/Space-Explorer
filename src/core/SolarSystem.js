@@ -111,7 +111,9 @@ function makeGlowTexture() {
   gradient.addColorStop(1, 'rgba(255,65,0,0)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 256, 256);
-  return new THREE.CanvasTexture(canvas);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
 }
 
 export class SolarSystem {
@@ -156,9 +158,10 @@ export class SolarSystem {
   }
 
   #createLighting() {
-    this.scene.add(new THREE.HemisphereLight(0x18284e, 0x020204, 0.22));
+    // A very faint neutral fill keeps the night hemisphere readable without a blue cast.
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x606878, 0.035));
     // Constant visual exposure: compressed orbital distances are not physical light distances.
-    const sunLight = new THREE.PointLight(0xfff4e4, 3.2, 0, 0);
+    const sunLight = new THREE.PointLight(0xfff4e4, 3, 0, 0);
     sunLight.position.set(0, 0, 0);
     this.root.add(sunLight);
   }
@@ -200,7 +203,7 @@ export class SolarSystem {
     const group = new THREE.Group();
     const mesh = new THREE.Mesh(
       new THREE.SphereGeometry(data.visualRadius, 64, 40),
-      new THREE.MeshBasicMaterial({ map: makeSunTexture(), color: 0xffd073 })
+      new THREE.MeshBasicMaterial({ map: makeSunTexture(), color: new THREE.Color(1.3, 1.3, 1.3) })
     );
     mesh.userData.bodyId = data.id;
     group.add(mesh);
@@ -214,7 +217,7 @@ export class SolarSystem {
 
     const corona = new THREE.Mesh(
       new THREE.SphereGeometry(data.visualRadius * 1.08, 48, 32),
-      new THREE.MeshBasicMaterial({ color: 0xffb140, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide })
+      new THREE.MeshBasicMaterial({ color: 0xffb140, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide, depthWrite: false })
     );
     group.add(corona);
     this.effects.push(corona);
@@ -340,7 +343,9 @@ export class SolarSystem {
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.anisotropy = 4;
         const material = this.getObject(id).mesh.material;
-        material.map?.dispose(); material.map = texture; material.color.set(0xffffff); material.needsUpdate = true;
+        material.map?.dispose(); material.map = texture;
+        material.color.setRGB(id === 'sun' ? 1.3 : 1, id === 'sun' ? 1.3 : 1, id === 'sun' ? 1.3 : 1);
+        material.needsUpdate = true;
         resolve(true);
       }, undefined, () => {
         window.dispatchEvent(new CustomEvent('texture-fallback', { detail: id }));

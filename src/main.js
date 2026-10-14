@@ -15,11 +15,13 @@ if (!WebGL.isWebGL2Available()) {
 
 const canvas = document.getElementById('space-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
-renderer.setSize(window.innerWidth, window.innerHeight);
+// Color textures are tagged sRGB by SolarSystem; lighting works in linear space.
+THREE.ColorManagement.enabled = true;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 1;
+const pixelRatioCaps = { low: 0.85, medium: 1.25, high: 1.75 };
+let renderQuality = 'high';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x01030a);
@@ -27,6 +29,16 @@ scene.fog = new THREE.FogExp2(0x02040d, 0.00042);
 
 const camera = new THREE.PerspectiveCamera(53, window.innerWidth / window.innerHeight, 0.05, 2200);
 camera.position.set(96, 58, 142);
+
+function resizeRenderer() {
+  const width = Math.max(1, window.innerWidth), height = Math.max(1, window.innerHeight);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  const ratio = Math.min(window.devicePixelRatio || 1, pixelRatioCaps[renderQuality]);
+  if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
+  renderer.setSize(width, height, false);
+}
+resizeRenderer();
 
 const orbitControls = new OrbitControls(camera, canvas);
 orbitControls.enableDamping = true;
@@ -209,9 +221,8 @@ ui.addEventListener('filter', (event) => {
 ui.addEventListener('quality-change', (event) => {
   const quality = event.detail;
   solarSystem.setQuality(quality);
-  const ratios = { low: 0.85, medium: 1.25, high: 1.75 };
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, ratios[quality]));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderQuality = quality;
+  resizeRenderer();
 });
 ui.addEventListener('flight-toggle', () => {
   if (tourActive) ui.stopTour();
@@ -266,11 +277,8 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+window.addEventListener('resize', resizeRenderer);
+document.addEventListener('fullscreenchange', resizeRenderer);
 
 
 
@@ -315,6 +323,9 @@ solarSystem.loadTexture('sun').then(() => {
 frameId = requestAnimationFrame(animate);
 // Read-only diagnostics for browser regression and allocation checks.
 if (import.meta.env.DEV) window.__observer = {
+  rendering: () => ({ pixelRatio: renderer.getPixelRatio(), aspect: camera.aspect,
+    exposure: renderer.toneMappingExposure, colorSpace: renderer.outputColorSpace,
+    toneMapping: renderer.toneMapping, quality: renderQuality }),
   elapsedDays: () => solarSystem.elapsedDays,
   regions: () => [...solarSystem.regions].map(([id, region]) => ({ id, visible: region.visible, count: region.geometry.drawRange.count, rotation: region.rotation.y })),
   resources: () => {
