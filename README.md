@@ -63,7 +63,7 @@ Drag/scroll mengambil alih transisi kamera dan menjeda tur. Preferensi sistem **
 
 ## Ambient audio
 
-Klik **Enable Ambience** di kiri bawah untuk mulai musik lokal; tersedia Play/Pause, Mute/Unmute dan slider volume (default 15%). Kontrol mendukung Tab, Enter/Space dan tombol panah pada slider. Fade volume berlangsung sekitar 450 ms. Kontrol ikut tersembunyi pada mode sinematik; tekan H untuk menampilkannya lagi.
+Klik tombol **♪ Pengaturan ambience** pada toolbar atas, lalu **Enable Ambience** untuk mulai musik lokal. Panel hanya muncul saat dibuka; klik di luar atau tekan Escape untuk menutupnya tanpa menghentikan musik. Tersedia Play/Pause, Mute/Unmute dan slider volume (default 15%). Kontrol mendukung Tab, Enter/Space dan tombol panah pada slider. Fade volume berlangsung sekitar 450 ms. Kontrol ikut tersembunyi pada mode sinematik; tekan H untuk menampilkannya lagi.
 
 Audio tidak autoplay saat startup/reload. Hanya volume dan mute disimpan di `milky-way-observer.audio.v1`; storage rusak/ditolak tidak menghentikan aplikasi. Saat tab tersembunyi audio langsung dijeda untuk menghindari suara di background, kemudian dilanjutkan hanya jika sebelumnya pengguna sedang memutarnya. Jika browser menolak pemutaran, tekan Play lagi. Pause/resume dan perpindahan scene tidak mereset posisi track; AudioManager tunggal dimiliki aplikasi, bukan Solar System/Galaxy scene.
 
