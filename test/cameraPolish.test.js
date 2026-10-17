@@ -33,4 +33,10 @@ test('camera collision handles body center and a translated tilted ring without 
   const ringEnd = ring.localToWorld(new THREE.Vector3(4,0,-3));
   safety.resolve(ringEnd, ringStart);
   assert.ok(ring.worldToLocal(ringEnd).z >= .3, 'fast movement must not tunnel through rings');
+  const gapStart = ring.localToWorld(new THREE.Vector3(2.5, 0, 1));
+  const gapEnd = ring.localToWorld(new THREE.Vector3(2.5, 0, -1));
+  const expected = gapEnd.clone();
+  safety.resolve(gapEnd, gapStart);
+  assert.ok(gapEnd.distanceTo(expected) < 1e-8, 'empty ring interior must remain traversable');
+  ring.geometry.dispose(); ring.material.dispose(); mesh.geometry.dispose(); mesh.material.dispose();
 });

@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **rendering, visual, kamera, mode sinematik, panel ilmiah, accessibility/UX desktop serta quality preset telah ditingkatkan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–14.
+Status: **Phase 4 selesai untuk cakupan implementasi dan regresi desktop yang diuji; siap menjadi baseline Phase 5**. Baseline audit di bagian 1–6 merupakan riwayat; implementasi di bagian 7–14 dan finalisasi di bagian 15. Pekerjaan lanjutan yang belum diverifikasi tetap tidak dicentang.
 
 ## 1. Baseline dan batas audit
 
@@ -68,7 +68,7 @@ Prioritas berikut berdasarkan pemeriksaan kode; reproduksi browser menjadi bagia
 
 ## 4. Checklist Phase 4 dan urutan paling aman
 
-Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerjaan yang sudah selesai.
+Checklist berikut membedakan implementasi yang telah diverifikasi dari pekerjaan lanjutan yang ditunda ke Phase 5. Temuan baseline di atas dipertahankan sebagai riwayat, bukan daftar bug aktif.
 
 ### Audit selesai
 
@@ -95,16 +95,18 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 - [x] P4-R1 (cakupan tugas pengguna): rendering/color space/exposure/pencahayaan dan resize ber-DPR cap; lihat bagian 7. P4-02/P4-05 tetap belum dicentang karena cakupannya lebih luas dari tugas ini.
 
 - [x] P4-01: fokus welcome tersembunyi, status toggle/slider dan nama dialog diperbaiki; E2E keyboard targeted tersedia (bagian 11–13).
-- [ ] P4-02: perbaiki sinkronisasi resize/DPR/fullscreen, termasuk keluar fullscreen melalui Escape dan kegagalan API. Uji kedua viewport, cap kualitas, zoom/perpindahan monitor.
+- [x] P4-02a: sinkronisasi resize/DPR/fullscreen, Escape dan kegagalan API diuji pada kedua viewport serta seluruh cap kualitas.
+- [ ] Phase 5 / P4-02b: uji zoom browser dan perpindahan monitor fisik dengan DPR berbeda.
 - [x] P4-03: reduced motion pada jalur tween bersama, termasuk perubahan preferensi ketika berjalan; kontrol kamera existing dipertahankan (bagian 13).
-- [ ] P4-04: ambil screenshot baseline deterministik Matahari, Bumi day/night limb, Venus, Saturnus, satu bulan, Halley dan overview pada Low/Medium/High; catat viewport, DPR, posisi kamera dan waktu simulasi yang sama.
-- [ ] P4-05: kalibrasi pencahayaan/material/transparansi secara kecil dan terpisah, lalu polish atmosfer/corona jika screenshot membuktikan manfaatnya. Tidak menambahkan bloom/shadow pipeline secara default.
-- [ ] P4-06: verifikasi sumber/representasi ilmiah dan aset prioritas (misalnya awan Venus atau satu bulan) sebelum menambah map lokal; perluas loader existing hanya sesuai kebutuhan, sertakan lisensi/fallback/disposal.
-- [ ] P4-07: polish background dan keterbacaan label/panel dengan pemeriksaan kontras dan occlusion; pertahankan navigasi dan layout utama.
-- [ ] P4-08: profile loop/startup/heap pada interaksi bergerak dan sesi panjang; kurangi kerja label/transformasi terbukti mahal. Bandingkan kualitas dengan baseline dan catat GPU/browser.
-- [ ] P4-09: regresi akhir unit/build/E2E, texture failure, keyboard/zoom/reduced motion, resize/fullscreen, console; perbarui README, atribusi dan hasil pengukuran.
+- [ ] Phase 5 / P4-04: matriks screenshot deterministik seluruh objek referensi dan Low/Medium/High. Screenshot E2E saat ini belum mencakup seluruh kombinasi.
+- [x] P4-05: pencahayaan/material/transparansi, atmosfer/corona ringan dan fallback diimplementasikan serta diuji (bagian 7–8); tidak menambah bloom/shadow pipeline.
+- [ ] Phase 5 / P4-06: verifikasi sumber dan aset awan Venus/bulan sebelum menambah map lokal, dengan lisensi/fallback/disposal.
+- [x] P4-07a: starfield/haze, panel lebih terbaca, focus state dan reduced motion tersedia (bagian 9, 12–13).
+- [ ] Phase 5 / P4-07b: penghindaran overlap/occlusion label, pengukuran kontras menyeluruh dan audit screen reader.
+- [ ] Phase 5 / P4-08: profiling loop/startup/heap sesi panjang lintas GPU. Pengujian disposal/resource singkat bukan pengganti profiling tersebut.
+- [x] P4-09: regresi akhir unit/build/E2E, texture failure, keyboard/reduced motion, resize/fullscreen, console dan README (hasil final di bagian 15). Zoom fisik dicatat terpisah pada P4-02b.
 
-**Tugas pertama paling aman: P4-01, khusus fokus welcome yang tersembunyi.** Mulai dengan test Tab yang menunjukkan masalah; perbaiki `hideWelcome` dan pemulihan HUD agar keadaan inert konsisten. Perubahan kecil di UI tanpa menyentuh renderer, data orbit atau kamera; sesudah itu lanjutkan semantik kontrol terkait.
+**Rekomendasi awal audit (sudah dilaksanakan): P4-01, fokus welcome yang tersembunyi**, kemudian semantik kontrol. Lihat hasil implementasi di bagian 11–13; jangan mengulang pekerjaan yang sudah tersedia.
 
 Kriteria tiap tahap: tidak menghapus fitur Phase 3; test relevan dan build lulus; browser console bersih pada skenario terkait; perubahan visual dibandingkan pada view identik; Low tetap ringan dan fallback berfungsi. Jangan mencentang tahap karena kode sudah ditulis saja.
 
@@ -321,3 +323,45 @@ File runtime: quality.js (baru), SolarSystem.js, SpaceBackground.js, UIControlle
 - `npm.cmd test`: **43/43 lulus**. `npm.cmd run build`: berhasil, 33 modul; aplikasi 97,94 kB dan Three.js 499,98 kB sebelum gzip. Pencarian pada bundle produksi tidak menemukan debug-fps/FPS, sesuai guard development-only.
 - `npm.cmd run test:e2e -- e2e/quality.spec.js e2e/rendering.spec.js e2e/regions.spec.js e2e/observer.spec.js`: **12/12 lulus**, exit code 0, 2,1 menit, Edge/Chrome; tidak ada console warning/error atau pageerror. Mencakup persistensi/reload, storage rusak, FPS opt-in, disposal geometry, reuse jika preset sama, identitas mesh/material, DPR/resize, jumlah sabuk dan regresi observer.
 - Manual: reload tanpa preferensi harus Medium; ubah Low lalu reload harus Low. Beralih beberapa kali, pilih objek dan pastikan panel/Follow tetap berfungsi. Jalankan dev dengan `?debug` untuk FPS; URL biasa tidak menampilkan counter. Coba data storage rusak, lalu reload dan pastikan kembali Medium.
+
+## 15. Finalisasi Phase 4 — 17 Oktober 2026
+
+Baseline Git `4cb7276`, working tree bersih sebelum pekerjaan. Tidak ada dependency, aset, data ilmiah, sistem orbit atau fitur besar baru. Tidak melakukan git commit/reset. Riwayat bagian 1–14 dipertahankan; status akhir harus mengacu pada bagian ini.
+
+### Temuan integrasi dan perbaikan
+
+Regresi browser menemukan Visit antarbulan dapat berhenti di depan Uranus/Saturnus sehingga klik pusat bulan memilih planet yang menghalanginya. Planner memakai bola pembungkus cincin yang lebih besar daripada volume tabrakan aktual, hanya mencoba empat arah detour, dan pemilihan endpoint belum mempertimbangkan cincin. Akibatnya semua kandidat lintasan bisa ditolak meskipun ada ruang kosong yang aman.
+
+`src/main.js` sekarang menguji segmen planner memakai `CameraSafety.resolve`, sama dengan guard runtime, memeriksa endpoint terhadap cincin dan mencari maksimal 64 arah seeded/geometris tetap dengan 32 sampel lintasan. Scratch planner dialokasikan saat Visit, bukan setiap frame. Guard runtime tetap aktif; orbit/posisi objek tidak diubah. Ini pencarian terbatas, bukan jaminan navigasi seluruh konfigurasi dinamis. Unit test menambahkan kasus melewati ruang kosong antara permukaan dan cincin, sekaligus mempertahankan larangan menembus body/cincin. Regresi bulan existing tetap mengharuskan klik memilih bulan yang benar; assertion tidak dilonggarkan.
+
+### Cakupan audit
+
+| Area | Pemeriksaan |
+| --- | --- |
+| Renderer/pencahayaan | Three.js terpasang 0.180.0; sRGB, ACES exposure 1, DPR cap sesuai preset; PointLight Matahari dan material matte tetap digunakan. Pencarian API legacy dan pemeriksaan source dependency tidak menemukan pemakaian deprecated pada kode proyek untuk versi ini. Clock pada r180 belum ditandai deprecated; tidak menyimpulkan kompatibilitas versi Three mendatang |
+| Efek/background | Shader rim/corona kompilasi, parent, Low, disposal dan raycasting diuji; starfield seeded camera-relative dan haze dekoratif tetap non-pickable |
+| Kamera | Visit/Follow/tur menggunakan jalur bersama; Escape, takeover mouse/flight, collision body/cincin dan kunjungan bulan diperiksa |
+| UI | Cinematic menyembunyikan kontrol dan label tanpa mempersist keadaan tersembunyi; fullscreen masuk/keluar, Escape, API ditolak/tidak ada; panel ilmiah seluruh jenis objek, sumber, nilai kosong dan fokus |
+| Accessibility | Keyboard, focus-visible, nama tombol/dialog, modal shortcut guard, time slider dan reduced motion ketika startup/perubahan preferensi. Belum audit screen reader/zoom fisik menyeluruh |
+| Kualitas/storage | Default Medium, persist/reload, JSON rusak dan storage ditolak, batas DPR, jumlah partikel, disposal/reuse geometry dan debug FPS |
+| Regresi Phase 3 | Search/filter, selection, bulan/katai/cincin/sabuk/komet, pause/resume/speed, tur/flight, bookmark dan perbandingan |
+| Fallback | Semua JPEG dipaksa gagal decode; simulasi, navigasi dan panel tetap berfungsi. Callback error loader juga diuji. Browser dapat mencatat error jaringan sendiri pada HTTP 404 sungguhan; itu berbeda dari exception aplikasi |
+| Loop/lifecycle | Scratch vector dipakai ulang; geometry tidak dibuat setiap frame, label tersembunyi early-return, material/texture/geometry dispose tersedia. DOM label yang terlihat dan collision/world transform tetap memerlukan kerja per-frame. Tidak mengklaim bebas leak jangka panjang |
+
+### Hasil verifikasi final
+
+- `npm.cmd test`: **43/43 lulus**, termasuk regresi ruang kosong cincin.
+- `npm.cmd run build`: **berhasil**, 33 modul. HTML 13,00 kB; CSS 14,63 kB; JS aplikasi 97,84 kB (gzip 31,74 kB); Three.js terpisah 499,98 kB (gzip 126,49 kB). Tidak ada warning/error build.
+- `npm.cmd run test:e2e`: **52/52 lulus**, 26 skenario pada Edge 1366×768 dan Chrome 1920×1080. Runner terakhir menyimpan `test-results/.last-run.json` dengan `status: passed` dan `failedTests: []`. Fixture seluruh skenario tidak menemukan console warning/error atau pageerror aplikasi. Screenshot Matahari/Bumi diperiksa; matriks visual lengkap tetap ditunda.
+- Warning Node tentang `NO_COLOR`/`FORCE_COLOR` berasal dari environment runner, bukan console aplikasi. Fixture browser tetap menolak console warning/error dan pageerror tanpa menonaktifkan console.
+- File finalisasi: `src/main.js`, `test/cameraPolish.test.js`, `README.md`, `docs/phase-4-progress.md`. Aset dan atribusi existing tidak berubah dan tidak diverifikasi ulang daring.
+
+### Ditunda secara eksplisit ke Phase 5
+
+- Galaxy Scene/peta Bima Sakti dan lifecycle lintas-scene; background Phase 4 hanya dekorasi.
+- Ephemeris/kalender/epoch, catch-up tab background, tidal locking dan pengayaan data ilmiah dengan sumber terverifikasi; Charon/pendamping tambahan bukan bagian finalisasi.
+- Peta awan Venus/tekstur bulan tambahan, dengan lisensi dan verifikasi representasi sebelum integrasi.
+- Matriks screenshot deterministik seluruh view/kualitas, label occlusion/overlap, screen reader, browser zoom dan perpindahan monitor fisik.
+- Profiling GPU/heap sesi panjang lintas perangkat serta kualitas adaptif. High DPR/transparansi, geometry, DOM label, collision dan procedural startup tetap kandidat biaya; bukan ranking hasil GPU profiler.
+
+Pemeriksaan manual lanjutan: pada Medium, jeda waktu lalu kunjungi Titan → Enceladus dan Titania → Oberon → Ariel. Klik bulan setelah transisi; panel harus menunjukkan bulan yang terlihat, dengan kamera di luar permukaan/cincin. Coba H/Escape dan L/Escape, Tab ke bantuan/favorit/perbandingan, P dan slider, serta perubahan preferensi reduced motion. Jangan menganggap konfigurasi orbit ilustratif sebagai posisi astronomis tanggal nyata.

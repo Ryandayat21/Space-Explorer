@@ -99,23 +99,28 @@ function beginTween(tween) {
   if (reducedMotion.matches) tween.duration = 150;
   resetObserver();
   tween.fromRotation = camera.quaternion.clone();
-  // Plan a bounded detour using conservative body/ring envelopes, once per visit.
-  const obstacles = [...solarSystem.objects.values()].map(body => {
-    const ring = body.mesh.getObjectByName(`${body.data.id}-rings`);
-    return { center: solarSystem.getWorldPosition(body.data.id).toArray(),
-      radius: ring ? ring.geometry.parameters.outerRadius + .4 : body.radius + Math.max(.3, body.radius * .1) };
-  });
+  // Test the same volumes as the runtime guard. A bounding sphere around a
+  // ring incorrectly rejects every route starting/ending in its empty interior.
+  // These scratch allocations happen once per visit, never in the frame loop.
+  const checked = new THREE.Vector3();
+  const routeClear = (start, end) => {
+    safety.resolve(checked.copy(end), start);
+    return checked.distanceToSquared(end) < 1e-10;
+  };
   const from = tween.fromPosition, to = tween.toPosition;
-  if (!clearApproach(from.toArray(), to.toArray(), obstacles)) {
+  if (!routeClear(from, to)) {
     const midpoint = from.clone().add(to).multiplyScalar(.5);
     const span = Math.max(15, from.distanceTo(to));
-    for (const axis of [new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1)]) {
+    for (let index = 0; index < 64; index++) {
+      const y = 1 - 2 * (index + .5) / 64;
+      const radial = Math.sqrt(1 - y * y), angle = index * 2.399963229728653;
+      const axis = new THREE.Vector3(radial * Math.cos(angle), y, radial * Math.sin(angle));
       const control = midpoint.clone().addScaledVector(axis, span);
       let previous = from.clone(), valid = true;
       for (let i = 1; i <= 32; i++) {
         const t = i / 32;
         const point = from.clone().multiplyScalar((1-t)**2).addScaledVector(control, 2*t*(1-t)).addScaledVector(to, t*t);
-        if (!clearApproach(previous.toArray(), point.toArray(), obstacles)) { valid = false; break; }
+        if (!routeClear(previous, point)) { valid = false; break; }
         previous = point;
       }
       if (valid) { tween.control = control; break; }
@@ -164,7 +169,13 @@ function setCameraDestination(id, duration = 1.65, follow = false, framing = 5.2
     center: solarSystem.getWorldPosition(body.data.id).toArray(),
     radius: Math.max(body.radius + Math.max(.25, body.radius * .08), .75)
   }));
-  if (!clearApproach(target.toArray(), destination.toArray(), obstacles)) {
+  const safeEndpoint = new THREE.Vector3();
+  const canObserve = candidate => {
+    safety.resolve(safeEndpoint.copy(candidate));
+    return safeEndpoint.distanceToSquared(candidate) < 1e-10 &&
+      clearApproach(target.toArray(), candidate.toArray(), obstacles);
+  };
+  if (!canObserve(destination)) {
     // Compressed orbits can place another planet across the incoming view.
     // Search a bounded set of directions at the same framing distance.
     for (let index = 0; index < 64; index++) {
@@ -172,7 +183,7 @@ function setCameraDestination(id, duration = 1.65, follow = false, framing = 5.2
       const radial = Math.sqrt(1 - y * y), angle = index * 2.399963229728653;
       const candidate = target.clone().add(new THREE.Vector3(
         radial * Math.cos(angle), y, radial * Math.sin(angle)).multiplyScalar(distance));
-      if (clearApproach(target.toArray(), candidate.toArray(), obstacles)) {
+      if (canObserve(candidate)) {
         destination.copy(candidate);
         break;
       }
