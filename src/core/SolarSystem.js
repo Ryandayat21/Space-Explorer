@@ -9,6 +9,7 @@ import { comets } from '../data/comets.js';
 import { CometVisual } from './CometVisual.js';
 import { smallBodyRegions } from '../data/smallBodyRegions.js';
 import { SmallBodyRegion } from './SmallBodyRegion.js';
+import { createRimGlow, atmosphereProfiles } from './RimGlow.js';
 
 const DEG = Math.PI / 180;
 const textureIds = new Set([...bodies.map(body => body.id), 'moon']);
@@ -212,13 +213,11 @@ export class SolarSystem {
     const glow = new THREE.Sprite(glowMaterial);
     glow.scale.set(32, 32, 1);
     glow.material.opacity = 0.32;
+    glow.raycast = () => {};
     group.add(glow);
     this.effects.push(glow);
 
-    const corona = new THREE.Mesh(
-      new THREE.SphereGeometry(data.visualRadius * 1.08, 48, 32),
-      new THREE.MeshBasicMaterial({ color: 0xffb140, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide, depthWrite: false })
-    );
+    const corona = createRimGlow(data.visualRadius, [0xffb140, 1.10, .25], group, true);
     group.add(corona);
     this.effects.push(corona);
 
@@ -243,21 +242,15 @@ export class SolarSystem {
       const material = new THREE.MeshStandardMaterial({
         map: makePlanetTexture(data),
         color: 0xffffff,
-        roughness: data.id === 'earth' ? 0.74 : 0.9,
+        roughness: ['jupiter', 'saturn', 'uranus', 'neptune'].includes(data.id) ? 0.9 : 0.96,
         metalness: 0
       });
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 32), material);
       mesh.userData.bodyId = data.id;
       visual.add(mesh);
 
-      if (['earth', 'venus', 'uranus', 'neptune'].includes(data.id)) {
-        const atmosphereColor = data.id === 'earth' ? 0x4ca6ff : data.id === 'venus' ? 0xffc779 : data.id === 'uranus' ? 0x7df0ff : 0x376dff;
-        const atmosphere = new THREE.Mesh(
-          new THREE.SphereGeometry(radius * 1.045, 40, 28),
-          new THREE.MeshBasicMaterial({ color: atmosphereColor, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide })
-        );
-        atmosphere.material.opacity = 0.065;
-        atmosphere.material.depthWrite = false;
+      if (atmosphereProfiles[data.id]) {
+        const atmosphere = createRimGlow(radius, atmosphereProfiles[data.id], parentObject.group);
         visual.add(atmosphere);
         this.effects.push(atmosphere);
       }

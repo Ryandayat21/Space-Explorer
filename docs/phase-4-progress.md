@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **audit selesai; tahap rendering pipeline dan pencahayaan telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7.
+Status: **rendering/pencahayaan serta atmosfer, glow dan material telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–8.
 
 ## 1. Baseline dan batas audit
 
@@ -80,6 +80,8 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 
 ### Implementasi bertahap
 
+- [x] P4-R2: atmosfer rim glow, corona ringan, material matte, fallback shader/tekstur, parent dan raycasting (bagian 8). Tidak mencakup aurora atau scattering fisik.
+
 - [x] P4-R1 (cakupan tugas pengguna): rendering/color space/exposure/pencahayaan dan resize ber-DPR cap; lihat bagian 7. P4-02/P4-05 tetap belum dicentang karena cakupannya lebih luas dari tugas ini.
 
 - [ ] P4-01: reproduksi dan perbaiki fokus welcome tersembunyi, status toggle/slider dan nama dialog. Tambahkan E2E keyboard targeted.
@@ -142,3 +144,22 @@ API diperiksa terhadap source Three.js lokal **0.180.0** (`WebGLRenderer`, `Colo
 - Tidak menjalankan ulang seluruh E2E atau benchmark GPU panjang. Tidak menambah render pass, shadow map, particle system atau pekerjaan baru di animation loop.
 
 Manual: jalankan npm run dev, kunjungi Bumi lalu orbitkan kamera untuk membandingkan sisi siang/malam; kunjungi Matahari dan Saturnus. Ubah kualitas High/Medium/Low, resize kedua resolusi, masuk/keluar fullscreen dan cek proporsi planet tetap bulat. Periksa buffer pada monitor DPR tinggi dan pastikan cap kualitas tetap berlaku. Fallback tetap dapat diuji dengan memblokir JPEG lalu reload.
+
+## 8. Atmosfer, glow dan material — 17 Oktober 2026
+
+- `src/core/RimGlow.js` menyediakan satu shell BackSide per planet: Venus, Bumi, Mars, Jupiter, Saturnus, Uranus dan Neptunus. Merkurius tidak diberi atmosfer tebal. Profil adalah parameter visual, bukan ukuran/kepadatan atmosfer ilmiah. Bumi paling jelas (strength 0,22, radius 1,035×); Mars sangat tipis (0,035; 1,012×). Planet lain strength 0,05–0,11 dan radius 1,018–1,025×.
+- RawShaderMaterial GLSL3 menghitung rim dari normal dan arah pandang, memudarkan batas luar serta mengurangi efek sisi malam berdasarkan posisi Matahari dalam view space. Tidak ada sampling tekstur, noise, loop partikel atau render pass tambahan. Warna overlay additive dikonversi ke sRGB secara eksplisit; bukan material permukaan atau simulasi scattering fisik.
+- Corona Matahari menggunakan shader yang sama tanpa pembatas sisi siang, radius 1,10× dan strength 0,25. Sprite gradient lokal existing tetap tersedia. Corona lama diganti, bukan ditumpuk. Penambahan bersih hanya tiga mesh untuk Mars/Jupiter/Saturnus; tidak ada penambahan mesh per frame.
+- Setiap shell merupakan child visual planet atau group Matahari, sehingga posisi/kemiringan mengikuti induk. Uniform view-space diperbarui dengan vector yang dipakai ulang saat render. Semua shell dan sprite glow menonaktifkan raycast; depthTest tetap aktif dan depthWrite false. Material/geometry dibuang melalui lifecycle existing. Low menyembunyikan semua efek ini.
+- Shader diuji compile/link memakai source GLSL yang sama satu kali per WebGL context sebelum dipromosikan dari MeshBasicMaterial. Kegagalan compile/link mempertahankan shell bawaan yang redup; probe dibersihkan dan hasilnya dicache, tanpa retry per-frame. Material fallback yang tersimpan dilepas ketika material shader dibuang. Ini menangani kegagalan shader efek, bukan kegagalan total perangkat WebGL.
+- Tekstur permukaan tetap memakai cache/fallback procedural existing. Rim dan corona tidak memerlukan tekstur eksternal. Roughness planet berbatu/katai menjadi 0,96; bulan tetap 1; gas/es tetap 0,9. Metalness planet tetap 0, sehingga peta warna dan pencahayaan gas tidak ditutupi lapisan spekular baru.
+- Tidak mengubah main/kamera, orbit, data objek, guided tour, UI, dependency atau aset; tidak ada commit. File: SolarSystem.js, RimGlow.js, test/rimGlow.test.js, e2e/atmosphere.spec.js dan dokumen ini. API raw shader diperiksa pada [dokumentasi resmi Three.js](https://threejs.org/docs/pages/RawShaderMaterial.html).
+
+### Pengujian dan batas
+
+- `npm.cmd test`: **36/36 lulus**. Test baru memeriksa profil Bumi, pewarisan parent, raycast kosong, depthWrite serta kegagalan probe/caching/pembersihan resource dan material fallback.
+- `npm.cmd run build`: berhasil, 29 modul, aplikasi 86,49 kB dan Three.js terpisah 499,98 kB sebelum gzip.
+- `npm.cmd run test:e2e -- e2e/atmosphere.spec.js e2e/finalization.spec.js`: **6/6 lulus**, exit code 0 (1,1 menit). Menguji compile shader nyata di Edge/Chrome, alignment setelah orbit bergerak, toggle Low/High, disposal, klik dan screenshot Bumi/Matahari/Jupiter/Bulan, serta regresi resize dan kegagalan decode semua JPEG. Fixture bersama tidak menemukan console warning/error atau pageerror.
+- Screenshot Bumi dan Matahari diperiksa: permukaan dan terminator tetap terlihat. Pita indikator seleksi existing masih terpisah dari rim atmosfer; tidak diubah dalam tugas ini. Screenshot bukan kalibrasi ilmiah atau benchmark GPU. Tidak mengklaim profiling jangka panjang atau seluruh E2E dijalankan ulang.
+
+Manual: pilih Bumi, putar pandangan dari sisi siang menuju sisi malam, bandingkan dengan Mars dan Jupiter. Kunjungi Matahari dan periksa detail permukaan tetap terlihat. Pilih Bulan untuk memeriksa material matte. Klik pusat objek melalui efek, ubah kualitas menjadi Low lalu High; efek harus hilang/kembali tanpa mengubah objek. Blokir JPEG dan reload untuk memeriksa fallback procedural.
