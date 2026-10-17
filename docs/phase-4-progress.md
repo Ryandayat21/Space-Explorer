@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **rendering/pencahayaan serta atmosfer, glow dan material telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–8.
+Status: **rendering/pencahayaan, atmosfer/glow/material dan lingkungan dekoratif telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–9.
 
 ## 1. Baseline dan batas audit
 
@@ -79,6 +79,8 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 - [x] Dokumentasikan rencana tanpa mengubah kode aplikasi/reset/commit.
 
 ### Implementasi bertahap
+
+- [x] P4-R3: lingkungan dekoratif berlapis, haze halus, posisi relatif kamera, seeded distribution dan toggle Bintang (bagian 9). Bukan Galaxy Scene Phase 5.
 
 - [x] P4-R2: atmosfer rim glow, corona ringan, material matte, fallback shader/tekstur, parent dan raycasting (bagian 8). Tidak mencakup aurora atau scattering fisik.
 
@@ -163,3 +165,19 @@ Manual: jalankan npm run dev, kunjungi Bumi lalu orbitkan kamera untuk membandin
 - Screenshot Bumi dan Matahari diperiksa: permukaan dan terminator tetap terlihat. Pita indikator seleksi existing masih terpisah dari rim atmosfer; tidak diubah dalam tugas ini. Screenshot bukan kalibrasi ilmiah atau benchmark GPU. Tidak mengklaim profiling jangka panjang atau seluruh E2E dijalankan ulang.
 
 Manual: pilih Bumi, putar pandangan dari sisi siang menuju sisi malam, bandingkan dengan Mars dan Jupiter. Kunjungi Matahari dan periksa detail permukaan tetap terlihat. Pilih Bulan untuk memeriksa material matte. Klik pusat objek melalui efek, ubah kualitas menjadi Low lalu High; efek harus hilang/kembali tanpa mengubah objek. Blokir JPEG dan reload untuk memeriksa fallback procedural.
+
+## 9. Lingkungan luar angkasa — 17 Oktober 2026
+
+- `SpaceBackground.js` menggantikan volume starfield dan haze lama. Tiga Points/BufferGeometry berisi 6000/2400/600 bintang dengan ukuran layar 1,4/2,2/3,2, brightness per vertex dan variasi putih hangat/netral/biru pucat. Seed 42042 menghasilkan posisi dan warna identik saat reload. Satu DataTexture radial 16×16 dibagi ketiga material; tidak ada aset eksternal atau shader kustom baru.
+- Haze berupa satu sphere berwarna per vertex dengan pita/cloud sangat redup; bukan peta Bima Sakti, katalog bintang atau model jarak galaksi. Tidak menambah aurora, animasi noise atau partikel individual.
+- Group background menyalin posisi kamera, tidak rotasinya. Arah bintang tetap sama saat translasi, tetapi berputar secara wajar ketika pengguna melihat arah lain. Radius shell 1800/1900 berada di dalam far plane existing 2200. Hanya copy vector per frame; buffer, geometri dan warna dibuat sekali.
+- Background memakai antrean opaque dengan renderOrder -200 (haze) dan -199 (bintang), depthTest/depthWrite false, serta additive blending bintang. Ini menggambar latar sebelum permukaan opaque dan efek transparan Tata Surya tanpa render pass terpisah; planet tetap menutupi bintang. Fog scene tidak diterapkan ke latar. Semua background raycast no-op dan tidak masuk daftar pickables.
+- High 9000 bintang, Medium 5040, Low 2520 menggunakan drawRange pada buffer yang sama; haze mati di Low. Toggle **Bintang** pada dock menyembunyikan/menampilkan seluruh latar, dengan aria-pressed dan dukungan tombol native Space/Enter. Pergantian kualitas tidak mengubah pilihan visibilitas. Tombol menyebut dekorasi melalui title; tidak mengubah guided tour atau data ilmiah.
+- Lifecycle disposal existing menelusuri group dan membuang geometry/material serta shared texture sekali melalui Set. Tidak ada listener atau mesh baru saat toggle/quality-change.
+- File: `src/core/SpaceBackground.js` (baru), `src/core/SolarSystem.js`, `src/main.js` (satu event toggle), `src/ui/UIController.js`, `index.html`, `test/spaceBackground.test.js`, `e2e/background.spec.js`, dokumen ini. Tidak ada perubahan orbit, katalog ilmiah, guided tour, dependency atau commit.
+
+Validasi: unit test mencakup seed posisi/warna, arah proyeksi tetap saat kamera ditranslasikan, reuse buffer, urutan render/depth, non-pickable dan kualitas/visibilitas. Browser memeriksa toggle keyboard, kualitas, viewport, klik planet, resize/HUD dan fallback JPEG. Benturan awal nama properti `layers` dengan API Object3D ditemukan lewat browser dan diperbaiki menjadi `starLayers`, dengan assertion regresi. Screenshot Edge 1366×768 diperiksa: latar halus dan planet tetap terlihat. Hasil akhir test/build/E2E dicatat setelah eksekusi selesai; tidak mengklaim benchmark GPU atau seluruh suite browser dijalankan ulang.
+
+Manual: aktifkan Free Flight, bergerak maju/mundur dan menyamping; bintang tidak mendekat atau bergeser seperti asteroid. Putar pandangan untuk melihat arah langit berbeda. Gunakan Bintang lewat Tab/Space/Enter, ganti Low/Medium/High, lalu kunjungi Bumi atau Saturnus dan pastikan bintang tidak menutupi cakram planet. Semua efek latar ini dekoratif.
+
+Hasil akhir: **37/37 unit test lulus**; **production build berhasil** (30 modul, aplikasi 88,03 kB, Three.js 499,98 kB sebelum gzip); **6/6 E2E targeted lulus** dalam 50,4 detik pada Edge/Chrome, exit code 0, tanpa console warning/error atau pageerror. `git diff --check` tidak menemukan whitespace error. Tidak ada git commit.

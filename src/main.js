@@ -214,6 +214,7 @@ ui.addEventListener('overview', () => {
 ui.addEventListener('time-change', (event) => { timeScale = event.detail; });
 ui.addEventListener('orbits-toggle', (event) => solarSystem.setOrbitsVisible(event.detail));
 ui.addEventListener('region-toggle', event => solarSystem.setRegionVisible(event.detail.id, event.detail.visible));
+ui.addEventListener('starfield-toggle', event => { solarSystem.background.visible = event.detail; });
 ui.addEventListener('filter', (event) => {
   ui.hideWelcome();
   ui.status(event.detail === 'all' ? '' : 'Kategori aktif: pilih objek pada hasil pencarian.');

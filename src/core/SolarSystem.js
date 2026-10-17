@@ -9,6 +9,7 @@ import { comets } from '../data/comets.js';
 import { CometVisual } from './CometVisual.js';
 import { smallBodyRegions } from '../data/smallBodyRegions.js';
 import { SmallBodyRegion } from './SmallBodyRegion.js';
+import { SpaceBackground } from './SpaceBackground.js';
 import { createRimGlow, atmosphereProfiles } from './RimGlow.js';
 
 const DEG = Math.PI / 180;
@@ -168,35 +169,8 @@ export class SolarSystem {
   }
 
   #createStarfield() {
-    const count = 9000;
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const random = seededRandom(42042);
-    const color = new THREE.Color();
-    for (let i = 0; i < count; i += 1) {
-      const radius = 450 + random() * 850;
-      const theta = random() * Math.PI * 2;
-      const phi = Math.acos(2 * random() - 1);
-      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = radius * Math.cos(phi);
-      positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
-      color.setHSL(0.52 + random() * 0.14, 0.25 + random() * 0.4, 0.58 + random() * 0.38);
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const stars = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 1.15, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.88, depthWrite: false }));
-    this.scene.add(stars);
-    this.stars = stars;
-
-    const haze = new THREE.Mesh(
-      new THREE.SphereGeometry(1000, 48, 32),
-      new THREE.MeshBasicMaterial({ color: 0x07112b, side: THREE.BackSide, transparent: true, opacity: 0.32 })
-    );
-    this.scene.add(haze);
+    this.background = new SpaceBackground();
+    this.scene.add(this.background);
   }
 
   #createSun() {
@@ -350,6 +324,7 @@ export class SolarSystem {
   }
 
   updateDetail(camera) {
+    this.background.update(camera);
     for (const id of textureIds) {
       if (this.loadedTextures.has(id)) continue;
       const object = this.objects.get(id);
@@ -380,7 +355,7 @@ export class SolarSystem {
 
   setQuality(quality) {
     this.effects.forEach(effect => { effect.visible = quality !== 'low'; });
-    this.stars.geometry.setDrawRange(0, quality === 'low' ? 2500 : quality === 'medium' ? 5000 : 9000);
+    this.background.setQuality(quality);
     for (const region of this.regions.values()) region.setQuality(quality);
   }
 

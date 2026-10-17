@@ -45,6 +45,11 @@ export class UIController extends EventTarget {
   }
 
   #bindEvents() {
+    document.getElementById('starfield-toggle').addEventListener('click', event => {
+      const visible = event.currentTarget.classList.toggle('active');
+      event.currentTarget.setAttribute('aria-pressed', String(visible));
+      this.emit('starfield-toggle', visible);
+    });
     document.getElementById('search-input').addEventListener('input', () => this.#populateSearch());
     document.getElementById('search-input').addEventListener('keydown', event => {
       if (event.key === 'Enter') {
