@@ -37,6 +37,8 @@ npm run preview
 
 ## Kontrol
 
+- **Galaxy · Dev / Tata Surya** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy sementara hanya placeholder kosong. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama. Peta galaksi belum tersedia.
+
 - Klik objek: membuka detail.
 - Pencarian: memilih dan mengunjungi objek.
 - **Kunjungi objek / F**: transisi kamera lalu melepas target; **Ikuti orbit**: kamera mengikuti posisi objek.

@@ -44,6 +44,7 @@ export class UIController extends EventTarget {
   }
 
   #populateSearch() {
+    if (this.mode === 'galaxy') return;
     const select = this['object-select'];
     select.replaceChildren(new Option('Pilih hasil pencarian...', ''));
     const results = searchObjects(document.getElementById('search-input').value, this.filter || 'all');
@@ -233,7 +234,26 @@ export class UIController extends EventTarget {
   }
 
   emit(name, detail) {
+    if (this.mode === 'galaxy' && name !== 'quality-change') return;
     this.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+
+  setMode(id) {
+    this.mode = id;
+    const galaxy = id === 'galaxy';
+    document.body.classList.toggle('galaxy-mode', galaxy);
+    this.selectedId = null; this.closeInfo(); this.hideWelcome();
+    this.status(''); this.filter = 'all';
+    for (const button of document.querySelectorAll('.rail-button')) {
+      const active = button.dataset.filter === 'all';
+      button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+    }
+    for (const control of document.querySelectorAll('.left-rail button, .time-dock button, .time-dock input, #search-input, #object-select, #tour-button, #flight-button, #favorites-button')) control.disabled = galaxy;
+    document.getElementById('search-input').value = '';
+    this['object-select'].replaceChildren(new Option('Galaxy Mode belum memiliki objek', ''));
+    if (!galaxy) this.#populateSearch();
+    document.getElementById('search-status').textContent = galaxy ? 'Belum ada katalog galaksi' : '';
+    document.getElementById('galaxy-placeholder').hidden = !galaxy;
   }
 
   ready() {
@@ -318,6 +338,7 @@ export class UIController extends EventTarget {
   }
 
   startTour() {
+    if (this.mode === 'galaxy') return;
     this.hideWelcome();
     this.tourIndex = 0;
     this.tourPaused = false;

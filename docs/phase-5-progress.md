@@ -1,7 +1,7 @@
 # Phase 5 — Interactive Milky Way Map
 
 Tanggal audit: 17 Oktober 2026 (Asia/Jakarta). Baseline Git: `7e6e951`.
-Status: **audit dan rancangan saja; belum ada Galaxy Mode atau refactor runtime**.
+Status: **arsitektur dua mode sudah diimplementasikan; Galaxy Mode masih scene kosong dengan placeholder**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
 
 ## 1. Baseline dan verifikasi
 
@@ -142,16 +142,56 @@ Tidak perlu mengekstrak seluruh kamera/tur menjadi framework generik dahulu. Pin
 - [x] Identifikasi coupling scene, kamera, UI/search/tour dan disposal.
 - [x] Rancang dua mode, lifecycle, coordinate boundary dan file modular.
 - [x] Jalankan 46 unit test dan production build; dokumentasikan hasil tanpa perubahan runtime.
-- [ ] P5-01: kontrak lifecycle + ModeController dengan test doubles, termasuk deactivate, update active-only, resize, switch berulang, rollback, latest-request-wins dan dispose idempotent. Belum menggambar galaksi.
-- [ ] P5-02: adapter SolarSystemMode dan delegasi main minimal; hanya solar terdaftar. Seluruh regresi existing wajib lulus sebelum menambah mode kedua.
+- [x] P5-01a: lifecycle sinkron + ModeController dengan test doubles: deactivate, update active-only, resize, switch berulang, rollback dan dispose idempotent (bagian 8).
+- [ ] P5-01b: async activation/cancellation dan latest-request-wins jika mode membutuhkan lazy import/aset async; belum diperlukan placeholder lokal.
+- [x] P5-02: adapter SolarSystemMode dan delegasi main; integrasi existing dipertahankan dan seluruh 54 E2E existing lulus. Sesuai tugas terbaru, mode kedua berupa placeholder turut disediakan (bagian 8).
 - [ ] P5-03: provider UI/search/detail serta capability solar; audit shortcut/dialog/fokus, pertahankan favorit lama. Validasi semua fitur solar tetap tersedia.
 - [ ] P5-04: verifikasi sumber/lisensi katalog dan konvensi koordinat; tulis helper murni beserta test finite, unit, sumbu, handedness, ID unik dan pemisahan science/visual.
-- [ ] P5-05: GalaxyMode minimal dengan scene/kamera sendiri dan selector mode, lazy activation/rollback. Uji bolak-balik tanpa kebocoran state, waktu atau audio sebelum visual kompleks.
+- [x] P5-05a: GalaxyMode kosong dengan scene/kamera sendiri, selector mode, lazy initialize sinkron dan rollback; pengujian switch/state/waktu/audio tersedia (bagian 8).
+- [ ] P5-05b: lazy activation async dan pemulihan kegagalan aset galaksi; menunggu kebutuhan dataset/visual.
 - [ ] P5-06: visual peta seeded yang ringan dan budget Low/Medium/High; model disk/struktur hanya setelah data/parameter ilustratif dijelaskan. Particle dekoratif non-pickable.
 - [ ] P5-07: marker terpilih, pencarian dataset galaksi, panel bersumber dan aksi marker Tata Surya untuk kembali ke mode solar-system. Framing/camera limits galaksi terpisah.
 - [ ] P5-08: E2E dua viewport, resize/fullscreen, reduced motion, keyboard, mode switch saat tur/flight/texture pending, search/filter isolation, error/fallback, kualitas dan timeline audio. Ulang seluruh suite unit/build/E2E.
 - [ ] P5-09: profil switch berulang dan sesi panjang, resource/heap/draw calls, audit visual/perangkat; dokumentasikan batas dan finalisasi README/progres.
 
-**Tugas pertama paling aman: P5-01, kontrak dan controller dengan mode palsu di unit test, tanpa mengubah scene existing.** Setelah lulus, P5-02 membuat adapter solar dengan hasil tampilan/perilaku identik. Jangan langsung menambah GalaxyMap ke SolarSystem atau memakai starfield dekoratif sebagai katalog galaksi.
+**Rekomendasi awal audit P5-01/P5-02 sudah dikerjakan pada bagian 8.** Berikutnya pisahkan provider katalog/detail (P5-03) dan verifikasi konvensi/data (P5-04) sebelum membuat visual. Jangan memakai starfield dekoratif sebagai katalog galaksi.
 
 Backlog Phase 4 seperti awan Venus, ephemeris, Charon, sinkronisasi favorit, screen reader menyeluruh dan adaptive quality tidak otomatis menjadi lingkup implementasi peta galaksi. Galactic flight/tour dan bookmark lintas mode memerlukan tugas tersendiri; capability awalnya nonaktif dengan penjelasan, bukan tombol kosong.
+
+## 8. Implementasi arsitektur mode — 17 Oktober 2026
+
+Tugas ini membuat batas lifecycle dan Galaxy placeholder saja. Tidak membuat peta, partikel, katalog atau data ilmiah galaksi. Integrasi solar di main dipindahkan secara mekanis ke closure dalam SolarSystemMode; solver orbit, material, kamera/tween, collision, tur dan data existing dipertahankan.
+
+### Kepemilikan dan lifecycle
+
+- `src/core/ModeController.js`: registry, initialize sekali/lazy, activate/deactivate, update active-only, resize kedua mode yang sudah diinisialisasi, rollback aktivasi gagal dan dispose idempotent. ID asing ditolak sebelum mode aktif dinonaktifkan.
+- `src/modes/SolarSystemMode.js`: mempunyai Scene, kamera, OrbitControls, FlightControls, SolarSystem, safety, state tween/tur/follow dan raycasting sendiri. Event callback digate oleh active dan dicabut saat dispose. Tidak membuat renderer atau RAF.
+- `src/modes/GalaxyMode.js`: Scene kosong, PerspectiveCamera dan OrbitControls tersendiri; `pickables` dan `searchDataset` kosong. Tidak memakai root/skala solar. Clipping 0,1–200 dan orbit distance 2–100 hanya konfigurasi placeholder, bukan angka astronomi.
+- `src/main.js`: satu renderer, satu rantai RAF, resize/fullscreen global, routing quality, context-lost dan switch. Per frame memanggil controller.update lalu render scene/camera aktif. Diagnostic solar existing tetap tersedia untuk regresi; diagnostic mode ditambahkan pada development.
+- `UIController.setMode`: bersihkan panel/search/filter/seleksi, nonaktifkan kontrol solar di galaxy, tampilkan placeholder. Shortcut tur/time tidak bisa mengubah solar saat galaxy aktif. Tombol fullscreen, bantuan, audio dan cinematic tetap global. Provider galaksi lengkap belum dibuat karena belum ada katalog.
+- AudioManager tidak dibuat ulang/dispose ketika mode berpindah. Setiap mode/control dibuat sekali, listener tidak ditambahkan ulang setiap activate. Dua OrbitControls terkait kamera berbeda, hanya satu enabled. Renderer dan audio hanya dilepas ketika halaman ditutup, bukan pada switch.
+
+### Perilaku pergantian
+
+Tombol **Galaxy · Dev** di kiri bawah masuk placeholder; tombol berubah menjadi **Tata Surya** untuk kembali. Tombol native memiliki title/aria-label/pressed state dan bisa digunakan dengan Tab/Enter. Placeholder menerangkan bahwa peta dan objek belum tersedia. Tidak ada kontrol galaksi palsu yang memanggil fungsi solar.
+
+Saat meninggalkan solar, tur/tween/Follow dihentikan, flight/velocity/pointer lock dilepas, seleksi mesh dan panel dibersihkan. Pose kamera, elapsedDays, pause/timeScale dan resource solar disimpan di instance yang sama. Solar tidak update saat inactive dan tidak mengejar waktu yang terlewat. Kembali tidak otomatis memulai tur/Follow/flight. Search solar dibangun ulang tanpa pilihan/filter lama. Dialog/popover transient ditutup ketika switch.
+
+Lifecycle saat ini **sinkron** karena kedua mode dibuat dari kode lokal tanpa async activation. Tidak mengklaim implementasi latest-request-wins atau pembatalan async loader mode: bagian itu ditunda hingga Galaxy membutuhkan lazy import/aset async. Callback texture solar inactive tidak boleh menimpa status UI galaxy; guard active menangani event fallback. Solar tetap memakai cache tekstur existing.
+
+### Checklist implementasi tahap ini
+
+- [x] Scene/camera solar dan galaxy terpisah, satu renderer dan satu RAF.
+- [x] Lifecycle initialize/activate/deactivate/update/resize/dispose dan unit test transisi/rollback.
+- [x] Integrasi solar dipindahkan ke adapter; Galaxy hanya placeholder tanpa visual baru.
+- [x] Tombol development, clear selection, input gating, UI sesuai mode dan persistensi instance audio.
+- [x] Seluruh 54 regresi browser existing lulus; test mode baru lulus di kedua browser setelah koreksi sinkronisasi assertion resize.
+- [ ] Provider katalog/panel galaksi, async activation/cancellation dan budget galaksi: tahap selanjutnya, bukan fitur selesai pada tugas ini.
+
+File baru: ModeController.js, modes/SolarSystemMode.js, modes/GalaxyMode.js, test/modes.test.js, e2e/modes.spec.js. File berubah: main.js, UIController.js, index.html, styles.css, README.md dan dokumen ini. Tidak ada dependency baru, reset atau git commit.
+
+Validasi: **49/49 unit test lulus**. **Production build berhasil**, 39 modul; HTML 14,36 kB, CSS 15,64 kB, aplikasi 108,03 kB (gzip 34,97 kB), Three.js tetap terpisah 499,98 kB (gzip 126,49 kB). Tidak ada warning/error build.
+
+`npm.cmd run test:e2e` menjalankan 56 eksekusi pada Edge 1366×768 dan Chrome 1920×1080: 55 lulus, satu test mode Edge membaca aspect sebelum event resize selesai. Assertion diperbaiki memakai expect.poll tanpa mengubah runtime; `npm.cmd run test:e2e -- e2e/modes.spec.js` kemudian **2/2 lulus**. Jadi seluruh 54 regresi existing dan kedua test mode telah terverifikasi, bukan klaim satu run penuh 56/56 setelah koreksi test. Tidak ada console warning/error aplikasi atau pageerror pada skenario yang lulus; warning NO_COLOR/FORCE_COLOR berasal dari environment runner.
+
+E2E baru memeriksa scene kosong, clear selection, solar time freeze, kamera kembali, resize, input/shortcut, resource count, audio singleton, keluar tur/flight dan pencarian setelah kembali. Pengujian resource singkat bukan bukti bebas leak sesi panjang. Screenshot placeholder juga diperiksa; belum ada visual galaksi yang perlu divalidasi.
