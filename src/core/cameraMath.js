@@ -1,6 +1,14 @@
 export function visitDistance(radius, framing = 5.2) {
   return Math.max(radius * framing, radius + 1.2);
 }
+export function cinematicEase(progress) {
+  const t = Math.max(0, Math.min(1, progress));
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+export function safeCameraRadius(radius) {
+  return radius + Math.max(.25, radius * .08);
+}
 export function proximityFactor(clearance) {
   return Math.max(0.025, Math.min(1, clearance / 18));
 }

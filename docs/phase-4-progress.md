@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **rendering/pencahayaan, atmosfer/glow/material dan lingkungan dekoratif telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–9.
+Status: **rendering/pencahayaan, atmosfer/glow/material, lingkungan dekoratif dan transisi kamera telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–10.
 
 ## 1. Baseline dan batas audit
 
@@ -79,6 +79,8 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 - [x] Dokumentasikan rencana tanpa mengubah kode aplikasi/reset/commit.
 
 ### Implementasi bertahap
+
+- [x] P4-R4: easing/transisi kamera bersama, pembatalan, Follow dan perlindungan body/cincin (bagian 10). Reduced motion P4-03 tetap tugas terpisah.
 
 - [x] P4-R3: lingkungan dekoratif berlapis, haze halus, posisi relatif kamera, seeded distribution dan toggle Bintang (bagian 9). Bukan Galaxy Scene Phase 5.
 
@@ -181,3 +183,31 @@ Validasi: unit test mencakup seed posisi/warna, arah proyeksi tetap saat kamera 
 Manual: aktifkan Free Flight, bergerak maju/mundur dan menyamping; bintang tidak mendekat atau bergeser seperti asteroid. Putar pandangan untuk melihat arah langit berbeda. Gunakan Bintang lewat Tab/Space/Enter, ganti Low/Medium/High, lalu kunjungi Bumi atau Saturnus dan pastikan bintang tidak menutupi cakram planet. Semua efek latar ini dekoratif.
 
 Hasil akhir: **37/37 unit test lulus**; **production build berhasil** (30 modul, aplikasi 88,03 kB, Three.js 499,98 kB sebelum gzip); **6/6 E2E targeted lulus** dalam 50,4 detik pada Edge/Chrome, exit code 0, tanpa console warning/error atau pageerror. `git diff --check` tidak menemukan whitespace error. Tidak ada git commit.
+
+## 10. Kamera dan transisi sinematik — 17 Oktober 2026
+
+- Easing quintic smootherstep `6t^5 - 15t^4 + 10t^3` menggantikan easing cubic, dengan turunan pertama/kedua nol pada endpoint. Orientasi memakai quaternion slerp dari pose awal menuju arah target yang diperbarui. Visit tetap memakai jarak berdasarkan radius visual (`max(radius × framing, radius + 1,2)`).
+- `beginTween` dipakai Visit/Follow, overview dan pemberhentian khusus sabuk asteroid. Tidak ada pengendali kamera atau timer tur kedua. Target bergerak tetap diperbarui selama perjalanan, lalu Follow mempertahankan offset kamera saat objek bergerak.
+- OrbitControls dinonaktifkan selama tween; listener pointer/wheel pada capture phase membatalkan tween sebelum OrbitControls memproses input. Sisa damping dibersihkan tanpa mengubah pose kamera. Pembatalan tween mengatur ulang target observer sepanjang arah pandang saat ini agar frame berikutnya tidak kembali menyentak ke arah target lama. Shortcut F berulang dan F saat Free Flight diabaikan.
+- Saat Free Flight diaktifkan, tur dihentikan, tween/Follow dilepas dan velocity/tombol flight direset sebelum pointer lock. Posisi/orientasi tidak direset ke preset. Escape membatalkan tween atau melepas Follow; jika tur aktif, tur dijeda agar tidak langsung mengambil alih lagi. Dialog tetap mendapat prioritas Escape; di flight, Escape tetap melepas pointer lock.
+- `CameraSafety` hanya mengubah posisi kamera. Batas bola = radius + max(0,25; 8% radius). Cincin diperiksa sebagai annulus dalam local space mesh dengan bantalan 0,3 unit visual, termasuk kemiringan/transformasi parent. Tidak menggunakan seluruh bola luar cincin sebagai zona terlarang saat observer/flight, sehingga area di atas/bawah cincin tetap dapat dijelajahi.
+- Swept segment memotong langkah kamera pada titik kontak terdekat dengan bola/cincin, mencegah tunnelling pada gerak cepat. Koreksi penetrasi memakai hingga delapan lintasan untuk overlap akibat skala terkompresi. Scratch vector digunakan ulang; tidak membuat mesh collision atau objek baru dalam loop safety.
+- Saat merencanakan tween, lintasan langsung diuji terhadap envelope konservatif; bila terhalang, empat kandidat quadratic detour diperiksa masing-masing 32 segmen. Alokasi perencanaan hanya terjadi saat memulai perjalanan. Rencana memakai posisi objek saat mulai; guard collision per-frame tetap menjadi pengaman ketika objek bergerak.
+- Batas: ini navigasi ilustratif, bukan pathfinding dinamis penuh. Bila tidak ditemukan detour atau objek bergerak menghalangi lintasan, kamera berhenti pada batas aman dan dapat memerlukan input manual; tidak menjamin setiap endpoint dapat dicapai pada semua konfigurasi objek yang saling tumpang tindih. Koreksi keselamatan diprioritaskan atas kelancaran ketika sebuah objek bergerak memasuki posisi kamera.
+- File: `src/main.js`, `src/core/cameraMath.js`, `src/core/CameraSafety.js` (baru), `test/cameraPolish.test.js`, `e2e/cameraPolish.spec.js`, dokumen ini. Tidak mengubah material, orbit, katalog objek, narasi tur atau UI. Tidak ada commit.
+
+### Kontrol setelah perubahan
+
+- Kunjungi / F / hasil pencarian: perjalanan halus, kemudian observer bebas; jarak mengikuti radius objek.
+- Ikuti orbit: perjalanan lalu Follow; drag/scroll observer tetap dapat mengatur pandangan ketika Follow sudah aktif. Escape melepas Follow.
+- Drag/scroll saat perjalanan: membatalkan perjalanan dan mengambil alih kamera; tur dijeda jika aktif.
+- Free Flight: menghentikan tur/transisi/Follow pada pose sekarang; WASD, Space/Ctrl, Shift dan scroll tetap tersedia. Escape melepas pointer; tombol Keluar Free Flight kembali ke observer.
+- Guided Tour menggunakan sistem tween dan safety yang sama; Escape menjeda pengambilalihan kamera tur, Resume tetap tersedia melalui kontrol existing.
+
+### Validasi
+
+- `npm.cmd test`: **39/39 lulus**, termasuk endpoint/monotonicity easing, radius aman, pusat bola, annulus miring yang ditranslasikan dan swept collision untuk lintasan cepat melewati bola/cincin.
+- `npm.cmd run build`: berhasil, 31 modul; aplikasi 91,45 kB, Three.js tetap terpisah 499,98 kB sebelum gzip.
+- `npm.cmd run test:e2e -- e2e/cameraPolish.spec.js e2e/observer.spec.js`: **8/8 lulus**, exit code 0, 1,5 menit di Edge 1366×768 dan Chrome 1920×1080. Regresi observer (Visit/Follow/tur/flight/resource/fallback), Escape dan pengambilalihan Free Flight dari transisi tur lulus tanpa console warning/error atau pageerror. Bukan klaim seluruh E2E atau benchmark performa dijalankan ulang.
+
+Manual: kunjungi Saturnus/Uranus, zoom mendekati cincin dari atas/bawah; coba gerak flight melintasi cincin. Mulai Visit lalu drag/scroll/Escape; mulai Follow, ubah waktu dan periksa target mengikuti planet sebelum menekan Escape. Saat tur sedang berpindah, aktifkan Free Flight, lepas pointer dengan Escape lalu keluar melalui tombol. Periksa orientasi tetap menerus ketika mode berubah.
