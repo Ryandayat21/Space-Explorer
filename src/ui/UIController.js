@@ -20,8 +20,13 @@ export class UIController extends EventTarget {
     this.exploration = new ExplorationUI(this);
     for (const button of document.querySelectorAll('button')) {
       if (!button.hasAttribute('title') && !button.hasAttribute('aria-label')) button.title = button.textContent.trim();
+      if (button.classList.contains('icon-button') && !button.hasAttribute('aria-label')) button.setAttribute('aria-label', button.title || button.textContent.trim());
     }
     this.syncFullscreen();
+    this.#updateTimeLabel();
+    for (const button of document.querySelectorAll('.rail-button, #orbit-toggle, #label-toggle, #flight-button')) {
+      button.setAttribute('aria-pressed', String(button.classList.contains('active')));
+    }
   }
 
   #cacheElements() {
@@ -82,7 +87,9 @@ export class UIController extends EventTarget {
     this['follow-button'].addEventListener('click', () => this.emit('follow', this.selectedId));
     this['tour-button'].addEventListener('click', () => this.startTour());
     this['flight-button'].addEventListener('click', () => this.emit('flight-toggle'));
-    this['help-button'].addEventListener('click', () => this['help-dialog'].showModal());
+    this['help-button'].addEventListener('click', () => {
+      this['help-dialog'].showModal(); this['close-help'].focus();
+    });
     this['close-help'].addEventListener('click', () => this['help-dialog'].close());
     this['fullscreen-button'].addEventListener('click', () => this.toggleFullscreen());
     document.addEventListener('fullscreenchange', () => {
@@ -120,10 +127,12 @@ export class UIController extends EventTarget {
     });
     this['orbit-toggle'].addEventListener('click', () => {
       const active = this['orbit-toggle'].classList.toggle('active');
+      this['orbit-toggle'].setAttribute('aria-pressed', String(active));
       this.emit('orbits-toggle', active);
     });
     this['label-toggle'].addEventListener('click', () => {
       this.labelsVisible = this['label-toggle'].classList.toggle('active');
+      this['label-toggle'].setAttribute('aria-pressed', String(this.labelsVisible));
       this['labels-layer'].hidden = !this.labelsVisible;
     });
     this['quality-button'].addEventListener('click', () => this.#cycleQuality());
@@ -142,8 +151,9 @@ export class UIController extends EventTarget {
     this['tour-exit'].addEventListener('click', () => this.stopTour());
     document.querySelectorAll('.rail-button').forEach((button) => {
       button.addEventListener('click', () => {
-        document.querySelectorAll('.rail-button').forEach((item) => item.classList.remove('active'));
+        document.querySelectorAll('.rail-button').forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-pressed', 'false'); });
         button.classList.add('active');
+        button.setAttribute('aria-pressed', 'true');
         this.filter = button.dataset.filter;
         this.#populateSearch();
         this.emit('filter', this.filter);
@@ -152,6 +162,9 @@ export class UIController extends EventTarget {
     window.addEventListener('keydown', (event) => {
       if (document.querySelector('dialog[open]')) return;
       if (event.repeat || event.ctrlKey || event.altKey || event.metaKey || document.activeElement.isContentEditable) return;
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (event.code === 'KeyP') { event.preventDefault(); this['time-toggle'].click(); }
+      if (event.code === 'KeyL') { event.preventDefault(); this.toggleFullscreen(); }
       if (event.code === 'KeyG' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) this.startTour();
       if (event.code === 'KeyH' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) this.toggleHud();
     });
@@ -207,6 +220,7 @@ export class UIController extends EventTarget {
 
   #updateTimeLabel() {
     const speed = timeSpeeds[this.timeIndex];
+    this['time-speed'].setAttribute('aria-valuetext', `${speed.toLocaleString('id-ID')} hari simulasi per detik`);
     this['time-label'].textContent = speed < 1 ? `${speed} hari/detik` : `${speed} hari/detik`;
   }
 
@@ -283,7 +297,9 @@ export class UIController extends EventTarget {
       this['flight-hud'].hidden = !active;
       document.getElementById('flight-exit').hidden = !active;
       this['flight-button'].classList.toggle('active', active);
+      this['flight-button'].setAttribute('aria-pressed', String(active));
       this['flight-button'].title = active ? 'Keluar dari mode terbang bebas' : 'Aktifkan mode terbang bebas';
+      this['flight-button'].setAttribute('aria-label', this['flight-button'].title);
       if (active) this.hideWelcome();
     }
     const displayedSpeed = Math.round(speed / 18 * 10);

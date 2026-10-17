@@ -76,6 +76,17 @@ const lookCamera = camera.clone();
 const savedPosition = new THREE.Vector3();
 const savedRotation = new THREE.Quaternion();
 const previousCameraPosition = new THREE.Vector3();
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+reducedMotion.addEventListener('change', () => {
+  if (reducedMotion.matches && cameraTween) {
+    cameraTween.fromPosition.copy(camera.position);
+    cameraTween.fromTarget.copy(orbitControls.target);
+    cameraTween.fromRotation.copy(camera.quaternion);
+    cameraTween.control = null;
+    cameraTween.start = performance.now(); cameraTween.duration = 150;
+    if (tourPaused) tweenSuspendedAt = cameraTween.start;
+  }
+});
 function resetObserver() {
   savedPosition.copy(camera.position); savedRotation.copy(camera.quaternion);
   orbitControls.enableDamping = false; orbitControls.update();
@@ -84,6 +95,7 @@ function resetObserver() {
   orbitControls.enabled = !flightActive;
 }
 function beginTween(tween) {
+  if (reducedMotion.matches) tween.duration = 150;
   resetObserver();
   tween.fromRotation = camera.quaternion.clone();
   // Plan a bounded detour using conservative body/ring envelopes, once per visit.
@@ -323,8 +335,8 @@ function goTour(id) {
 window.addEventListener('keydown', (event) => {
   if (document.querySelector('dialog[open]')) return;
   if (event.code === 'Escape') { manualTakeover(); followedObject = null; return; }
-  if (event.repeat || flightActive) return;
-  if (event.code === 'KeyF' && selectedObject && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) {
+  if (event.repeat || flightActive || event.ctrlKey || event.altKey || event.metaKey || document.activeElement.isContentEditable) return;
+  if (event.code === 'KeyF' && selectedObject && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
     if (tourActive) ui.stopTour();
     setCameraDestination(selectedObject.data.id);
   }

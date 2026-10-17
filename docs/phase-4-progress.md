@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **rendering/pencahayaan, atmosfer/glow/material, lingkungan dekoratif, transisi kamera, mode sinematik/kontrol tampilan serta panel ilmiah telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–12.
+Status: **rendering, visual, kamera, mode sinematik, panel ilmiah serta accessibility/UX desktop telah ditingkatkan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–13.
 
 ## 1. Baseline dan batas audit
 
@@ -92,9 +92,9 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 
 - [x] P4-R1 (cakupan tugas pengguna): rendering/color space/exposure/pencahayaan dan resize ber-DPR cap; lihat bagian 7. P4-02/P4-05 tetap belum dicentang karena cakupannya lebih luas dari tugas ini.
 
-- [ ] P4-01: reproduksi dan perbaiki fokus welcome tersembunyi, status toggle/slider dan nama dialog. Tambahkan E2E keyboard targeted.
+- [x] P4-01: fokus welcome tersembunyi, status toggle/slider dan nama dialog diperbaiki; E2E keyboard targeted tersedia (bagian 11–13).
 - [ ] P4-02: perbaiki sinkronisasi resize/DPR/fullscreen, termasuk keluar fullscreen melalui Escape dan kegagalan API. Uji kedua viewport, cap kualitas, zoom/perpindahan monitor.
-- [ ] P4-03: integrasikan reduced motion pada transisi kamera melalui alur existing; jaga Visit/Follow, pembatalan manual dan tur.
+- [x] P4-03: reduced motion pada jalur tween bersama, termasuk perubahan preferensi ketika berjalan; kontrol kamera existing dipertahankan (bagian 13).
 - [ ] P4-04: ambil screenshot baseline deterministik Matahari, Bumi day/night limb, Venus, Saturnus, satu bulan, Halley dan overview pada Low/Medium/High; catat viewport, DPR, posisi kamera dan waktu simulasi yang sama.
 - [ ] P4-05: kalibrasi pencahayaan/material/transparansi secara kecil dan terpisah, lalu polish atmosfer/corona jika screenshot membuktikan manfaatnya. Tidak menambahkan bloom/shadow pipeline secara default.
 - [ ] P4-06: verifikasi sumber/representasi ilmiah dan aset prioritas (misalnya awan Venus atau satu bulan) sebelum menambah map lokal; perluas loader existing hanya sesuai kebutuhan, sertakan lisensi/fallback/disposal.
@@ -252,3 +252,35 @@ Manual: pilih objek lalu tekan H; pastikan hanya tombol pemulihan UI dan indikat
 - `npm.cmd run test:e2e -- e2e/sciencePanel.spec.js e2e/dwarfPlanets.spec.js e2e/cameraPolish.spec.js`: **6/6 lulus**, exit code 0, 46,9 detik pada Edge/Chrome. Mencakup panel Matahari/planet/bulan/katai/komet, fokus/Escape, tautan sumber, placeholder data, regresi planet katai dan transisi kamera; tanpa console warning/error atau pageerror. Tidak mengklaim seluruh suite dijalankan ulang.
 
 Manual: cari Matahari, Bumi, Bulan, Pluto dan Halley bergantian. Periksa heading, satuan, sumber dan Data belum tersedia pada massa objek yang belum memiliki data. Gunakan Tab untuk membaca kontrol; Escape menutup panel dan mengembalikan fokus ke pencarian. Mulai guided tour untuk memastikan pergantian informasi tidak memindahkan fokus dari kontrol tur.
+
+## 13. Accessibility dan UX desktop — 17 Oktober 2026
+
+### Audit dan perubahan
+
+| Area | Hasil dan tindakan |
+| --- | --- |
+| Button/icon | Tombol native tetap keyboard-operable. Semua icon-button diberi aria-label jika belum ada; label/pressed Free Flight mengikuti state. Focus-visible cyan existing dipertahankan |
+| Toggle/kategori | Orbit, Label, Free Flight dan kategori kini mengekspos aria-pressed; Bintang, kedua sabuk, bookmark, fullscreen dan sinematik sudah tersedia |
+| Input | Search/select memiliki nama; slider kini aria-valuetext dalam hari simulasi per detik, bukan hanya indeks 0–4. Tombol panah native tetap bekerja |
+| Modal | Help diberi aria-labelledby dan fokus awal Tutup. Favorit/perbandingan tetap native dialog dengan nama, autofocus dan pengembalian fokus existing. Tidak menambah focus trap JavaScript; Tab dapat menuju chrome browser ketika hanya ada satu kontrol dialog, tetapi tidak ke kontrol latar inert |
+| Panel | Info memiliki aria-labelledby, heading fokus, Escape dan focus return; panel/welcome/HUD tersembunyi inert. Panel nonmodal tidak menjebak Tab |
+| Shortcut | P jeda/lanjut simulasi, L fullscreen, H sinematik, G tur, F Visit. Guard dialog, input/select/textarea, contenteditable, modifier dan repeat mencegah shortcut mengambil alih ketika mengetik. Flight WASD/Space/Ctrl/Shift dan pointer lock tetap memakai kontrol existing |
+| Bantuan | Daftar WASD, mouse/drag, scroll, Shift, Space/Ctrl, F, G/H, L, P, Escape, Tab/Shift+Tab/Enter/Space dan penjelasan prioritas modal. Dialog dibatasi tinggi viewport dan dapat discroll |
+| Kontras | Muted menjadi #b1bfd5; glass-panel lebih opak (0,94–0,96) agar latar planet terang tidak memutihkan panel. Tidak mengganti layout utama |
+
+Acuan perhitungan kontras terhadap panel gelap #1a253a: muted #b1bfd5 ≈8,24:1; label/sumber sekunder #a5b4cc ≈7,30:1; deskripsi #a9b4c9 ≈7,34:1; fokus cyan ≈9,44:1. Ini pemeriksaan palet teks utama, bukan sertifikasi seluruh kombinasi transparansi, perangkat atau pembaca layar. Disabled controls tetap berbeda secara visual. Uji screen reader manual menyeluruh dan zoom ekstrem belum dilakukan.
+
+### Reduced motion
+
+- matchMedia prefers-reduced-motion dipakai di beginTween yang sudah dibagi Visit/Follow/overview/tur: durasi 150 ms, menggantikan 1,2–2,2 detik. Perubahan preferensi saat tween aktif mengawali segmen pendek dari pose sekarang; bila tur dijeda, timestamp pause diselaraskan.
+- CSS reduced-motion meminimalkan transisi UI dan mematikan animasi loading-orbit. Efek latar/rim existing tidak memakai blinking; tidak menambahkan efek berkedip. Simulasi orbit dan gerak manual tetap dikendalikan pengguna; reduced motion tidak diam-diam mengubah data/waktu/orbit atau menghentikan Follow. Shortcut P tersedia untuk pause simulasi.
+- File: src/main.js, src/ui/UIController.js, src/styles.css, index.html, e2e/accessibility.spec.js dan dokumen ini. Tidak mengubah data/sistem orbit, dependency atau melakukan git commit.
+
+### Validasi
+
+- `npm.cmd test`: **42/42 lulus**.
+- `npm.cmd run build`: berhasil, 32 modul, aplikasi 96,80 kB, CSS 14,63 kB; Three.js tetap terpisah 499,98 kB sebelum gzip.
+- `npm.cmd run test:e2e -- e2e/accessibility.spec.js e2e/cinematic.spec.js e2e/sciencePanel.spec.js`: **10/10 lulus**, exit code 0, 43,1 detik pada Edge 1366×768 dan Chrome 1920×1080; tanpa console warning/error atau pageerror. Memeriksa bantuan bernama, fokus kembali, modal shortcut guard, P/L, input guard, slider, pressed state, outline keyboard serta reduced motion saat startup dan saat tween aktif; termasuk regresi cinematic dan panel ilmiah.
+- Assertion awal terlalu ketat mengharuskan Tab tetap di dalam dialog satu tombol. Disesuaikan untuk perilaku native yang mengizinkan fokus chrome browser/body tanpa memfokuskan kontrol latar; tidak mengubah dialog menjadi trap buatan demi test.
+
+Manual: buka bantuan lewat Tab/Enter, baca shortcut dan tutup dengan Escape; fokus harus kembali ke bantuan. Coba P/L/H dari tombol biasa dan pastikan tidak berjalan ketika mengetik di search. Ubah slider dengan panah. Aktifkan reduced motion di pengaturan OS/browser lalu Visit beberapa objek, termasuk saat transisi sedang berlangsung. Gunakan favorit/perbandingan dengan Tab/Shift+Tab dan pastikan Escape mengembalikan fokus ke kontrol pembuka.
