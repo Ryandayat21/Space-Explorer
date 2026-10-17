@@ -61,6 +61,14 @@ Favorit hanya menyimpan ID di localStorage pada browser/origin yang sama, tanpa 
 
 Drag/scroll mengambil alih transisi kamera dan menjeda tur. Preferensi sistem **reduced motion** memendekkan transisi kamera menjadi 150 ms dan menonaktifkan animasi UI dekoratif, tanpa mengubah kecepatan orbit.
 
+## Ambient audio
+
+Klik **Enable Ambience** di kiri bawah untuk mulai musik lokal; tersedia Play/Pause, Mute/Unmute dan slider volume (default 15%). Kontrol mendukung Tab, Enter/Space dan tombol panah pada slider. Fade volume berlangsung sekitar 450 ms. Kontrol ikut tersembunyi pada mode sinematik; tekan H untuk menampilkannya lagi.
+
+Audio tidak autoplay saat startup/reload. Hanya volume dan mute disimpan di `milky-way-observer.audio.v1`; storage rusak/ditolak tidak menghentikan aplikasi. Saat tab tersembunyi audio langsung dijeda untuk menghindari suara di background, kemudian dilanjutkan hanya jika sebelumnya pengguna sedang memutarnya. Jika browser menolak pemutaran, tekan Play lagi. Pause/resume dan perpindahan scene tidak mereset posisi track; AudioManager tunggal dimiliki aplikasi, bukan Solar System/Galaxy scene.
+
+Ganti `public/audio/Interstellar Main Theme.mp3` dengan MP3 berizin menggunakan nama yang sama, atau sesuaikan URL di `src/core/AudioManager.js`. Sumber/lisensi file yang diberikan pengguna belum diketahui; lihat [catatan aset audio](public/audio/README.md). Tidak ada musik yang diunduh atau ditambahkan oleh implementasi ini. Vite menyalin aset public ke build, jadi pastikan izin distribusi sebelum deployment. Jika file gagal, kontrol menampilkan **Audio unavailable** tanpa retry berulang; fitur simulasi tetap berjalan.
+
 ## Quality presets
 
 Default **Medium**. Pilihan disimpan di localStorage; data rusak atau storage tidak tersedia kembali ke Medium pada startup.

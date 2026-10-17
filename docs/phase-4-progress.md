@@ -365,3 +365,19 @@ Regresi browser menemukan Visit antarbulan dapat berhenti di depan Uranus/Saturn
 - Profiling GPU/heap sesi panjang lintas perangkat serta kualitas adaptif. High DPR/transparansi, geometry, DOM label, collision dan procedural startup tetap kandidat biaya; bukan ranking hasil GPU profiler.
 
 Pemeriksaan manual lanjutan: pada Medium, jeda waktu lalu kunjungi Titan → Enceladus dan Titania → Oberon → Ariel. Klik bulan setelah transisi; panel harus menunjukkan bulan yang terlihat, dengan kamera di luar permukaan/cincin. Coba H/Escape dan L/Escape, Tab ke bantuan/favorit/perbandingan, P dan slider, serta perubahan preferensi reduced motion. Jangan menganggap konfigurasi orbit ilustratif sebagai posisi astronomis tanggal nyata.
+
+## 16. Ambient audio lokal — 17 Oktober 2026
+
+- [x] AudioManager modular dengan satu instance aplikasi, terpisah dari lifecycle scene. Loop MP3, default volume 15%, fade 450 ms, play/pause dan mute/volume. Posisi track tidak direset saat pause atau berpindah scene; Galaxy Mode belum tersedia untuk diuji langsung.
+- [x] Tidak autoplay saat startup/reload; hanya tombol Enable/Play memulai playback. Penolakan browser ditangkap dan meminta interaksi baru, tanpa retry otomatis.
+- [x] Hanya mute/volume dipersist dalam `milky-way-observer.audio.v1`; JSON rusak, tipe salah, nilai di luar rentang dan storage ditolak ditangani. Status playback tidak disimpan.
+- [x] Tab tersembunyi langsung pause, tanpa menunggu fade/timer background; kembali hanya melanjutkan intent playback sebelumnya. Pause manual tidak dilanjutkan otomatis.
+- [x] File gagal menampilkan unavailable, menghentikan playback dan menonaktifkan kontrol tanpa error/retry berulang. HTTP error dari browser sendiri tetap mungkin jika file benar-benar hilang.
+- [x] Kontrol native keyboard dengan aria-label/title, slider dengan nilai persen; tersembunyi bersama cinematic mode. Listener didaftarkan sekali, timer fade diganti/dihentikan, teardown saat keluar halaman. Tidak menambah library.
+- [x] README aset mencatat nama/format, sumber berkas pengguna dan lisensi/attribution yang belum diketahui; tidak mengunduh, mengubah, atau menambahkan rekaman musik. MP3 sudah ada sebagai berkas pengguna sebelum tugas. Vite akan menyalin public ke build; izin distribusi perlu dipastikan sebelum deployment.
+
+File baru: `src/core/AudioManager.js`, `src/data/audioPreferences.js`, `src/ui/AudioControls.js`, `test/audio.test.js`, `e2e/audio.spec.js`, `public/audio/README.md`. File berubah: `src/main.js` (inisialisasi audio saja), `index.html`, `src/styles.css`, `README.md`, dokumen ini. Rendering, orbit, kamera dan tur tidak diubah. Tidak ada git commit.
+
+Verifikasi: **46/46 unit test lulus**, mencakup storage, fade, visibility/resume, timeline, autoplay denial dan media error. **Production build berhasil**, 36 modul; JS aplikasi 102,47 kB (gzip 33,06 kB), Three.js tetap terpisah 499,98 kB. **10/10 E2E targeted lulus** pada Edge 1366×768 dan Chrome 1920×1080 (audio, accessibility dan cinematic/fullscreen), 45,6 detik, tanpa console warning/error aplikasi atau pageerror. Seluruh suite E2E tidak diulang pada tugas audio ini; hasil 52/52 di bagian 15 adalah hasil finalisasi sebelumnya.
+
+Cara uji: reload harus diam; Tab ke Enable Ambience lalu Enter, ubah volume dengan panah, mute/unmute, pause dan play. Pindah tab ketika playing lalu kembali; ulangi ketika paused (harus tetap paused). Reload mempertahankan volume/mute namun tidak mulai musik. Ganti MP3 berizin dengan nama sama atau ubah URL AudioManager; perbarui catatan sumber/lisensinya.
