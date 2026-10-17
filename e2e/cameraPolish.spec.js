@@ -6,6 +6,9 @@ test('Escape cancels Visit and Follow and Free Flight takes over a tour transiti
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(true);
   await page.keyboard.press('Escape');
   expect(await page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
+  // Escape now also closes the science panel; reopen it before using Follow.
+  await page.locator('#object-select').selectOption('earth');
+  await page.locator('#object-select').selectOption('saturn');
   await page.locator('#follow-button').click();
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().followed)).toBe('saturn');
   await page.keyboard.press('Escape');

@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **rendering/pencahayaan, atmosfer/glow/material, lingkungan dekoratif, transisi kamera serta mode sinematik/kontrol tampilan telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–11.
+Status: **rendering/pencahayaan, atmosfer/glow/material, lingkungan dekoratif, transisi kamera, mode sinematik/kontrol tampilan serta panel ilmiah telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–12.
 
 ## 1. Baseline dan batas audit
 
@@ -79,6 +79,8 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 - [x] Dokumentasikan rencana tanpa mengubah kode aplikasi/reset/commit.
 
 ### Implementasi bertahap
+
+- [x] P4-R6: panel informasi ilmiah berkelompok, formatter, nilai kosong, sumber dan fokus/Escape (bagian 12). Tidak menambah angka ilmiah.
 
 - [x] P4-R5: mode sinematik, pemulihan UI, indikator singkat dan fullscreen aman (bagian 11). Tidak menyimpan preferensi sembunyikan UI saat reload.
 
@@ -231,3 +233,22 @@ Manual: kunjungi Saturnus/Uranus, zoom mendekati cincin dari atas/bawah; coba ge
 - `npm.cmd run test:e2e -- e2e/cinematic.spec.js e2e/finalization.spec.js`: **8/8 lulus**, exit code 0, 1,1 menit pada Edge 1366×768 dan Chrome 1920×1080, tanpa console warning/error atau pageerror. Memeriksa pemulihan inert/label, indikator hilang, pose kamera identik saat simulasi paused, reload, atribut tombol, fullscreen nyata, Escape, Promise rejection/API hilang dan dialog; ditambah regresi resize serta fallback seluruh JPEG. Tidak menjalankan seluruh suite atau benchmark GPU ulang.
 
 Manual: pilih objek lalu tekan H; pastikan hanya tombol pemulihan UI dan indikator sementara yang muncul. Tekan H/Escape untuk kembali dan periksa pilihan label sebelumnya dipertahankan. Masuk fullscreen, aktifkan sinematik, lalu Escape; keduanya harus berakhir. Coba ulang saat Follow/Free Flight dan buka bantuan untuk memeriksa prioritas Escape dialog. Reload saat sinematik harus selalu menampilkan UI.
+
+## 12. Pengalaman informasi ilmiah — 17 Oktober 2026
+
+- Panel existing kini mempunyai heading Ringkasan, Karakteristik fisik, Orbit dan rotasi, serta Eksplorasi dan fakta penting. Nama/jenis, bookmark, perbandingan, Visit/Follow dan sumber tetap tersedia; panel tetap scroll tanpa redesign scene.
+- `src/data/scienceFormat.js` menyediakan formatter murni dan model kelompok. Diameter memakai km/pemisah ribuan Indonesia; angka sangat besar memakai notasi ilmiah. String eksponen seperti 7,35e+22 kg menjadi 7,35 × 10²² kg; label perkiraan/GM/G dipertahankan. Notasi gravitasi dan desimal dinormalisasi; AU ditulis au dengan legenda satuan.
+- Nilai null/undefined, angka nonfinite, string kosong dan placeholder Belum diverifikasi/Tidak diketahui ditampilkan sebagai **Data belum tersedia**. Nol tetap nol. Tidak berlaku dibedakan dari data hilang; orbit heliosentris Matahari tidak berlaku. Tidak memakai ukuran/jarak visual untuk mengisi data kosong.
+- Satuan utama konsisten (diameter km, massa kg, gravitasi m/s²). Periode jam/hari/tahun dan suhu K/°C tetap mengikuti nilai serta definisi sumber; tidak memaksa konversi teks rentang/perkiraan yang dapat menambah presisi palsu. Legenda menjelaskan satuan tersebut dan au. Jarak bulan diberi label Jarak dari induk, bukan Jarak dari Matahari.
+- Penjelasan skala visual disederhanakan tetap tampil. Sumber hanya berasal dari metadata existing, menggunakan tautan HTTP(S) dan textContent. Metadata kosong menampilkan Data belum tersedia; label sumber yang kosong memakai URL. Tidak menambah atau memverifikasi ulang angka astronomi daring dalam tugas presentasi ini.
+- Setelah memilih lewat pencarian/dropdown atau dari canvas/body, fokus masuk ke judul panel yang dapat difokuskan secara programatik. Pembaruan tur otomatis dan pointer lock tidak mencuri fokus. Tutup/Escape mengembalikan fokus ke pemicu yang masih aktif, atau pencarian/tombol pemulihan HUD sebagai fallback; panel tertutup tetap inert.
+- Escape saat panel terbuka menutup panel, sambil mempertahankan handler Escape kamera existing (membatalkan transisi/melepas Follow). Dialog/fullscreen/sinematik dan pointer lock mempertahankan prioritas yang sudah tersedia. Tidak mengubah kode kamera, sistem orbit, scene, data ilmiah atau material.
+- File: `src/data/scienceFormat.js`, `src/ui/UIController.js`, `index.html`, `src/styles.css`, `test/scienceFormat.test.js`, `e2e/sciencePanel.spec.js`; assertion au dan alur Escape pada test dwarfPlanets/cameraPolish disesuaikan dengan perilaku baru. Tidak ada dependency atau git commit.
+
+### Verifikasi
+
+- `npm.cmd test`: **42/42 lulus**; tambahan memeriksa nilai hilang/nonfinite/nol, angka besar, eksponen, satuan/qualifier serta jarak bulan dan orbit Matahari.
+- `npm.cmd run build`: berhasil, 32 modul; aplikasi 95,41 kB, CSS 14,41 kB dan Three.js terpisah 499,98 kB sebelum gzip.
+- `npm.cmd run test:e2e -- e2e/sciencePanel.spec.js e2e/dwarfPlanets.spec.js e2e/cameraPolish.spec.js`: **6/6 lulus**, exit code 0, 46,9 detik pada Edge/Chrome. Mencakup panel Matahari/planet/bulan/katai/komet, fokus/Escape, tautan sumber, placeholder data, regresi planet katai dan transisi kamera; tanpa console warning/error atau pageerror. Tidak mengklaim seluruh suite dijalankan ulang.
+
+Manual: cari Matahari, Bumi, Bulan, Pluto dan Halley bergantian. Periksa heading, satuan, sumber dan Data belum tersedia pada massa objek yang belum memiliki data. Gunakan Tab untuk membaca kontrol; Escape menutup panel dan mengembalikan fokus ke pencarian. Mulai guided tour untuk memastikan pergantian informasi tidak memindahkan fokus dari kontrol tur.

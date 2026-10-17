@@ -1,6 +1,7 @@
 import { tour } from '../data/tour.js';
 import { searchObjects } from '../data/search.js';
 import { scienceFor } from '../data/science.js';
+import { formatScienceValue, scienceSections } from '../data/scienceFormat.js';
 import { ExplorationUI } from './ExplorationUI.js';
 import { timeSpeeds, tourStops } from '../data/celestialBodies.js';
 
@@ -92,7 +93,12 @@ export class UIController extends EventTarget {
     window.addEventListener('keydown', event => {
       if (event.code !== 'Escape' || document.querySelector('dialog[open]')) return;
       const cinematic = document.body.classList.contains('hud-hidden');
-      if (!cinematic && !document.fullscreenElement) return;
+      if (!cinematic && !document.fullscreenElement) {
+        if (!document.pointerLockElement && this['info-panel'].classList.contains('open')) {
+          this.closeInfo();
+        }
+        return;
+      }
       event.preventDefault(); event.stopImmediatePropagation();
       if (document.pointerLockElement) document.exitPointerLock?.();
       if (cinematic) this.toggleHud();
@@ -218,6 +224,10 @@ export class UIController extends EventTarget {
   }
 
   showInfo(data) {
+    const active = document.activeElement;
+    const focusPanel = this['tour-panel'].hidden && !document.pointerLockElement &&
+      (['search-input', 'object-select', 'space-canvas'].includes(active?.id) || active === document.body);
+    if (!this['info-panel'].contains(active)) this.infoReturnFocus = active;
     data = scienceFor(data);
     this.hideWelcome();
     this.selectedId = data.id;
@@ -226,36 +236,45 @@ export class UIController extends EventTarget {
     this['object-symbol'].style.color = data.color || '#66d9ff';
     this['object-type'].textContent = { star: 'BINTANG', moon: 'SATELIT ALAMI', planet: 'PLANET', 'dwarf-planet': 'PLANET KATAI', comet: 'KOMET' }[data.type] ?? 'OBJEK';
     this['object-name'].textContent = data.name;
-    this['object-description'].textContent = data.description;
-    this['object-fact'].textContent = data.fact;
-    const stats = [
-      ['Diameter', data.diameterKm ? `${data.diameterKm.toLocaleString('id-ID')} km` : null],
-      ['Massa', data.mass], ['Gravitasi', data.gravity], ['Suhu', data.temperature],
-      ['Jarak', data.distance], ['Rotasi', data.rotation], ['Revolusi', data.orbitPeriod], ['Bulan', data.moons], ['Komposisi', data.composition]
-    ];
-    this['object-stats'].replaceChildren(...stats.map(([label, value]) => {
+    this['object-description'].textContent = formatScienceValue(data.description);
+    this['object-fact'].textContent = formatScienceValue(data.fact);
+    this['object-stats'].replaceChildren(...scienceSections(data).map(section => {
+      const container = document.createElement('section');
+      const heading = document.createElement('h3'); heading.textContent = section.title;
+      const list = document.createElement('dl'); list.className = 'stat-grid';
+      list.append(...section.rows.map(([label, value]) => {
       const wrapper = document.createElement('div');
       const dt = document.createElement('dt');
       const dd = document.createElement('dd');
       dt.textContent = label;
-      dd.textContent = value ?? 'Belum diverifikasi';
+      dd.textContent = value;
       wrapper.append(dt, dd);
       return wrapper;
+      }));
+      container.append(heading, list); return container;
     }));
-    document.getElementById('object-sources').replaceChildren(...data.sources.map(source => {
-      const link = document.createElement('a'); link.href = source.url; link.textContent = source.label; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
+    document.getElementById('object-sources').replaceChildren(...(data.sources ?? []).filter(source => source?.url && /^https?:\/\//i.test(source.url)).map(source => {
+      const link = document.createElement('a'); link.href = source.url; link.textContent = source.label || source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
     }));
+    if (!document.getElementById('object-sources').children.length) document.getElementById('object-sources').textContent = 'Data belum tersedia';
     this['object-select'].value = data.id;
     this['info-panel'].inert = document.body.classList.contains('hud-hidden');
     this['info-panel'].scrollTop = 0;
     this['info-panel'].classList.add('open');
     this['info-panel'].setAttribute('aria-hidden', 'false');
+    if (focusPanel && !this['info-panel'].inert) this['object-name'].focus({ preventScroll: true });
   }
 
   closeInfo() {
+    const hadFocus = this['info-panel'].contains(document.activeElement);
     this['info-panel'].inert = true;
     this['info-panel'].classList.remove('open');
     this['info-panel'].setAttribute('aria-hidden', 'true');
+    if (hadFocus) {
+      const target = this.infoReturnFocus;
+      if (target?.isConnected && target !== document.body && !target.closest('[inert]')) target.focus({ preventScroll: true });
+      else document.getElementById(document.body.classList.contains('hud-hidden') ? 'hud-button' : 'search-input').focus({ preventScroll: true });
+    }
   }
 
   setFlight(active, speed = 18) {

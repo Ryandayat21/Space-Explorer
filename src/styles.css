@@ -381,6 +381,9 @@ button:disabled { opacity: .4; cursor: default; }
 .stat-grid dt, .scale-note, .time-copy span { color: #a5b4cc; }
 .sources { display: grid; gap: 5px; font-size: 10px; }
 .sources a { color: #9edfff; }
+.science-heading, #object-stats h3 { margin: 18px 0 8px; font-size: 13px; color: #c7d6ef; }
+#object-stats .stat-grid { margin-top: 8px; }
+#object-name:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
 .tour-panel { left: 110px; transform: none; width: min(540px, calc(100vw - 510px)); flex-direction: column; gap: 12px; }
 .tour-panel p:not(.eyebrow) { font-size: 13px; line-height: 1.6; color: #c1cce0; }
 .tour-actions { justify-content: flex-end; }
