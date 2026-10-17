@@ -385,6 +385,9 @@ button:disabled { opacity: .4; cursor: default; }
 .tour-panel p:not(.eyebrow) { font-size: 13px; line-height: 1.6; color: #c1cce0; }
 .tour-actions { justify-content: flex-end; }
 .hud-button { position: fixed; right: 20px; bottom: 22px; z-index: 40; }
+.hud-hidden .flight-hud, .hud-hidden .flight-exit,
+.hud-hidden #app-status, .hud-hidden .mobile-notice { visibility: hidden; pointer-events: none; }
+.cinematic-status { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 41; padding: 8px 14px; color: #dce8ff; background: #07101de6; border-radius: 8px; font-size: 12px; pointer-events: none; }
 .flight-exit { position: fixed; left: 20px; bottom: 100px; z-index: 40; }
 #app-status { position: fixed; left: 110px; bottom: 95px; z-index: 40; max-width: 440px; font-size: 12px; color: #ffda96; background: #07101de6; }
 .flight-status { bottom: 165px; }

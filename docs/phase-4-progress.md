@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **rendering/pencahayaan, atmosfer/glow/material, lingkungan dekoratif dan transisi kamera telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–10.
+Status: **rendering/pencahayaan, atmosfer/glow/material, lingkungan dekoratif, transisi kamera serta mode sinematik/kontrol tampilan telah diimplementasikan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–11.
 
 ## 1. Baseline dan batas audit
 
@@ -79,6 +79,8 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 - [x] Dokumentasikan rencana tanpa mengubah kode aplikasi/reset/commit.
 
 ### Implementasi bertahap
+
+- [x] P4-R5: mode sinematik, pemulihan UI, indikator singkat dan fullscreen aman (bagian 11). Tidak menyimpan preferensi sembunyikan UI saat reload.
 
 - [x] P4-R4: easing/transisi kamera bersama, pembatalan, Follow dan perlindungan body/cincin (bagian 10). Reduced motion P4-03 tetap tugas terpisah.
 
@@ -211,3 +213,21 @@ Hasil akhir: **37/37 unit test lulus**; **production build berhasil** (30 modul,
 - `npm.cmd run test:e2e -- e2e/cameraPolish.spec.js e2e/observer.spec.js`: **8/8 lulus**, exit code 0, 1,5 menit di Edge 1366×768 dan Chrome 1920×1080. Regresi observer (Visit/Follow/tur/flight/resource/fallback), Escape dan pengambilalihan Free Flight dari transisi tur lulus tanpa console warning/error atau pageerror. Bukan klaim seluruh E2E atau benchmark performa dijalankan ulang.
 
 Manual: kunjungi Saturnus/Uranus, zoom mendekati cincin dari atas/bawah; coba gerak flight melintasi cincin. Mulai Visit lalu drag/scroll/Escape; mulai Follow, ubah waktu dan periksa target mengikuti planet sebelum menekan Escape. Saat tur sedang berpindah, aktifkan Free Flight, lepas pointer dengan Escape lalu keluar melalui tombol. Periksa orientasi tetap menerus ketika mode berubah.
+
+## 11. Mode sinematik dan kontrol tampilan — 17 Oktober 2026
+
+- Tombol HUD existing menjadi **Sinematik · H**. Mode memakai class hud-hidden existing untuk menyembunyikan topbar/pencarian, kategori, welcome, info, kontrol waktu, panel tur dan label; overlay/status Free Flight, pesan aplikasi dan mobile notice juga disembunyikan. Tombol **Tampilkan UI · H** selalu tersedia, di luar panel inert.
+- Indikator noninteraktif dengan role status muncul tiga detik: Mode sinematik aktif · H atau Escape untuk kembali. Timer dibatalkan/diganti saat toggle, tidak menumpuk. Label objek kembali sesuai pilihan Label sebelumnya, bukan selalu diaktifkan.
+- Panel tersembunyi inert, termasuk tombol keluar flight. Saat UI dipulihkan, info yang tertutup dan welcome yang sudah disembunyikan tetap inert. Ini juga menutup celah fokus welcome yang ditemukan pada audit. Semua tombol statis mendapat title atau aria-label bila belum tersedia; tombol favorit dinamis sudah memiliki aria-label spesifik objek.
+- H dapat masuk/keluar; key repeat, shortcut dengan modifier dan contenteditable tidak memicu toggle. Escape dalam mode sinematik memulihkan UI; bila fullscreen juga aktif, meminta exitFullscreen dan melepas pointer lock jika perlu. Event Escape tersebut tidak diteruskan ke handler kamera. Dialog terbuka tetap mendapat prioritas Escape native. Escape di mode observer biasa tetap mengikuti perilaku kamera existing.
+- Fullscreen menggunakan requestFullscreen/exitFullscreen dengan penanganan API tidak tersedia, throw sinkron dan Promise rejection. fullscreenchange menyinkronkan title, aria-label dan aria-pressed tombol, termasuk ketika pengguna keluar lewat browser. Keluar fullscreen juga memulihkan UI bila mode sinematik aktif. Mode sinematik dan fullscreen dapat diaktifkan terpisah.
+- Preferensi sinematik **tidak dipersist**; reload selalu membuka UI. Tidak memakai localStorage baru, capture screenshot, preserveDrawingBuffer atau perubahan WebGL. Kamera, orbit, material dan renderer tidak diubah. Tur/waktu/Follow tetap berjalan selama UI disembunyikan.
+- File: `src/ui/UIController.js`, `src/styles.css`, `index.html`, `e2e/cinematic.spec.js` (baru), dokumen ini. Tidak ada dependency, redesign atau git commit.
+
+### Verifikasi
+
+- `npm.cmd test`: **39/39 lulus**.
+- `npm.cmd run build`: berhasil, 31 modul; aplikasi 93,36 kB, CSS 14,21 kB, Three.js tetap 499,98 kB sebelum gzip.
+- `npm.cmd run test:e2e -- e2e/cinematic.spec.js e2e/finalization.spec.js`: **8/8 lulus**, exit code 0, 1,1 menit pada Edge 1366×768 dan Chrome 1920×1080, tanpa console warning/error atau pageerror. Memeriksa pemulihan inert/label, indikator hilang, pose kamera identik saat simulasi paused, reload, atribut tombol, fullscreen nyata, Escape, Promise rejection/API hilang dan dialog; ditambah regresi resize serta fallback seluruh JPEG. Tidak menjalankan seluruh suite atau benchmark GPU ulang.
+
+Manual: pilih objek lalu tekan H; pastikan hanya tombol pemulihan UI dan indikator sementara yang muncul. Tekan H/Escape untuk kembali dan periksa pilihan label sebelumnya dipertahankan. Masuk fullscreen, aktifkan sinematik, lalu Escape; keduanya harus berakhir. Coba ulang saat Follow/Free Flight dan buka bantuan untuk memeriksa prioritas Escape dialog. Reload saat sinematik harus selalu menampilkan UI.
