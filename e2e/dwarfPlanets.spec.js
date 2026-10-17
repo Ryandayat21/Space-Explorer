@@ -18,7 +18,7 @@ test('dwarf planets have category, labels, panels, picking and Follow', async ({
     await expect(page.locator('#object-name')).toHaveText(body.name);
     await expect(page.locator('#object-type')).toHaveText('PLANET KATAI');
     await expect(page.locator('#object-description')).toContainText('tidak proporsional');
-    await expect(page.locator('#object-stats')).toContainText('AU dari Matahari');
+    await expect(page.locator('#object-stats')).toContainText('au dari Matahari');
     await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
     await page.locator('#close-info').click();
     const point = await page.evaluate(id => window.__observer.project(id), body.id);

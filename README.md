@@ -4,6 +4,10 @@ Simulasi 3D Tata Surya yang menggabungkan eksplorasi sinematik dan informasi ilm
 
 ## Fitur saat ini
 
+Phase 4 menambahkan rendering sRGB/ACES dengan exposure 1, pencahayaan Matahari, atmosfer rim glow dan corona ringan dengan fallback, starfield berlapis seeded serta haze dekoratif. Kamera Visit/Follow/tur memakai transisi bersama dengan perlindungan permukaan dan cincin. Mode sinematik, fullscreen, panel ilmiah berkelompok, fokus keyboard dan prefers-reduced-motion tersedia. Catatan verifikasi dan batas implementasi ada di [progres Phase 4](docs/phase-4-progress.md).
+
+Finalisasi 17 Oktober 2026: **43/43 unit test**, **52/52 E2E** (Edge 1366×768 dan Chrome 1920×1080), serta production build berhasil. Perencanaan Visit antarbulan diperbaiki agar memakai volume tabrakan cincin aktual dan endpoint aman. Tidak ditemukan warning/error console aplikasi dalam skenario yang diuji. Batas validasi dan pekerjaan Phase 5 tercatat di dokumen progres.
+
 - Matahari dan delapan planet dengan orbit elips, inclination, serta rotasi.
 - 22 bulan utama sebagai objek 3D.
 - Lima planet katai: Ceres, Pluto, Haumea, Makemake dan Eris.
@@ -39,7 +43,7 @@ npm run preview
 - **Bookmark** di panel: tambah/hapus favorit. **☆** pada header: buka daftar favorit dan kunjungi objek tersimpan.
 - **Bandingkan**: pilih maksimal dua objek untuk tabel diameter, massa, gravitasi, jarak dari Matahari dan periode orbit; lingkaran memakai rasio diameter ilmiah. Scene tidak diganti atau diatur ulang.
 - **Jeda / slider waktu**: pause/resume atau pilih 0,1 / 1 / 10 / 50 / 200 hari simulasi per detik.
-- **Orbit / Label / Asteroid / Kuiper**: tampilkan/sembunyikan masing-masing; **Kualitas**: High → Medium → Low.
+- **Orbit / Label / Bintang / Asteroid / Kuiper**: tampilkan/sembunyikan masing-masing; **Kualitas**: Medium → Low → High → Medium.
 - **Guided Tour**: mulai, jeda/lanjut, sebelumnya, berikutnya, lewati, keluar; input kamera manual mengambil alih.
 - `W A S D`: bergerak dalam mode Free Flight.
 - Mouse: melihat sekeliling.
@@ -47,12 +51,31 @@ npm run preview
 - `Shift`: boost.
 - `F`: fokus ke objek terpilih.
 - `G`: memulai guided tour.
-- `H`: menyembunyikan HUD.
-- `Esc`: melepas pointer atau menutup dialog. Tombol **Keluar Free Flight** kembali ke observer.
-- `Tab` / `Shift+Tab`, `Enter` / `Space`: navigasi dan aktivasi tombol; panah memilih opsi dropdown. Kontrol HUD tersembunyi tidak menerima fokus. Shortcut F/G/H tidak aktif saat dialog terbuka.
+- `H`: mode sinematik; menyembunyikan HUD, panel, pencarian, kontrol waktu dan label. Tekan lagi atau gunakan tombol HUD untuk memulihkan UI. Mode ini tidak disimpan saat reload.
+- `P`: jeda/lanjut simulasi. `L`: aktif/nonaktif fullscreen.
+- `Esc`: menutup dialog/panel, membatalkan transisi atau Follow, melepas pointer, atau keluar dari cinematic/fullscreen sesuai keadaan aktif. Tombol **Keluar Free Flight** kembali ke observer.
+- `Tab` / `Shift+Tab`, `Enter` / `Space`: navigasi dan aktivasi tombol; panah memilih opsi dropdown. Kontrol HUD tersembunyi tidak menerima fokus. Shortcut huruf tidak aktif saat dialog terbuka atau mengetik dalam input.
 - Scroll: zoom pada observer, ubah kecepatan pada Free Flight. Tombol `?` membuka bantuan; tombol layar penuh mengaktifkan fullscreen.
 
 Favorit hanya menyimpan ID di localStorage pada browser/origin yang sama, tanpa akun. Data rusak diabaikan; bila storage ditolak, favorit berlaku selama sesi dengan pesan. Jarak bulan pada katalog relatif planet induk, sehingga perbandingan tidak menyebutnya sebagai jarak dari Matahari. Angka yang belum diverifikasi tetap ditandai.
+
+Drag/scroll mengambil alih transisi kamera dan menjeda tur. Preferensi sistem **reduced motion** memendekkan transisi kamera menjadi 150 ms dan menonaktifkan animasi UI dekoratif, tanpa mengubah kecepatan orbit.
+
+## Quality presets
+
+Default **Medium**. Pilihan disimpan di localStorage; data rusak atau storage tidak tersedia kembali ke Medium pada startup.
+
+| Pengaturan | Low | Medium | High |
+| --- | --- | --- | --- |
+| Batas device pixel ratio | 0,85 | 1,25 | 1,75 |
+| Segmen sphere planet | 24 × 16 | 40 × 24 | 64 × 40 |
+| Segmen sphere bulan | 12 × 8 | 16 × 12 | 24 × 16 |
+| Bintang | 2.520 | 5.040 | 9.000 |
+| Asteroid dekoratif | 600 | 1.200 | 1.900 |
+| Objek Kuiper dekoratif | 900 | 1.800 | 3.600 |
+| Atmosfer, glow, coma dan haze | Nonaktif | Aktif | Aktif |
+
+Pergantian kualitas membuang geometry sphere lama dan memakai ulang buffer sabuk/bintang; tidak membuat ulang scene setiap frame. Low tetap mempertahankan alokasi buffer maksimum dan tekstur yang sudah dimuat. Tekstur lokal dimuat sesuai kebutuhan dengan fallback procedural. Tidak ada bloom atau shadow map mahal. Penghitung FPS hanya tersedia pada server development melalui `/?debug`, bukan build produksi.
 
 ## Deployment Vercel
 
@@ -81,6 +104,8 @@ vercel
 
 Ukuran dan jarak visual sengaja disederhanakan agar seluruh Tata Surya tetap dapat dijelajahi. Nilai ilmiah pada panel informasi disimpan terpisah dari ukuran yang digunakan oleh scene 3D.
 
+Kecepatan waktu, fase awal dan elemen orbit adalah ilustrasi, bukan ephemeris tanggal nyata atau simulasi gravitasi n-body. Pencahayaan memakai jarak terkompresi, bukan radiometri inverse-square. Atmosfer, ekor komet dan starfield bersifat dekoratif; starfield bukan peta Bima Sakti. Perlindungan kamera menggunakan batas konservatif, bukan perencana lintasan fisik lengkap. Panel ilmiah membagi ringkasan, karakteristik fisik, orbit dan fakta/sumber; nilai kosong ditampilkan sebagai **Data belum tersedia**.
+
 ## Sumber data awal
 
 - NASA Solar System Exploration: https://science.nasa.gov/solar-system/
@@ -88,13 +113,14 @@ Ukuran dan jarak visual sengaja disederhanakan agar seluruh Tata Surya tetap dap
 
 Data sumber dan tanggal verifikasi tersimpan dalam modul data serta panel. Dari 22 bulan, 17 mempunyai pengayaan sains; nilai yang belum diverifikasi tidak diisi dengan nilai visual. Finalisasi ini tidak memperbarui angka astronomi atau mengklaim posisi ephemeris saat ini.
 
-## Ditunda ke Phase 4
+## Ditunda ke Phase 5
 
 - Melengkapi parameter ilmiah yang masih kosong, lima bulan tambahan, serta aset bulan/awan Venus berlisensi.
 - Kalender/epoch, elemen orbit lengkap, ephemeris, kebijakan tab background/catch-up dan tidal locking.
 - Charon/pendamping lain, rute tur tambahan dan Galaxy Scene beserta lifecycle lintas-scene.
 - Perluasan perbandingan jarak fisik; sinkronisasi favorit antar-tab/perangkat jika diperlukan.
 - Profiling interaktif panjang lintas GPU, retained-heap analysis dan kualitas adaptif. Benchmark headless satu mesin tidak menggantikannya.
+- Audit screen reader/zoom dan perpindahan monitor fisik; penghindaran overlap/occlusion label serta matriks screenshot deterministik seluruh objek/kualitas.
 
 ## Phase 2 (11 Oktober 2026)
 
@@ -117,7 +143,7 @@ Sumber diverifikasi pada 11 Oktober 2026:
 - [NASA Science Solar System](https://science.nasa.gov/solar-system/), [Sun](https://science.nasa.gov/sun/facts/), [Moon](https://science.nasa.gov/moon/facts/), dan halaman facts setiap planet untuk deskripsi/komposisi/fakta.
 - [NASA/JPL Satellite Physical Parameters](https://ssd.jpl.nasa.gov/sats/phys_par/) untuk radius rata-rata 22 bulan. Diameter bulan dihitung 2 kali radius rata-rata; ini bukan diameter ekuator untuk satelit tak beraturan.
 
-Panel menautkan sumbernya. Data ilmiah ditata oleh `src/data/science.js` dan dataset bulan/planet katai; `radiusEarth`, `visualRadius`, `size`, `distance` numerik pada katalog bulan, dan helper skala dipakai untuk scene saja. Periode pada katalog simulasi bulan tidak otomatis menjadi nilai ilmiah panel. Nilai yang belum diverifikasi tampil sebagai "Belum diverifikasi". Ukuran, jarak, waktu, elemen orbit sederhana dan fase awal adalah ilustrasi, bukan ephemeris tanggal nyata. Suhu raksasa gas merujuk lapisan atmosfer, bukan permukaan padat.
+Panel menautkan sumbernya. Data ilmiah ditata oleh `src/data/science.js` dan dataset bulan/planet katai; `radiusEarth`, `visualRadius`, `size`, `distance` numerik pada katalog bulan, dan helper skala dipakai untuk scene saja. Periode pada katalog simulasi bulan tidak otomatis menjadi nilai ilmiah panel. Nilai yang belum diverifikasi ditandai; sejak Phase 4 panel detail memakai "Data belum tersedia", sedangkan tabel perbandingan dapat memakai "Belum diverifikasi". Ukuran, jarak, waktu, elemen orbit sederhana dan fase awal adalah ilustrasi, bukan ephemeris tanggal nyata. Suhu raksasa gas merujuk lapisan atmosfer, bukan permukaan padat.
 
 ### Aset lokal dan lisensi
 
@@ -152,7 +178,7 @@ E2E memerlukan Chrome dan Edge desktop terinstal; config meluncurkan kedua brows
 
 Baseline: 4 unit test lulus dan build berhasil. Bug yang ditemukan: hidden panel ditimpa CSS, filter hanya memindahkan kamera, Follow tidak membawa kamera, tween menuju posisi lama objek, belum ada asteroid dalam tur, Shift menimpa kecepatan, orbit tidak tepat di garis, serta request font/favicon gagal.
 
-Suite mencakup 34 unit test dan 16 skenario E2E pada masing-masing Edge 1366×768 dan Chrome 1920×1080 (32 eksekusi): seluruh jenis objek/orbit, cincin/sabuk/komet, bookmark/storage/perbandingan, kamera/tur/flight, resize, keyboard, HUD, startup dan kegagalan tekstur. Fixture bersama memeriksa pageerror serta console error/warning; tidak menonaktifkan console. Untuk Windows, jalankan `npm run dev` di terminal pertama lalu `npm run test:e2e` di terminal kedua agar runner memakai server existing dan tidak tertahan cleanup proses npm. Pengujian resource bukan pengganti profiling heap jangka panjang atau benchmark FPS lintas GPU.
+Suite mencakup 43 unit test dan 26 skenario E2E pada masing-masing Edge 1366×768 dan Chrome 1920×1080 (52 eksekusi): seluruh jenis objek/orbit, cincin/sabuk/komet, bookmark/storage/perbandingan, kamera/tur/flight, resize, keyboard, cinematic/fullscreen, reduced motion, quality presets, shader, startup dan kegagalan tekstur. Fixture bersama memeriksa pageerror serta console error/warning; tidak menonaktifkan console. Untuk Windows, jalankan `npm run dev` di terminal pertama lalu `npm run test:e2e` di terminal kedua agar runner memakai server existing dan tidak tertahan cleanup proses npm. Pengujian resource bukan pengganti profiling heap jangka panjang atau benchmark FPS lintas GPU.
 
 ### File Phase 2
 

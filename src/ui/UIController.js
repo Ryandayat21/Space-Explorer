@@ -1,6 +1,8 @@
 import { tour } from '../data/tour.js';
 import { searchObjects } from '../data/search.js';
 import { scienceFor } from '../data/science.js';
+import { readQuality, saveQuality } from '../data/quality.js';
+import { formatScienceValue, scienceSections } from '../data/scienceFormat.js';
 import { ExplorationUI } from './ExplorationUI.js';
 import { timeSpeeds, tourStops } from '../data/celestialBodies.js';
 
@@ -14,9 +16,19 @@ export class UIController extends EventTarget {
     this.paused = false;
     this.labelsVisible = true;
     this.#cacheElements();
+    this.setQualityLabel(readQuality());
     this.#populateSearch();
     this.#bindEvents();
     this.exploration = new ExplorationUI(this);
+    for (const button of document.querySelectorAll('button')) {
+      if (!button.hasAttribute('title') && !button.hasAttribute('aria-label')) button.title = button.textContent.trim();
+      if (button.classList.contains('icon-button') && !button.hasAttribute('aria-label')) button.setAttribute('aria-label', button.title || button.textContent.trim());
+    }
+    this.syncFullscreen();
+    this.#updateTimeLabel();
+    for (const button of document.querySelectorAll('.rail-button, #orbit-toggle, #label-toggle, #flight-button')) {
+      button.setAttribute('aria-pressed', String(button.classList.contains('active')));
+    }
   }
 
   #cacheElements() {
@@ -45,6 +57,11 @@ export class UIController extends EventTarget {
   }
 
   #bindEvents() {
+    document.getElementById('starfield-toggle').addEventListener('click', event => {
+      const visible = event.currentTarget.classList.toggle('active');
+      event.currentTarget.setAttribute('aria-pressed', String(visible));
+      this.emit('starfield-toggle', visible);
+    });
     document.getElementById('search-input').addEventListener('input', () => this.#populateSearch());
     document.getElementById('search-input').addEventListener('keydown', event => {
       if (event.key === 'Enter') {
@@ -72,12 +89,30 @@ export class UIController extends EventTarget {
     this['follow-button'].addEventListener('click', () => this.emit('follow', this.selectedId));
     this['tour-button'].addEventListener('click', () => this.startTour());
     this['flight-button'].addEventListener('click', () => this.emit('flight-toggle'));
-    this['help-button'].addEventListener('click', () => this['help-dialog'].showModal());
-    this['close-help'].addEventListener('click', () => this['help-dialog'].close());
-    this['fullscreen-button'].addEventListener('click', () => {
-      const request = !document.fullscreenElement ? document.documentElement.requestFullscreen?.() : document.exitFullscreen?.();
-      request?.catch(() => this.status('Layar penuh tidak tersedia pada browser ini.'));
+    this['help-button'].addEventListener('click', () => {
+      this['help-dialog'].showModal(); this['close-help'].focus();
     });
+    this['close-help'].addEventListener('click', () => this['help-dialog'].close());
+    this['fullscreen-button'].addEventListener('click', () => this.toggleFullscreen());
+    document.addEventListener('fullscreenchange', () => {
+      const exited = this.fullscreenActive && !document.fullscreenElement;
+      this.syncFullscreen();
+      if (exited && document.body.classList.contains('hud-hidden')) this.toggleHud();
+    });
+    window.addEventListener('keydown', event => {
+      if (event.code !== 'Escape' || document.querySelector('dialog[open]')) return;
+      const cinematic = document.body.classList.contains('hud-hidden');
+      if (!cinematic && !document.fullscreenElement) {
+        if (!document.pointerLockElement && this['info-panel'].classList.contains('open')) {
+          this.closeInfo();
+        }
+        return;
+      }
+      event.preventDefault(); event.stopImmediatePropagation();
+      if (document.pointerLockElement) document.exitPointerLock?.();
+      if (cinematic) this.toggleHud();
+      if (document.fullscreenElement) this.toggleFullscreen();
+    }, { capture: true });
     this['time-toggle'].addEventListener('click', () => {
       this.paused = !this.paused;
       this['time-toggle'].textContent = this.paused ? '▶' : 'Ⅱ';
@@ -94,10 +129,12 @@ export class UIController extends EventTarget {
     });
     this['orbit-toggle'].addEventListener('click', () => {
       const active = this['orbit-toggle'].classList.toggle('active');
+      this['orbit-toggle'].setAttribute('aria-pressed', String(active));
       this.emit('orbits-toggle', active);
     });
     this['label-toggle'].addEventListener('click', () => {
       this.labelsVisible = this['label-toggle'].classList.toggle('active');
+      this['label-toggle'].setAttribute('aria-pressed', String(this.labelsVisible));
       this['labels-layer'].hidden = !this.labelsVisible;
     });
     this['quality-button'].addEventListener('click', () => this.#cycleQuality());
@@ -116,8 +153,9 @@ export class UIController extends EventTarget {
     this['tour-exit'].addEventListener('click', () => this.stopTour());
     document.querySelectorAll('.rail-button').forEach((button) => {
       button.addEventListener('click', () => {
-        document.querySelectorAll('.rail-button').forEach((item) => item.classList.remove('active'));
+        document.querySelectorAll('.rail-button').forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-pressed', 'false'); });
         button.classList.add('active');
+        button.setAttribute('aria-pressed', 'true');
         this.filter = button.dataset.filter;
         this.#populateSearch();
         this.emit('filter', this.filter);
@@ -125,29 +163,72 @@ export class UIController extends EventTarget {
     });
     window.addEventListener('keydown', (event) => {
       if (document.querySelector('dialog[open]')) return;
+      if (event.repeat || event.ctrlKey || event.altKey || event.metaKey || document.activeElement.isContentEditable) return;
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (event.code === 'KeyP') { event.preventDefault(); this['time-toggle'].click(); }
+      if (event.code === 'KeyL') { event.preventDefault(); this.toggleFullscreen(); }
       if (event.code === 'KeyG' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) this.startTour();
       if (event.code === 'KeyH' && !['INPUT', 'SELECT'].includes(document.activeElement.tagName)) this.toggleHud();
     });
   }
 
   #cycleQuality() {
-    const current = this['quality-button'].dataset.quality || 'high';
+    const current = this['quality-button'].dataset.quality || 'medium';
     const next = current === 'high' ? 'medium' : current === 'medium' ? 'low' : 'high';
+    this.setQualityLabel(next);
+    if (!saveQuality(next)) this.status('Pilihan kualitas berlaku untuk sesi ini; penyimpanan tidak tersedia.');
+    this.emit('quality-change', next);
+  }
+
+  setQualityLabel(next) {
     this['quality-button'].dataset.quality = next;
     this['quality-button'].textContent = `Kualitas: ${next[0].toUpperCase()}${next.slice(1)}`;
-    this.emit('quality-change', next);
+    this['quality-button'].title = this['quality-button'].textContent;
   }
 
   toggleHud() {
     const hidden = document.body.classList.toggle('hud-hidden');
     for (const panel of document.querySelectorAll('.topbar, .left-rail, .welcome-card, .info-panel, .time-dock, .tour-panel')) panel.inert = hidden;
     this['info-panel'].inert = hidden || !this['info-panel'].classList.contains('open');
-    document.getElementById('hud-button').setAttribute('aria-pressed', String(hidden));
-    document.getElementById('hud-button').focus();
+    this['welcome-card'].inert = hidden || this['welcome-card'].classList.contains('hidden');
+    document.getElementById('flight-exit').inert = hidden;
+    const button = document.getElementById('hud-button');
+    button.setAttribute('aria-pressed', String(hidden));
+    button.textContent = hidden ? 'Tampilkan UI · H' : 'Sinematik · H';
+    button.title = hidden ? 'Tampilkan UI (H atau Escape)' : 'Aktifkan mode sinematik (H)';
+    button.setAttribute('aria-label', button.title);
+    button.focus();
+    const indicator = document.getElementById('cinematic-status');
+    clearTimeout(this.cinematicTimer);
+    indicator.textContent = hidden ? 'Mode sinematik aktif · H atau Escape untuk kembali' : '';
+    indicator.hidden = !hidden;
+    if (hidden) this.cinematicTimer = setTimeout(() => { indicator.hidden = true; indicator.textContent = ''; }, 3000);
+  }
+
+  syncFullscreen() {
+    this.fullscreenActive = !!document.fullscreenElement;
+    const button = this['fullscreen-button'];
+    button.setAttribute('aria-pressed', String(this.fullscreenActive));
+    button.title = this.fullscreenActive ? 'Keluar layar penuh' : 'Layar penuh';
+    button.setAttribute('aria-label', button.title);
+  }
+
+  async toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) {
+        if (!document.exitFullscreen) throw new Error('Fullscreen unavailable');
+        await document.exitFullscreen();
+      } else {
+        if (!document.documentElement.requestFullscreen) throw new Error('Fullscreen unavailable');
+        await document.documentElement.requestFullscreen();
+      }
+      this.syncFullscreen();
+    } catch { this.status('Layar penuh tidak tersedia pada browser ini.'); this.syncFullscreen(); }
   }
 
   #updateTimeLabel() {
     const speed = timeSpeeds[this.timeIndex];
+    this['time-speed'].setAttribute('aria-valuetext', `${speed.toLocaleString('id-ID')} hari simulasi per detik`);
     this['time-label'].textContent = speed < 1 ? `${speed} hari/detik` : `${speed} hari/detik`;
   }
 
@@ -161,9 +242,14 @@ export class UIController extends EventTarget {
 
   hideWelcome() {
     this['welcome-card'].classList.add('hidden');
+    this['welcome-card'].inert = true;
   }
 
   showInfo(data) {
+    const active = document.activeElement;
+    const focusPanel = this['tour-panel'].hidden && !document.pointerLockElement &&
+      (['search-input', 'object-select', 'space-canvas'].includes(active?.id) || active === document.body);
+    if (!this['info-panel'].contains(active)) this.infoReturnFocus = active;
     data = scienceFor(data);
     this.hideWelcome();
     this.selectedId = data.id;
@@ -172,36 +258,45 @@ export class UIController extends EventTarget {
     this['object-symbol'].style.color = data.color || '#66d9ff';
     this['object-type'].textContent = { star: 'BINTANG', moon: 'SATELIT ALAMI', planet: 'PLANET', 'dwarf-planet': 'PLANET KATAI', comet: 'KOMET' }[data.type] ?? 'OBJEK';
     this['object-name'].textContent = data.name;
-    this['object-description'].textContent = data.description;
-    this['object-fact'].textContent = data.fact;
-    const stats = [
-      ['Diameter', data.diameterKm ? `${data.diameterKm.toLocaleString('id-ID')} km` : null],
-      ['Massa', data.mass], ['Gravitasi', data.gravity], ['Suhu', data.temperature],
-      ['Jarak', data.distance], ['Rotasi', data.rotation], ['Revolusi', data.orbitPeriod], ['Bulan', data.moons], ['Komposisi', data.composition]
-    ];
-    this['object-stats'].replaceChildren(...stats.map(([label, value]) => {
+    this['object-description'].textContent = formatScienceValue(data.description);
+    this['object-fact'].textContent = formatScienceValue(data.fact);
+    this['object-stats'].replaceChildren(...scienceSections(data).map(section => {
+      const container = document.createElement('section');
+      const heading = document.createElement('h3'); heading.textContent = section.title;
+      const list = document.createElement('dl'); list.className = 'stat-grid';
+      list.append(...section.rows.map(([label, value]) => {
       const wrapper = document.createElement('div');
       const dt = document.createElement('dt');
       const dd = document.createElement('dd');
       dt.textContent = label;
-      dd.textContent = value ?? 'Belum diverifikasi';
+      dd.textContent = value;
       wrapper.append(dt, dd);
       return wrapper;
+      }));
+      container.append(heading, list); return container;
     }));
-    document.getElementById('object-sources').replaceChildren(...data.sources.map(source => {
-      const link = document.createElement('a'); link.href = source.url; link.textContent = source.label; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
+    document.getElementById('object-sources').replaceChildren(...(data.sources ?? []).filter(source => source?.url && /^https?:\/\//i.test(source.url)).map(source => {
+      const link = document.createElement('a'); link.href = source.url; link.textContent = source.label || source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
     }));
+    if (!document.getElementById('object-sources').children.length) document.getElementById('object-sources').textContent = 'Data belum tersedia';
     this['object-select'].value = data.id;
     this['info-panel'].inert = document.body.classList.contains('hud-hidden');
     this['info-panel'].scrollTop = 0;
     this['info-panel'].classList.add('open');
     this['info-panel'].setAttribute('aria-hidden', 'false');
+    if (focusPanel && !this['info-panel'].inert) this['object-name'].focus({ preventScroll: true });
   }
 
   closeInfo() {
+    const hadFocus = this['info-panel'].contains(document.activeElement);
     this['info-panel'].inert = true;
     this['info-panel'].classList.remove('open');
     this['info-panel'].setAttribute('aria-hidden', 'true');
+    if (hadFocus) {
+      const target = this.infoReturnFocus;
+      if (target?.isConnected && target !== document.body && !target.closest('[inert]')) target.focus({ preventScroll: true });
+      else document.getElementById(document.body.classList.contains('hud-hidden') ? 'hud-button' : 'search-input').focus({ preventScroll: true });
+    }
   }
 
   setFlight(active, speed = 18) {
@@ -210,7 +305,9 @@ export class UIController extends EventTarget {
       this['flight-hud'].hidden = !active;
       document.getElementById('flight-exit').hidden = !active;
       this['flight-button'].classList.toggle('active', active);
+      this['flight-button'].setAttribute('aria-pressed', String(active));
       this['flight-button'].title = active ? 'Keluar dari mode terbang bebas' : 'Aktifkan mode terbang bebas';
+      this['flight-button'].setAttribute('aria-label', this['flight-button'].title);
       if (active) this.hideWelcome();
     }
     const displayedSpeed = Math.round(speed / 18 * 10);

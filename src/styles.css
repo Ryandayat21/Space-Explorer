@@ -7,7 +7,7 @@
   --line: rgba(153, 194, 255, 0.18);
   --line-strong: rgba(153, 194, 255, 0.35);
   --text: #f4f7ff;
-  --muted: #91a0bc;
+  --muted: #b1bfd5;
   --cyan: #66d9ff;
   --blue: #4b79ff;
   --violet: #836cff;
@@ -41,7 +41,7 @@ button { color: inherit; }
 }
 
 .glass-panel {
-  background: linear-gradient(145deg, rgba(11, 22, 46, 0.78), rgba(3, 8, 20, 0.58));
+  background: linear-gradient(145deg, rgba(11, 22, 46, 0.96), rgba(3, 8, 20, 0.94));
   border: 1px solid var(--line);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.035);
   backdrop-filter: blur(18px) saturate(125%);
@@ -365,6 +365,7 @@ kbd { color: #dce8ff; font-family: inherit; font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .loading-orbit { animation: none; }
 }
 
 /* Explicit hidden wins over component display rules. */
@@ -372,6 +373,11 @@ kbd { color: #dce8ff; font-family: inherit; font-weight: 700; }
 .tour-panel .eyebrow > span:first-child { display: inline; width: auto; height: auto; margin: 0 0 0 8px; background: none; }
 .tour-panel h3, .help-dialog h2 { font-family: 'Space Grotesk', system-ui, sans-serif; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+button, input, select, a { scroll-margin: 12px; }
+.help-dialog { max-height: calc(100vh - 48px); overflow-y: auto; }
+.control-grid div { gap: 12px; }
+.control-grid kbd { flex-shrink: 0; }
+.control-grid span { text-align: right; }
 button:disabled { opacity: .4; cursor: default; }
 .object-search { position: relative; height: auto; flex-wrap: wrap; padding: 6px 12px; gap: 2px; }
 .object-search > span[aria-hidden] { display: none; }
@@ -381,10 +387,16 @@ button:disabled { opacity: .4; cursor: default; }
 .stat-grid dt, .scale-note, .time-copy span { color: #a5b4cc; }
 .sources { display: grid; gap: 5px; font-size: 10px; }
 .sources a { color: #9edfff; }
+.science-heading, #object-stats h3 { margin: 18px 0 8px; font-size: 13px; color: #c7d6ef; }
+#object-stats .stat-grid { margin-top: 8px; }
+#object-name:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
 .tour-panel { left: 110px; transform: none; width: min(540px, calc(100vw - 510px)); flex-direction: column; gap: 12px; }
 .tour-panel p:not(.eyebrow) { font-size: 13px; line-height: 1.6; color: #c1cce0; }
 .tour-actions { justify-content: flex-end; }
 .hud-button { position: fixed; right: 20px; bottom: 22px; z-index: 40; }
+.hud-hidden .flight-hud, .hud-hidden .flight-exit,
+.hud-hidden #app-status, .hud-hidden .mobile-notice { visibility: hidden; pointer-events: none; }
+.cinematic-status { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 41; padding: 8px 14px; color: #dce8ff; background: #07101de6; border-radius: 8px; font-size: 12px; pointer-events: none; }
 .flight-exit { position: fixed; left: 20px; bottom: 100px; z-index: 40; }
 #app-status { position: fixed; left: 110px; bottom: 95px; z-index: 40; max-width: 440px; font-size: 12px; color: #ffda96; background: #07101de6; }
 .flight-status { bottom: 165px; }

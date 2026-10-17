@@ -48,6 +48,7 @@ try {
       await page.locator('#object-select').selectOption('sun');
       await page.waitForFunction(() => !window.__observer.snapshot().tween);
       await page.locator('#close-info').click();
+      while (await page.locator('#quality-button').getAttribute('data-quality') !== 'high') await page.locator('#quality-button').click();
       for (const quality of ['high', 'medium', 'low']) {
         if (quality !== 'high') await page.locator('#quality-button').click();
         const frames = await page.evaluate(() => new Promise(resolve => {

@@ -9,6 +9,9 @@ import { comets } from '../data/comets.js';
 import { CometVisual } from './CometVisual.js';
 import { smallBodyRegions } from '../data/smallBodyRegions.js';
 import { SmallBodyRegion } from './SmallBodyRegion.js';
+import { SpaceBackground } from './SpaceBackground.js';
+import { qualityPresets, validQuality } from '../data/quality.js';
+import { createRimGlow, atmosphereProfiles } from './RimGlow.js';
 
 const DEG = Math.PI / 180;
 const textureIds = new Set([...bodies.map(body => body.id), 'moon']);
@@ -111,7 +114,9 @@ function makeGlowTexture() {
   gradient.addColorStop(1, 'rgba(255,65,0,0)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 256, 256);
-  return new THREE.CanvasTexture(canvas);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
 }
 
 export class SolarSystem {
@@ -156,43 +161,17 @@ export class SolarSystem {
   }
 
   #createLighting() {
-    this.scene.add(new THREE.HemisphereLight(0x18284e, 0x020204, 0.22));
+    // A very faint neutral fill keeps the night hemisphere readable without a blue cast.
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x606878, 0.035));
     // Constant visual exposure: compressed orbital distances are not physical light distances.
-    const sunLight = new THREE.PointLight(0xfff4e4, 3.2, 0, 0);
+    const sunLight = new THREE.PointLight(0xfff4e4, 3, 0, 0);
     sunLight.position.set(0, 0, 0);
     this.root.add(sunLight);
   }
 
   #createStarfield() {
-    const count = 9000;
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const random = seededRandom(42042);
-    const color = new THREE.Color();
-    for (let i = 0; i < count; i += 1) {
-      const radius = 450 + random() * 850;
-      const theta = random() * Math.PI * 2;
-      const phi = Math.acos(2 * random() - 1);
-      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = radius * Math.cos(phi);
-      positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
-      color.setHSL(0.52 + random() * 0.14, 0.25 + random() * 0.4, 0.58 + random() * 0.38);
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const stars = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 1.15, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.88, depthWrite: false }));
-    this.scene.add(stars);
-    this.stars = stars;
-
-    const haze = new THREE.Mesh(
-      new THREE.SphereGeometry(1000, 48, 32),
-      new THREE.MeshBasicMaterial({ color: 0x07112b, side: THREE.BackSide, transparent: true, opacity: 0.32 })
-    );
-    this.scene.add(haze);
+    this.background = new SpaceBackground();
+    this.scene.add(this.background);
   }
 
   #createSun() {
@@ -200,7 +179,7 @@ export class SolarSystem {
     const group = new THREE.Group();
     const mesh = new THREE.Mesh(
       new THREE.SphereGeometry(data.visualRadius, 64, 40),
-      new THREE.MeshBasicMaterial({ map: makeSunTexture(), color: 0xffd073 })
+      new THREE.MeshBasicMaterial({ map: makeSunTexture(), color: new THREE.Color(1.3, 1.3, 1.3) })
     );
     mesh.userData.bodyId = data.id;
     group.add(mesh);
@@ -209,13 +188,11 @@ export class SolarSystem {
     const glow = new THREE.Sprite(glowMaterial);
     glow.scale.set(32, 32, 1);
     glow.material.opacity = 0.32;
+    glow.raycast = () => {};
     group.add(glow);
     this.effects.push(glow);
 
-    const corona = new THREE.Mesh(
-      new THREE.SphereGeometry(data.visualRadius * 1.08, 48, 32),
-      new THREE.MeshBasicMaterial({ color: 0xffb140, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide })
-    );
+    const corona = createRimGlow(data.visualRadius, [0xffb140, 1.10, .25], group, true);
     group.add(corona);
     this.effects.push(corona);
 
@@ -240,21 +217,15 @@ export class SolarSystem {
       const material = new THREE.MeshStandardMaterial({
         map: makePlanetTexture(data),
         color: 0xffffff,
-        roughness: data.id === 'earth' ? 0.74 : 0.9,
+        roughness: ['jupiter', 'saturn', 'uranus', 'neptune'].includes(data.id) ? 0.9 : 0.96,
         metalness: 0
       });
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 32), material);
       mesh.userData.bodyId = data.id;
       visual.add(mesh);
 
-      if (['earth', 'venus', 'uranus', 'neptune'].includes(data.id)) {
-        const atmosphereColor = data.id === 'earth' ? 0x4ca6ff : data.id === 'venus' ? 0xffc779 : data.id === 'uranus' ? 0x7df0ff : 0x376dff;
-        const atmosphere = new THREE.Mesh(
-          new THREE.SphereGeometry(radius * 1.045, 40, 28),
-          new THREE.MeshBasicMaterial({ color: atmosphereColor, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, side: THREE.BackSide })
-        );
-        atmosphere.material.opacity = 0.065;
-        atmosphere.material.depthWrite = false;
+      if (atmosphereProfiles[data.id]) {
+        const atmosphere = createRimGlow(radius, atmosphereProfiles[data.id], parentObject.group);
         visual.add(atmosphere);
         this.effects.push(atmosphere);
       }
@@ -340,7 +311,9 @@ export class SolarSystem {
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.anisotropy = 4;
         const material = this.getObject(id).mesh.material;
-        material.map?.dispose(); material.map = texture; material.color.set(0xffffff); material.needsUpdate = true;
+        material.map?.dispose(); material.map = texture;
+        material.color.setRGB(id === 'sun' ? 1.3 : 1, id === 'sun' ? 1.3 : 1, id === 'sun' ? 1.3 : 1);
+        material.needsUpdate = true;
         resolve(true);
       }, undefined, () => {
         window.dispatchEvent(new CustomEvent('texture-fallback', { detail: id }));
@@ -352,6 +325,7 @@ export class SolarSystem {
   }
 
   updateDetail(camera) {
+    this.background.update(camera);
     for (const id of textureIds) {
       if (this.loadedTextures.has(id)) continue;
       const object = this.objects.get(id);
@@ -381,8 +355,20 @@ export class SolarSystem {
   }
 
   setQuality(quality) {
-    this.effects.forEach(effect => { effect.visible = quality !== 'low'; });
-    this.stars.geometry.setDrawRange(0, quality === 'low' ? 2500 : quality === 'medium' ? 5000 : 9000);
+    quality = validQuality(quality);
+    if (this.quality === quality) return;
+    this.quality = quality;
+    const preset = qualityPresets[quality];
+    // Only rebuild sphere buffers at an explicit preset change. Keep mesh/material identity.
+    for (const object of this.objects.values()) {
+      if (!object.mesh.geometry.isBufferGeometry || object.mesh.geometry.type !== 'SphereGeometry') continue;
+      const [width, height] = object.data.type === 'moon' ? preset.moon : preset.sphere;
+      const previous = object.mesh.geometry;
+      object.mesh.geometry = new THREE.SphereGeometry(object.radius, width, height);
+      previous.dispose();
+    }
+    this.effects.forEach(effect => { effect.visible = preset.effects; });
+    this.background.setQuality(quality);
     for (const region of this.regions.values()) region.setQuality(quality);
   }
 

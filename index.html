@@ -75,24 +75,28 @@
         <p class="scale-note">◉ Visualisasi memakai skala jarak, kecepatan, dan ukuran yang disederhanakan.</p>
       </section>
 
-      <aside id="info-panel" class="info-panel glass-panel" aria-live="polite" aria-hidden="true" inert>
+      <aside id="info-panel" class="info-panel glass-panel" aria-labelledby="object-name" aria-live="polite" aria-hidden="true" inert>
         <button id="close-info" class="panel-close" type="button" aria-label="Tutup informasi">×</button>
         <div class="object-heading">
           <span id="object-symbol" class="object-symbol">●</span>
           <div>
             <p id="object-type" class="eyebrow">PLANET</p>
-            <h2 id="object-name">Bumi</h2>
+            <h2 id="object-name" tabindex="-1">Bumi</h2>
           </div>
         </div>
+        <h3 class="science-heading">Ringkasan</h3>
         <p id="object-description" class="object-description"></p>
         <div class="panel-actions">
           <button id="bookmark-button" class="button button-ghost" type="button" aria-pressed="false">☆ Bookmark</button>
           <button id="compare-button" class="button button-ghost" type="button">Bandingkan</button>
         </div>
         <p id="bookmark-status" class="scale-note" role="status"></p>
-        <dl id="object-stats" class="stat-grid"></dl>
+        <div id="object-stats"></div>
+        <h3 class="science-heading">Eksplorasi dan fakta penting</h3>
         <div id="object-fact" class="fact-box"></div>
         <p class="scale-note">Ukuran diperbesar dan jarak dikompresi, tidak proporsional; kecepatan visual disederhanakan. Diameter planet utama: ekuator; suhu raksasa gas: lapisan atmosfer. Data yang belum diverifikasi ditandai.</p>
+        <p class="scale-note">Satuan: km untuk diameter; kg untuk massa; m/s² untuk gravitasi. au adalah satuan astronomi. Suhu K/°C dan periode jam/hari/tahun mengikuti definisi sumber, bukan waktu atau jarak scene.</p>
+        <h3 class="science-heading">Sumber data</h3>
         <div id="object-sources" class="sources"></div>
         <div class="panel-actions">
           <button id="visit-button" class="button button-primary" type="button">Kunjungi objek</button>
@@ -147,9 +151,10 @@
         <div class="dock-divider"></div>
         <button id="orbit-toggle" class="dock-toggle active" type="button">Orbit</button>
         <button id="label-toggle" class="dock-toggle active" type="button">Label</button>
+        <button id="starfield-toggle" class="dock-toggle active" type="button" aria-pressed="true" title="Latar bintang dekoratif, bukan peta Bima Sakti">Bintang</button>
         <button id="asteroid-belt-toggle" data-region="asteroid-belt" class="dock-toggle active" type="button" aria-pressed="true" title="Tampilkan/sembunyikan sabuk asteroid (partikel ilustratif)">Asteroid</button>
         <button id="kuiper-belt-toggle" data-region="kuiper-belt" class="dock-toggle active" type="button" aria-pressed="true" title="Tampilkan/sembunyikan Sabuk Kuiper (partikel ilustratif)">Kuiper</button>
-        <button id="quality-button" class="dock-toggle" type="button">Kualitas: High</button>
+        <button id="quality-button" class="dock-toggle" type="button">Kualitas: Medium</button>
       </div>
 
       <div id="flight-hud" class="flight-hud" hidden>
@@ -162,24 +167,28 @@
       </div>
 
       <button id="flight-exit" class="button button-ghost flight-exit" hidden>Keluar Free Flight</button>
-      <button id="hud-button" class="button button-ghost hud-button">HUD · H</button>
+      <button id="hud-button" class="button button-ghost hud-button" type="button" aria-pressed="false" aria-label="Aktifkan mode sinematik (H)" title="Aktifkan mode sinematik (H)">Sinematik · H</button>
+      <p id="cinematic-status" class="cinematic-status" role="status" hidden></p>
       <p id="app-status" role="status"></p>
       <div id="labels-layer" class="labels-layer" aria-hidden="true"></div>
 
-      <dialog id="help-dialog" class="help-dialog glass-panel">
+      <dialog id="help-dialog" class="help-dialog glass-panel" aria-labelledby="help-title">
         <button id="close-help" class="panel-close" type="button" aria-label="Tutup bantuan">×</button>
         <p class="eyebrow">KONTROL OBSERVER</p>
-        <h2>Jelajahi semesta dengan caramu.</h2>
+        <h2 id="help-title">Jelajahi semesta dengan caramu.</h2>
         <div class="control-grid">
-          <div><kbd>W A S D</kbd><span>Terbang</span></div>
-          <div><kbd>Mouse</kbd><span>Lihat sekitar</span></div>
+          <div><kbd>W A S D</kbd><span>Terbang (pointer terkunci)</span></div>
+          <div><kbd>Mouse</kbd><span>Drag untuk orbit; lihat sekitar saat terbang</span></div>
           <div><kbd>Shift</kbd><span>Percepat</span></div>
           <div><kbd>Space / Ctrl</kbd><span>Naik / turun</span></div>
-          <div><kbd>Scroll</kbd><span>Kecepatan terbang / zoom</span></div><div><kbd>G / H</kbd><span>Tur / sembunyikan HUD</span></div>
+          <div><kbd>Scroll</kbd><span>Kecepatan terbang / zoom</span></div><div><kbd>G / H</kbd><span>Tur / mode sinematik</span></div>
+          <div><kbd>L</kbd><span>Masuk / keluar fullscreen</span></div>
+          <div><kbd>P</kbd><span>Jeda / lanjut simulasi</span></div>
           <div><kbd>F</kbd><span>Fokus objek</span></div>
-          <div><kbd>Esc</kbd><span>Lepas pointer / tutup dialog</span></div>
+          <div><kbd>Esc</kbd><span>Tutup dialog/panel, keluar sinematik/fullscreen, batalkan transisi/Follow atau lepas pointer</span></div>
           <div><kbd>Tab / Enter</kbd><span>Pilih / aktifkan kontrol</span></div>
         </div>
+        <p class="muted">Shortcut huruf tidak aktif saat mengetik atau membuka dialog. Tab / Shift+Tab berpindah kontrol; Enter / Space mengaktifkan tombol. Preferensi reduced motion perangkat memperpendek transisi kamera dan menonaktifkan animasi UI.</p>
         <p class="muted">Klik objek atau cari namanya untuk membuka panel. Bookmark menyimpan favorit; tombol ☆ membuka daftarnya. Bandingkan menampilkan dua objek tanpa mengubah scene.</p>
       </dialog>
 
