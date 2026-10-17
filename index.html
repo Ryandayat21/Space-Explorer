@@ -42,6 +42,7 @@
         </div>
 
         <nav class="top-actions" aria-label="Kontrol aplikasi">
+          <button id="audio-settings" class="icon-button" type="button" popovertarget="audio-panel" title="Pengaturan ambience" aria-label="Buka pengaturan ambience"><span aria-hidden="true">♪</span></button>
           <button id="favorites-button" class="icon-button" type="button" aria-label="Buka favorit" title="Favorit">☆</button>
           <button id="tour-button" class="button button-primary" type="button">
             <span aria-hidden="true">▶</span> Guided Tour
@@ -170,6 +171,13 @@
       <button id="hud-button" class="button button-ghost hud-button" type="button" aria-pressed="false" aria-label="Aktifkan mode sinematik (H)" title="Aktifkan mode sinematik (H)">Sinematik · H</button>
       <p id="cinematic-status" class="cinematic-status" role="status" hidden></p>
       <p id="app-status" role="status"></p>
+      <section id="audio-panel" class="audio-controls glass-panel" popover aria-label="Ambient audio">
+        <button id="audio-play" type="button" title="Enable Ambience" aria-label="Enable Ambience">Enable Ambience</button>
+        <button id="audio-mute" type="button" title="Bisukan ambience" aria-label="Bisukan ambience">Mute</button>
+        <label for="audio-volume">Volume</label>
+        <input id="audio-volume" type="range" min="0" max="100" value="15" step="1" title="Volume ambience" aria-label="Volume ambience" />
+        <small id="audio-status" role="status"></small>
+      </section>
       <div id="labels-layer" class="labels-layer" aria-hidden="true"></div>
 
       <dialog id="help-dialog" class="help-dialog glass-panel" aria-labelledby="help-title">

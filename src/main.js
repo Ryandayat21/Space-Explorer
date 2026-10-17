@@ -9,6 +9,7 @@ import { SolarSystem } from './core/SolarSystem.js';
 import { CameraSafety } from './core/CameraSafety.js';
 import { FlightControls } from './core/FlightControls.js';
 import { UIController } from './ui/UIController.js';
+import { initializeAudioControls } from './ui/AudioControls.js';
 
 if (!WebGL.isWebGL2Available()) {
   document.body.replaceChildren(WebGL.getWebGL2ErrorMessage());
@@ -53,6 +54,7 @@ const solarSystem = new SolarSystem(scene);
 solarSystem.setQuality(renderQuality);
 const safety = new CameraSafety(solarSystem);
 const ui = new UIController();
+initializeAudioControls();
 const clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();

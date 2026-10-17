@@ -420,3 +420,10 @@ button:disabled { opacity: .4; cursor: default; }
 #comparison-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; margin: 16px 0; }
 #comparison-table th, #comparison-table td { padding: 10px 8px; border-bottom: 1px solid #354861; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 #bookmark-status:empty { display: none; }
+.audio-controls { position: fixed; inset: 96px 20px auto auto; margin: 0; width: min(280px, calc(100vw - 40px)); padding: 16px; color: #e4ebf8; border: 1px solid #354861; border-radius: 14px; font-size: 12px; }
+.audio-controls:popover-open { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.audio-controls button { color: #e4ebf8; background: #14233b; border: 1px solid #53708f; border-radius: 6px; padding: 6px; cursor: pointer; }
+.audio-controls input { width: 160px; }
+.audio-controls small { width: 100%; color: #b1bfd5; }
+.audio-controls :disabled { opacity: .6; cursor: default; }
+.hud-hidden .audio-controls { visibility: hidden; pointer-events: none; }
