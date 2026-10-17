@@ -4,6 +4,7 @@ test('rendering preserves quality caps across DPR changes and resize', async ({ 
   await page.goto('/');
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   await page.locator('#time-toggle').click();
+  while (await page.locator('#quality-button').getAttribute('data-quality') !== 'high') await page.locator('#quality-button').click();
   await page.evaluate(() => Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 3 }));
   for (const [quality, cap] of [['high', 1.75], ['medium', 1.25], ['low', .85]]) {
     if (quality !== 'high') await page.locator('#quality-button').click();

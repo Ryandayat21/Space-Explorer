@@ -1,4 +1,5 @@
 import { tour } from './data/tour.js';
+import { qualityPresets, readQuality } from './data/quality.js';
 import { visitDistance, clearApproach, cinematicEase } from './core/cameraMath.js';
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
@@ -21,8 +22,7 @@ THREE.ColorManagement.enabled = true;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1;
-const pixelRatioCaps = { low: 0.85, medium: 1.25, high: 1.75 };
-let renderQuality = 'high';
+let renderQuality = readQuality();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x01030a);
@@ -35,7 +35,7 @@ function resizeRenderer() {
   const width = Math.max(1, window.innerWidth), height = Math.max(1, window.innerHeight);
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
-  const ratio = Math.min(window.devicePixelRatio || 1, pixelRatioCaps[renderQuality]);
+  const ratio = Math.min(window.devicePixelRatio || 1, qualityPresets[renderQuality].pixelRatio);
   if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
   renderer.setSize(width, height, false);
 }
@@ -50,6 +50,7 @@ orbitControls.target.set(0, 0, 0);
 
 const flightControls = new FlightControls(camera, canvas);
 const solarSystem = new SolarSystem(scene);
+solarSystem.setQuality(renderQuality);
 const safety = new CameraSafety(solarSystem);
 const ui = new UIController();
 const clock = new THREE.Clock();
@@ -221,13 +222,15 @@ function updateCameraTween(now) {
 }
 
 function updateLabels() {
+  if (!ui.labelsVisible || document.body.classList.contains('hud-hidden')) return;
   const width = window.innerWidth;
   const height = window.innerHeight;
   camera.getWorldDirection(cameraDirection);
   for (const [id, label] of labels) {
     const position = solarSystem.getWorldPosition(id, labelPosition);
     const toObject = labelDirection.subVectors(position, camera.position);
-    const visible = toObject.dot(cameraDirection) > 0 && toObject.length() < 600;
+    const distance = toObject.length();
+    const visible = toObject.dot(cameraDirection) > 0 && distance < 600;
     if (!visible || !ui.labelsVisible) {
       label.style.opacity = '0';
       continue;
@@ -235,7 +238,7 @@ function updateLabels() {
     position.project(camera);
     label.style.left = `${(position.x * 0.5 + 0.5) * width}px`;
     label.style.top = `${(-position.y * 0.5 + 0.5) * height}px`;
-    label.style.opacity = String(Math.min(1, Math.max(0.25, 1 - toObject.length() / 600)));
+    label.style.opacity = String(Math.min(1, Math.max(0.25, 1 - distance / 600)));
   }
 }
 
@@ -347,7 +350,19 @@ document.addEventListener('fullscreenchange', resizeRenderer);
 
 
 
+// Opt-in development-only counter; no DOM work or counter in the production loop.
+const fpsDebug = import.meta.env.DEV && new URLSearchParams(location.search).has('debug');
+let fpsNode, fpsFrames = 0, fpsStart = performance.now();
+if (fpsDebug) {
+  fpsNode = document.createElement('output'); fpsNode.id = 'debug-fps';
+  fpsNode.style.cssText = 'position:fixed;left:8px;top:88px;z-index:99;color:white;background:#000c;padding:4px;pointer-events:none';
+  document.body.append(fpsNode);
+}
 function animate(now) {
+  if (fpsDebug && ++fpsFrames && now - fpsStart >= 1000) {
+    fpsNode.textContent = `${Math.round(fpsFrames * 1000 / (now - fpsStart))} FPS`;
+    fpsFrames = 0; fpsStart = now;
+  }
   frameId = requestAnimationFrame(animate);
   previousCameraPosition.copy(camera.position);
   const delta = Math.min(clock.getDelta(), 0.05);

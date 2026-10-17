@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { qualityPresets, validQuality } from '../data/quality.js';
 
 function randomSequence(seed) {
   let state = seed >>> 0;
@@ -61,7 +62,8 @@ export class SpaceBackground extends THREE.Group {
   update(camera) { this.position.copy(camera.position); }
 
   setQuality(quality) {
-    const fraction = quality === 'low' ? .28 : quality === 'medium' ? .56 : 1;
+    quality = validQuality(quality);
+    const fraction = qualityPresets[quality].stars;
     for (const layer of this.starLayers) layer.geometry.setDrawRange(0, Math.floor(layer.geometry.attributes.position.count * fraction));
     this.haze.visible = quality !== 'low';
   }

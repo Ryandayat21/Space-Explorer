@@ -1,6 +1,7 @@
 import { tour } from '../data/tour.js';
 import { searchObjects } from '../data/search.js';
 import { scienceFor } from '../data/science.js';
+import { readQuality, saveQuality } from '../data/quality.js';
 import { formatScienceValue, scienceSections } from '../data/scienceFormat.js';
 import { ExplorationUI } from './ExplorationUI.js';
 import { timeSpeeds, tourStops } from '../data/celestialBodies.js';
@@ -15,6 +16,7 @@ export class UIController extends EventTarget {
     this.paused = false;
     this.labelsVisible = true;
     this.#cacheElements();
+    this.setQualityLabel(readQuality());
     this.#populateSearch();
     this.#bindEvents();
     this.exploration = new ExplorationUI(this);
@@ -171,11 +173,17 @@ export class UIController extends EventTarget {
   }
 
   #cycleQuality() {
-    const current = this['quality-button'].dataset.quality || 'high';
+    const current = this['quality-button'].dataset.quality || 'medium';
     const next = current === 'high' ? 'medium' : current === 'medium' ? 'low' : 'high';
+    this.setQualityLabel(next);
+    if (!saveQuality(next)) this.status('Pilihan kualitas berlaku untuk sesi ini; penyimpanan tidak tersedia.');
+    this.emit('quality-change', next);
+  }
+
+  setQualityLabel(next) {
     this['quality-button'].dataset.quality = next;
     this['quality-button'].textContent = `Kualitas: ${next[0].toUpperCase()}${next.slice(1)}`;
-    this.emit('quality-change', next);
+    this['quality-button'].title = this['quality-button'].textContent;
   }
 
   toggleHud() {

@@ -87,7 +87,7 @@ test('desktop navigation, tours, picking, flight and resources', async ({ page }
   await expect.poll(async () => (await snapshot()).pointerLocked).toBe(false);
   await page.locator('#flight-exit').click();
   expect((await snapshot()).flight).toBe(false);
-  for (const quality of ['Medium', 'Low', 'High']) {
+  for (const quality of ['Low', 'High', 'Medium']) {
     await page.locator('#quality-button').click();
     await expect(page.locator('#quality-button')).toContainText(quality);
   }

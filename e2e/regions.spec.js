@@ -7,7 +7,7 @@ test('region toggles, quality limits and standalone dwarf planets work together'
   await page.goto('/');
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   const regions = () => page.evaluate(() => window.__observer.regions());
-  expect((await regions()).map(region => region.count)).toEqual([1900, 3600]);
+  expect((await regions()).map(region => region.count)).toEqual([1200, 1800]);
   await page.locator('#time-toggle').click();
   const paused = await regions();
   await page.waitForTimeout(100);
@@ -17,7 +17,7 @@ test('region toggles, quality limits and standalone dwarf planets work together'
     await expect(page.locator(`#${id}-toggle`)).toHaveAttribute('aria-pressed', 'false');
   }
   expect((await regions()).every(region => !region.visible)).toBe(true);
-  for (const counts of [[1200, 1800], [600, 900], [1900, 3600]]) {
+  for (const counts of [[600, 900], [1900, 3600], [1200, 1800]]) {
     await page.locator('#quality-button').click();
     expect((await regions()).map(region => region.count)).toEqual(counts);
     expect((await regions()).every(region => !region.visible)).toBe(true);

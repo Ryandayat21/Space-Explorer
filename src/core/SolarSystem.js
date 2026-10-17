@@ -10,6 +10,7 @@ import { CometVisual } from './CometVisual.js';
 import { smallBodyRegions } from '../data/smallBodyRegions.js';
 import { SmallBodyRegion } from './SmallBodyRegion.js';
 import { SpaceBackground } from './SpaceBackground.js';
+import { qualityPresets, validQuality } from '../data/quality.js';
 import { createRimGlow, atmosphereProfiles } from './RimGlow.js';
 
 const DEG = Math.PI / 180;
@@ -354,7 +355,19 @@ export class SolarSystem {
   }
 
   setQuality(quality) {
-    this.effects.forEach(effect => { effect.visible = quality !== 'low'; });
+    quality = validQuality(quality);
+    if (this.quality === quality) return;
+    this.quality = quality;
+    const preset = qualityPresets[quality];
+    // Only rebuild sphere buffers at an explicit preset change. Keep mesh/material identity.
+    for (const object of this.objects.values()) {
+      if (!object.mesh.geometry.isBufferGeometry || object.mesh.geometry.type !== 'SphereGeometry') continue;
+      const [width, height] = object.data.type === 'moon' ? preset.moon : preset.sphere;
+      const previous = object.mesh.geometry;
+      object.mesh.geometry = new THREE.SphereGeometry(object.radius, width, height);
+      previous.dispose();
+    }
+    this.effects.forEach(effect => { effect.visible = preset.effects; });
     this.background.setQuality(quality);
     for (const region of this.regions.values()) region.setQuality(quality);
   }

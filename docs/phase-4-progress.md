@@ -1,7 +1,7 @@
 # Phase 4 — Scientific & Cinematic Polish
 
 Tanggal audit: 14 Oktober 2026 (Asia/Jakarta). Baseline Git: `f694554`.
-Status: **rendering, visual, kamera, mode sinematik, panel ilmiah serta accessibility/UX desktop telah ditingkatkan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–13.
+Status: **rendering, visual, kamera, mode sinematik, panel ilmiah, accessibility/UX desktop serta quality preset telah ditingkatkan**. Baseline audit di bagian 1–6 merupakan riwayat; hasil terbaru di bagian 7–14.
 
 ## 1. Baseline dan batas audit
 
@@ -79,6 +79,8 @@ Checklist implementasi berikut adalah usulan ruang lingkup polish, bukan pekerja
 - [x] Dokumentasikan rencana tanpa mengubah kode aplikasi/reset/commit.
 
 ### Implementasi bertahap
+
+- [x] P4-R7: preset kualitas persisten, detail sphere/disposal, default Medium dan FPS debug (bagian 14). Profiling GPU/heap panjang P4-08 tetap terpisah.
 
 - [x] P4-R6: panel informasi ilmiah berkelompok, formatter, nilai kosong, sumber dan fokus/Escape (bagian 12). Tidak menambah angka ilmiah.
 
@@ -284,3 +286,38 @@ Acuan perhitungan kontras terhadap panel gelap #1a253a: muted #b1bfd5 ≈8,24:1;
 - Assertion awal terlalu ketat mengharuskan Tab tetap di dalam dialog satu tombol. Disesuaikan untuk perilaku native yang mengizinkan fokus chrome browser/body tanpa memfokuskan kontrol latar; tidak mengubah dialog menjadi trap buatan demi test.
 
 Manual: buka bantuan lewat Tab/Enter, baca shortcut dan tutup dengan Escape; fokus harus kembali ke bantuan. Coba P/L/H dari tombol biasa dan pastikan tidak berjalan ketika mengetik di search. Ubah slider dengan panah. Aktifkan reduced motion di pengaturan OS/browser lalu Visit beberapa objek, termasuk saat transisi sedang berlangsung. Gunakan favorit/perbandingan dengan Tab/Shift+Tab dan pastikan Escape mengembalikan fokus ke kontrol pembuka.
+
+## 14. Performa dan quality preset — 17 Oktober 2026
+
+Default aplikasi adalah **Medium**; tidak menebak kelas GPU dari user agent. Pilihan melalui tombol kualitas disimpan sebagai string JSON pada `milky-way-observer.quality.v1`. Hanya low/medium/high diterima; JSON rusak, nilai asing, array/object, getter storage ditolak atau storage kosong kembali ke Medium. Kegagalan menulis tidak menghentikan perubahan kualitas sesi dan ditampilkan sebagai pesan. Tidak menyimpan atau mengubah data ilmiah.
+
+| Parameter | Low | Medium (default) | High |
+| --- | --- | --- | --- |
+| DPR maksimum | 0,85 | 1,25 | 1,75 |
+| Bintang | 2520 | 5040 | 9000 |
+| Asteroid | 600 | 1200 | 1900 |
+| Kuiper | 900 | 1800 | 3600 |
+| Sphere Matahari/planet/katai (segmen width × height) | 24×16 | 40×24 | 64×40 |
+| Sphere bulan | 12×8 | 16×12 | 24×16 |
+| Atmosfer/corona/glow/coma | Mati | Aktif | Aktif |
+| Haze dekoratif | Mati | Aktif | Aktif |
+
+- Preset rendering berada di `src/data/quality.js`; jumlah sabuk tetap memakai konfigurasi visual seeded existing. Tombol, renderer/DPR dan scene memakai pilihan awal yang sama. Siklus Medium → Low → High → Medium; pilihan tersimpan dipulihkan setelah reload.
+- Saat preset berubah, hanya geometry sphere permukaan diganti; mesh/material/tekstur/parent, seleksi dan orbit dipertahankan. Geometry lama langsung dispose. Memilih preset yang sudah aktif tidak mengalokasikan geometry baru. Tidak membuat ulang scene setiap frame; detail ring, hit sphere dan shader shell tetap ringan dan tidak diganti.
+- Bintang/sabuk memakai drawRange pada buffer existing. Low tidak membebaskan seluruh buffer partikel atau menurunkan resolusi JPEG; ini mengurangi kerja render, bukan klaim penggunaan memori minimum. Aset shared tetap dibuang melalui traversal Set existing ketika scene dilepas.
+- Audit loop: updateLabels langsung return ketika label/HUD disembunyikan, menghindari world transform, proyeksi dan string CSS yang tidak tampak. Saat terlihat, jarak dihitung sekali per label. Cache loader, scratch vector safety/flight/background dan UI speed existing tetap dipakai. Tidak ada event listener baru untuk preset dan tidak ada dependency performa.
+- FPS opt-in hanya pada Vite development melalui `/?debug`. Counter menghitung frame per interval satu detik dan menulis satu output kecil; normal URL tidak membuat overlay. Guard import.meta.env.DEV menghilangkan jalur debug dari production. Tidak mengaktifkan preserveDrawingBuffer atau screenshot runtime.
+- Skrip benchmark sekarang secara eksplisit memilih High sebelum seri pengukuran High/Medium/Low, agar perubahan default tidak membuat label hasil salah. Laporan benchmark historis tidak ditimpa.
+
+### Beban tersisa dan batas pengukuran
+
+Kandidat biaya terbesar dari audit kode: fill-rate/DPR saat planet atau shell transparan menutupi banyak layar, geometry High, proyeksi/penulisan DOM label yang terlihat, world transform serta collision/swept checks pada semua objek, dan pembuatan procedural map saat startup. Ini kandidat, **bukan ranking hasil GPU profiler**. Buffer partikel/tekstur tetap resident dan penambahan detail shader belum diukur lintas GPU. Benchmark jangka panjang, retained heap dan adaptive quality masih belum dikerjakan; FPS debug bukan bukti bebas leak.
+
+### File dan validasi
+
+File runtime: quality.js (baru), SolarSystem.js, SpaceBackground.js, UIController.js, main.js, index.html. Test: quality.test.js/quality.spec.js baru; observer/regions/rendering diperbarui untuk default Medium. scripts/profile.mjs memastikan preset benchmark benar. Tidak ada git commit.
+
+- Unit test mencakup sanitasi storage, JSON rusak, array/object, storage ditolak dan round-trip semua preset.
+- `npm.cmd test`: **43/43 lulus**. `npm.cmd run build`: berhasil, 33 modul; aplikasi 97,94 kB dan Three.js 499,98 kB sebelum gzip. Pencarian pada bundle produksi tidak menemukan debug-fps/FPS, sesuai guard development-only.
+- `npm.cmd run test:e2e -- e2e/quality.spec.js e2e/rendering.spec.js e2e/regions.spec.js e2e/observer.spec.js`: **12/12 lulus**, exit code 0, 2,1 menit, Edge/Chrome; tidak ada console warning/error atau pageerror. Mencakup persistensi/reload, storage rusak, FPS opt-in, disposal geometry, reuse jika preset sama, identitas mesh/material, DPR/resize, jumlah sabuk dan regresi observer.
+- Manual: reload tanpa preferensi harus Medium; ubah Low lalu reload harus Low. Beralih beberapa kali, pilih objek dan pastikan panel/Follow tetap berfungsi. Jalankan dev dengan `?debug` untuk FPS; URL biasa tidak menampilkan counter. Coba data storage rusak, lalu reload dan pastikan kembali Medium.
