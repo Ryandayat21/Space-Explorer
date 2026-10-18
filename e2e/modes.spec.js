@@ -10,7 +10,7 @@ test('mode switching isolates selection, input, time, resources and audio', asyn
   });
   await page.locator('#mode-toggle').click();
   await expect(page.locator('#galaxy-placeholder')).toBeVisible();
-  expect(await page.evaluate(() => window.__observer.mode().sceneObjects)).toBe(1);
+  expect(await page.evaluate(() => window.__observer.mode().sceneObjects)).toBe(2);
   expect(await page.evaluate(() => window.__observer.mode().galaxyParticles)).toBe(30240);
   const days = await page.evaluate(() => window.__observer.elapsedDays());
   await page.keyboard.press('g'); await page.keyboard.press('p'); await page.keyboard.press('f');
@@ -24,7 +24,8 @@ test('mode switching isolates selection, input, time, resources and audio', asyn
   await expect.poll(() => page.evaluate(() => window.__observer.mode().aspect)).toBeCloseTo(1500/850);
   await page.locator('#mode-toggle').click();
   await expect(page.locator('#object-select')).toBeEnabled();
-  expect(await page.evaluate(() => window.__observer.snapshot().camera)).toEqual(before.camera);
+  const restoredCamera = await page.evaluate(() => window.__observer.snapshot().camera);
+  restoredCamera.forEach((value, axis) => expect(value).toBeCloseTo(before.camera[axis], 10));
   expect(await page.evaluate(async () => {
     const { getAudioManager } = await import('/src/core/AudioManager.js'); return window.testAudio === getAudioManager();
   })).toBe(true);

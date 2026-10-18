@@ -37,7 +37,7 @@ npm run preview
 
 ## Kontrol
 
-- **Galaxy · Dev / Tata Surya** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy menampilkan core, bulge, bar, empat lengan spiral ilustratif, Orion Spur, disk dan halo halus. Titik adalah sampel visual edukatif, bukan bintang katalog. Low/Medium/High memakai 12.600/30.240/50.400 titik; ubah preset di Tata Surya sebelum masuk galaksi. Belum ada selection, landmark atau pencarian galaksi. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama.
+- **Galaxy · Dev / Tata Surya** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy menampilkan core, bulge, bar, empat lengan spiral ilustratif, Orion Spur, disk dan halo halus. Titik adalah sampel visual edukatif, bukan bintang katalog. Low/Medium/High memakai 12.600/30.240/50.400 titik; ubah preset di Tata Surya sebelum masuk galaksi. Tersedia 13 landmark selectable melalui klik atau daftar keyboard, dengan panel bersumber NASA. Posisi marker skematis dan approximate, bukan koordinat astronomis; objek lokal direnggangkan. Pencarian galaksi belum tersedia. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama.
 
 - Klik objek: membuka detail.
 - Pencarian: memilih dan mengunjungi objek.
@@ -63,7 +63,7 @@ Favorit hanya menyimpan ID di localStorage pada browser/origin yang sama, tanpa 
 
 Drag/scroll mengambil alih transisi kamera dan menjeda tur. Preferensi sistem **reduced motion** memendekkan transisi kamera menjadi 150 ms dan menonaktifkan animasi UI dekoratif, tanpa mengubah kecepatan orbit.
 
-Kamera **Galaxy Mode**: gunakan preset Top view, Angled overview, Galactic center atau Solar System region (posisi ilustratif, belum terverifikasi). **Reset view** kembali ke overview. **Free Flight** mengaktifkan WASD + mouse, Space/Ctrl naik/turun, Shift boost 3× dan scroll pengali kecepatan 0,25–4×. Kecepatan adaptif dihitung dari jarak ke pusat model, terpisah dari Tata Surya; kamera dibatasi radius 80 unit model. Escape membatalkan transisi atau keluar flight; drag/scroll mengambil alih transisi. Preset memakai easing 1,4 detik (150 ms untuk reduced motion). Tidak ada landmark atau guided tour galaksi.
+Kamera **Galaxy Mode**: gunakan preset Top view, Angled overview, Galactic center atau Solar System region (posisi ilustratif, belum terverifikasi). **Reset view** kembali ke overview. **Free Flight** mengaktifkan WASD + mouse, Space/Ctrl naik/turun, Shift boost 3× dan scroll pengali kecepatan 0,25–4×. Kecepatan adaptif dihitung dari jarak ke pusat model, terpisah dari Tata Surya; kamera dibatasi radius 80 unit model. Escape membatalkan transisi atau keluar flight; drag/scroll mengambil alih transisi. Preset memakai easing 1,4 detik (150 ms untuk reduced motion). Klik marker atau gunakan daftar Landmark untuk membuka informasi; Escape menutup panel. Guided tour galaksi belum tersedia. Sumber dan batas interpretasi tercantum pada docs/phase-5-progress.md bagian 11.
 
 Klik tombol **♪ Pengaturan ambience** pada toolbar atas, lalu **Enable Ambience** untuk mulai musik lokal. Panel hanya muncul saat dibuka; klik di luar atau tekan Escape untuk menutupnya tanpa menghentikan musik. Tersedia Play/Pause, Mute/Unmute dan slider volume (default 15%). Kontrol mendukung Tab, Enter/Space dan tombol panah pada slider. Fade volume berlangsung sekitar 450 ms. Kontrol ikut tersembunyi pada mode sinematik; tekan H untuk menampilkannya lagi.
 

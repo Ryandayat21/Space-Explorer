@@ -433,3 +433,12 @@ button:disabled { opacity: .4; cursor: default; }
 .hud-hidden .mode-toggle, .hud-hidden .galaxy-placeholder { visibility: hidden; pointer-events: none; }
 .galaxy-camera-controls { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; }
 .galaxy-camera-controls button { padding: 7px; border: 1px solid #53708f; border-radius: 6px; color: #e4ebf8; background: #14233b; cursor: pointer; }
+
+.galaxy-landmark-list { pointer-events: auto; margin-top: 10px; max-height: 25vh; overflow: auto; }
+.galaxy-landmark-list summary { cursor: pointer; padding: 6px; }
+.galaxy-landmark-list button { display: block; width: 100%; text-align: left; margin-top: 4px; padding: 6px; }
+.galaxy-landmark-panel { position: fixed; right: 20px; top: 110px; width: min(330px, 85vw); max-height: calc(100vh - 220px); overflow: auto; padding: 20px; border-radius: 18px; z-index: 20; font-size: 14px; line-height: 1.6; }
+.galaxy-landmark-panel h2 { font-size: 21px; }
+.galaxy-landmark-panel a { color: #72dcff; }
+.galaxy-landmark-panel .landmark-note { font-size: 12px; color: #bdcbe0; }
+.hud-hidden .galaxy-landmark-panel { visibility: hidden; pointer-events: none; }

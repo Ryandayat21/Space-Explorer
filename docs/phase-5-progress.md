@@ -1,7 +1,7 @@
 # Phase 5 â€” Interactive Milky Way Map
 
 Tanggal audit: 17 Oktober 2026 (Asia/Jakarta). Baseline Git: `7e6e951`.
-Status: **arsitektur dua mode dan visual dasar galaksi edukatif tersedia; belum ada katalog, landmark atau seleksi galaksi**. Bagian 1â€“7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
+Status: **arsitektur dua mode, visual galaksi, kamera dan 13 landmark skematis selectable tersedia; pencarian/tur galaksi belum tersedia**. Bagian 1â€“7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
 
 ## 1. Baseline dan verifikasi
 
@@ -247,3 +247,24 @@ File baru: `src/core/GalaxyCameraControls.js`, `src/core/galaxyCameraMath.js`, `
 Verifikasi: **53/53 unit test lulus**; helper diuji untuk monotonic adaptive speed, clamp pengali, input nonfinite, batas radius dan preset finite. **Production build berhasil**, 43 modul; aplikasi 116,66 kB (gzip 37,49 kB), Three.js tetap terpisah 499,98 kB. **4/4 E2E targeted lulus** (galaxyCamera dan modes) pada Edge 1366?768/Chrome 1920?1080 dalam 44 detik, tanpa console warning/error aplikasi atau pageerror. Seluruh suite E2E tidak diulang. Cakupan mencakup preset, Escape, pointer lock/gerak, scroll, reset/reduced motion dan isolasi solar; unit test memeriksa batas matematis.
 
 Manual: masuk Galaxy, pilih keempat preset lalu batalkan satu transisi dengan Escape. Mulai Free Flight, WASD/mouse dan scroll, lalu Escape; Reset harus kembali ke overview. Pilih preset region solar untuk framing ilustratif. Kembali Tata Surya harus mempertahankan kecepatan kontrol solar. Uji reduced motion melalui preferensi sistem. Tidak mengklaim posisi preset sebagai hasil observasi atau navigasi fisik.
+
+## 11. Dataset struktur dan landmark ï¿½ 18 Oktober 2026
+
+- [x] 13 ID unik: Galactic Center/Sgr A*, Solar System, Local/Orion Spur, Scutumï¿½Centaurus, Perseus, Sagittarius, Norma, Alpha Centauri, Sirius, Betelgeuse, Pleiades, Orion Nebula, Crab Nebula.
+- [x] Dataset terpisah `src/data/galaxyLandmarks.js`: nama, alias, kategori, deskripsi, posisi model dengan `approximate: true`, data jarak jika relevan dan URL sumber/tanggal akses.
+- [x] Metadata posisi dan data ilmiah dipisahkan. Semua posisi adalah layout skematis XZ/Y, bukan koordinat galaktosentris terukur. Tidak ada konversi unit model ke kpc. Objek lokal sengaja direnggangkan; jarak maupun arah antarmarker tidak dapat diukur sebagai data fisik.
+- [x] Marker sprite 10 CSS px dengan proxy raycast 24 px, highlight terpilih, panel informasi bersumber, serta daftar tombol native untuk keyboard. Partikel dekoratif tetap tidak selectable. Klik saat drag/free-flight/cinematic diabaikan.
+- [x] Panel ditutup dengan tombol/Escape, fokus kembali ke pemicu; deactivate membersihkan selection/panel. Listener dilepas dan texture/material milik modul di-dispose. Geometry Sprite shared bawaan Three.js tidak dimusnahkan oleh modul.
+- [x] Update memakai scratch vector; tidak membuat objek setiap frame. Tidak menambah RAF, renderer atau mengubah kamera/orbit solar.
+- [x] Unit test ID/kategori/data wajib/finite posisi, ukuran proxy, selection dan disposal.
+- [ ] Search, guided tour, aksi marker menuju mode solar, transform astrometri dan katalog lebih rinci tetap tugas berikutnya. P5-04/P5-07 baru sebagian selesai; checklist gabungan sebelumnya tidak ditandai penuh.
+
+Sumber primer: [struktur Spitzer NASA](https://science.nasa.gov/resource/the-milky-way-galaxy/), [Sgr A*](https://www.nasa.gov/image-article/supermassive-black-hole-sagittarius/), [Alpha Centauri](https://science.nasa.gov/mission/webb/science-overview/science-explainers/what-is-the-center-of-our-galaxy-like/), [Sirius](https://science.nasa.gov/asset/hubble/the-dog-star-sirius-and-its-tiny-companion/), [Betelgeuse](https://science.nasa.gov/universe/what-is-betelgeuse-inside-the-strange-volatile-star/), [M45](https://science.nasa.gov/mission/hubble/science/explore-the-night-sky/hubble-messier-catalog/messier-45/), [M42](https://science.nasa.gov/mission/hubble/science/explore-the-night-sky/hubble-messier-catalog/messier-42/), [Crab](https://science.nasa.gov/asset/hubble/crab-nebula-3/). Diakses 18 Oktober 2026. Deskripsi merupakan ringkasan; tidak mengunduh aset gambar/katalog. Sumber mendukung fakta, bukan koordinat layout. Nilai jarak dibulatkan dan mengikuti sumber yang ditautkan; estimasi lain dapat berbeda. Empat label lengan tidak berarti empat lengan sama dominan: model Spitzer membedakan dua utama dan dua lebih kecil; struktur masih diteliti. Visual spiral existing tidak diubah menjadi fit ilmiah.
+
+Verifikasi: **55/55 unit test lulus**, production build berhasil (46 modul; aplikasi 125,26 kB/gzip 40,44 kB; Three.js tetap bundle terpisah 499,98 kB). Browser targeted memeriksa raycast pusat, panel/sumber, keyboard, restore fokus, switch mode dan resource stability. Tidak mengklaim pengujian seluruh suite browser atau profiling GPU sesi panjang.
+
+Manual: buka Galaxy, klik titik biru (pusat membuka Galactic Center), baca catatan posisi dan tautan sumber. Buka daftar Landmark lalu Tab/Enter pada Sirius; Escape menutup panel dan mengembalikan fokus. Zoom/pilih preset untuk memeriksa marker tidak membesar berlebihan; kembali Tata Surya dan masuk Galaxy lagi harus membersihkan pilihan.
+
+Hasil browser: kedua test landmark lulus pada Edge 1366×768 dan Chrome 1920×1080 tanpa console warning/error aplikasi. Regresi mode awal lulus di Edge tetapi gagal di Chrome karena assertion koordinat identik (selisih floating point sekitar 1e-14). Assertion diubah menjadi toleransi 10 digit; rerun regresi mode **2/2 lulus**. Total dua skenario pada dua browser terverifikasi, bukan klaim satu run penuh 4/4 setelah perbaikan. Warning NO_COLOR/FORCE_COLOR berasal dari runner, bukan aplikasi.
+
+File baru: src/data/galaxyLandmarks.js, src/core/GalaxyLandmarks.js, src/ui/GalaxyLandmarkPanel.js, test/galaxyLandmarks.test.js, e2e/galaxyLandmarks.spec.js. File diubah: src/modes/GalaxyMode.js, index.html, src/styles.css, e2e/modes.spec.js, README.md dan dokumen ini. Tidak ada git commit.
