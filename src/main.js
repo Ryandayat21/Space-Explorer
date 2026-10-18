@@ -76,6 +76,7 @@ solar.integration.loadSun().then(() => { clearTimeout(startupTimeout); ui.ready(
 frameId = requestAnimationFrame(animate);
 if (import.meta.env.DEV) window.__observer = {
   ...solar.integration.diagnostics,
+  galaxyCamera: () => galaxy.camera ? ({ position: galaxy.camera.position.toArray(), flight: !!galaxy.controls.flight, tween: !!galaxy.controls.tween, multiplier: galaxy.controls.multiplier }) : null,
   mode: () => ({ id: modes.active.id, aspect: modes.active.camera.aspect, sceneObjects: modes.active.scene.children.length, galaxyParticles: galaxy.galaxy?.particleCount }),
   rendering: () => ({ pixelRatio: renderer.getPixelRatio(), aspect: modes.active.camera.aspect,
     exposure: renderer.toneMappingExposure, colorSpace: renderer.outputColorSpace,

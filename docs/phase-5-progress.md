@@ -228,3 +228,22 @@ Validasi: **51/51 unit test lulus**, termasuk seeded buffers, finite coordinates
 File baru: `src/core/GalaxyScene.js`, `src/data/galaxyVisual.js`, `test/galaxyScene.test.js`. File berubah: GalaxyMode.js, main.js (routing kualitas/diagnostic), index.html/styles.css (catatan edukatif), e2e/modes.spec.js (expectation visual), README dan dokumen ini. Tidak ada perubahan orbit, material solar, data ilmiah atau git commit.
 
 P5-06 visual dasar telah diterapkan; pengukuran budget lintas GPU masih terbuka. P5-03/04/07 (provider, verifikasi data dan landmark) tetap belum selesai dan tidak dibuat pada tugas ini.
+
+
+## 10. Kamera Galaxy Mode ? 18 Oktober 2026
+
+- [x] Orbit strategis dengan target preset, zoom 0,4?60 unit terhadap target; pan dimatikan agar target tidak hanyut. Tidak mengubah orbit controls solar.
+- [x] GalaxyCameraControls terpisah, memakai velocity damping dan pointer lock; WASD, Space/Ctrl, Shift boost 3?, scroll pengali kecepatan 0,25?4?. Tidak mengubah FlightControls.js Tata Surya.
+- [x] Kecepatan dasar adaptif `min(32, (0.4 + min(distance, 80) * 0.18) * multiplier)` unit model/detik sebelum boost. Jarak mengacu pusat galaksi, bukan posisi planet atau AU.
+- [x] Kamera dibatasi bola radius 80 unit dari pusat model, baik flight maupun orbit; velocity dihentikan di batas. Ini batas navigasi, bukan collision dengan titik/bintang.
+- [x] Tombol Free Flight/Kembali ke orbit, Reset view, Top view, Angled overview, Galactic center dan Solar System region. Semua native button dengan title/aria-label dan fokus existing.
+- [x] Preset posisi/target berada di galaxyCameraMath.js. Posisi region solar `[8,0,0]` adalah pilihan framing ilustratif, **bukan koordinat astronomis terverifikasi**; UI memberi penjelasan. Tidak membuat landmark/objek selectable atau guided tour.
+- [x] Transisi smootherstep dan quaternion slerp selama 1,4 detik; reduced motion 150 ms termasuk perubahan preferensi saat transisi berlangsung. Escape, drag atau scroll membatalkan; free-flight mengambil alih dari pose saat ini.
+- [x] Escape/pointer unlock mengembalikan mode orbit tanpa reset posisi; Reset kembali `[0,20,30]` menuju pusat. Tab tersembunyi keluar flight/cancel tween, kehilangan fokus mereset gerakan. Penolakan pointer lock ditangkap dengan status dan fallback orbit.
+- [x] Deactivate membatalkan tween, melepas pointer lock dan mereset input. Listener dibuat sekali per instance dan dilepas saat dispose. Scratch vector/quaternion digunakan ulang pada update; tidak ada renderer/RAF baru.
+
+File baru: `src/core/GalaxyCameraControls.js`, `src/core/galaxyCameraMath.js`, `test/galaxyCamera.test.js`, `e2e/galaxyCamera.spec.js`. File berubah: GalaxyMode.js, main.js (diagnostic development), index.html/styles.css (kontrol kamera), README dan dokumen ini. Visual galaksi, data solar, solver orbit, kamera solar, audio dan tur tidak diubah. Tidak ada git commit.
+
+Verifikasi: **53/53 unit test lulus**; helper diuji untuk monotonic adaptive speed, clamp pengali, input nonfinite, batas radius dan preset finite. **Production build berhasil**, 43 modul; aplikasi 116,66 kB (gzip 37,49 kB), Three.js tetap terpisah 499,98 kB. **4/4 E2E targeted lulus** (galaxyCamera dan modes) pada Edge 1366?768/Chrome 1920?1080 dalam 44 detik, tanpa console warning/error aplikasi atau pageerror. Seluruh suite E2E tidak diulang. Cakupan mencakup preset, Escape, pointer lock/gerak, scroll, reset/reduced motion dan isolasi solar; unit test memeriksa batas matematis.
+
+Manual: masuk Galaxy, pilih keempat preset lalu batalkan satu transisi dengan Escape. Mulai Free Flight, WASD/mouse dan scroll, lalu Escape; Reset harus kembali ke overview. Pilih preset region solar untuk framing ilustratif. Kembali Tata Surya harus mempertahankan kecepatan kontrol solar. Uji reduced motion melalui preferensi sistem. Tidak mengklaim posisi preset sebagai hasil observasi atau navigasi fisik.

@@ -431,3 +431,5 @@ button:disabled { opacity: .4; cursor: default; }
 .galaxy-placeholder { position: fixed; left: 20px; top: 105px; width: min(280px, 80vw); padding: 16px; border-radius: 18px; font-size: 12px; pointer-events: none; }
 .galaxy-mode .left-rail, .galaxy-mode .time-dock, .galaxy-mode .welcome-card, .galaxy-mode #labels-layer { visibility: hidden; pointer-events: none; }
 .hud-hidden .mode-toggle, .hud-hidden .galaxy-placeholder { visibility: hidden; pointer-events: none; }
+.galaxy-camera-controls { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; }
+.galaxy-camera-controls button { padding: 7px; border: 1px solid #53708f; border-radius: 6px; color: #e4ebf8; background: #14233b; cursor: pointer; }

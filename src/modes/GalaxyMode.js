@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GalaxyCameraControls } from '../core/GalaxyCameraControls.js';
 import { GalaxyScene } from '../core/GalaxyScene.js';
 export class GalaxyMode {
   id = 'galaxy';
@@ -11,13 +11,12 @@ export class GalaxyMode {
     this.galaxy = new GalaxyScene(this.quality); this.scene.add(this.galaxy);
     this.camera = new THREE.PerspectiveCamera(50, 1, .1, 200);
     this.camera.position.set(0, 20, 30);
-    this.controls = new OrbitControls(this.camera, this.canvas);
-    this.controls.minDistance = 2; this.controls.maxDistance = 100; this.controls.enabled = false;
+    this.controls = new GalaxyCameraControls(this.camera, this.canvas);
   }
-  activate() { this.controls.enabled = true; }
+  activate() { this.controls.activate(); }
   setQuality(quality) { this.quality = quality; this.galaxy?.setQuality(quality); }
-  deactivate() { if (this.controls) this.controls.enabled = false; }
-  update() { this.controls.update(); }
+  deactivate() { this.controls?.deactivate(); }
+  update(delta, now) { this.controls.update(delta, now); }
   resize(width, height) { if (this.camera) { this.camera.aspect = width / height; this.camera.updateProjectionMatrix(); } }
   dispose() {
     if (this.disposed) return;

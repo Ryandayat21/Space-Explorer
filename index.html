@@ -176,6 +176,15 @@
         <h2>Galaxy Mode</h2>
         <p>Representasi edukatif. Titik adalah sampel visual, bukan bintang katalog nyata. Struktur dan skala disederhanakan.</p>
         <p>Pencarian dan landmark belum tersedia. Kualitas mengikuti preset Tata Surya.</p>
+        <div class="galaxy-camera-controls" role="group" aria-label="Kamera galaksi">
+          <button id="galaxy-flight" type="button" title="Beralih orbit dan free-flight galaksi" aria-label="Beralih orbit dan free-flight galaksi">Free Flight</button>
+          <button id="galaxy-reset" type="button" title="Reset ke overview" aria-label="Reset kamera galaksi">Reset view</button>
+          <button data-galaxy-view="top" type="button" title="Lihat dari atas" aria-label="Top view">Top view</button>
+          <button data-galaxy-view="overview" type="button" title="Overview miring" aria-label="Angled overview">Angled overview</button>
+          <button data-galaxy-view="center" type="button" title="Lihat pusat galaksi" aria-label="Galactic center">Galactic center</button>
+          <button data-galaxy-view="solar" type="button" title="Wilayah Tata Surya ilustratif, bukan koordinat terverifikasi" aria-label="Solar System region ilustratif">Solar System region*</button>
+        </div>
+        <p>*Posisi ilustratif. Flight: WASD, mouse, Space/Ctrl, Shift boost, scroll kecepatan. Escape keluar flight atau membatalkan transisi.</p>
       </section>
       <section id="audio-panel" class="audio-controls glass-panel" popover aria-label="Ambient audio">
         <button id="audio-play" type="button" title="Enable Ambience" aria-label="Enable Ambience">Enable Ambience</button>
