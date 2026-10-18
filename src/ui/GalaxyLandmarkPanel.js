@@ -1,7 +1,7 @@
 import { galaxyLandmarks, landmarkPositionNotice } from '../data/galaxyLandmarks.js';
 
 export class GalaxyLandmarkPanel {
-  constructor(onSelect) {
+  constructor(onSelect, onEnterSolarSystem) {
     this.element = document.createElement('section');
     this.element.id = 'galaxy-landmark-panel'; this.element.className = 'galaxy-landmark-panel glass-panel';
     this.element.hidden = true; this.element.setAttribute('aria-label', 'Informasi landmark galaksi');
@@ -10,7 +10,11 @@ export class GalaxyLandmarkPanel {
     this.closeButton.setAttribute('aria-label', 'Tutup informasi landmark');
     this.title = node('h2', ''); this.aliases = node('p', ''); this.description = node('p', '');
     this.distance = node('p', ''); node('p', landmarkPositionNotice).className = 'landmark-note';
-    this.sources = node('div', ''); document.body.append(this.element);
+    this.sources = node('div', '');
+    this.enterButton = node('button', 'Enter Solar System'); this.enterButton.hidden = true;
+    this.enterButton.title = 'Masuk ke Tata Surya'; this.enterButton.setAttribute('aria-label', 'Enter Solar System');
+    this.onEnter = onEnterSolarSystem; this.enterButton.addEventListener('click', this.onEnter);
+    document.body.append(this.element);
     this.list = document.createElement('details'); this.list.className = 'galaxy-landmark-list';
     const summary = document.createElement('summary'); summary.textContent = 'Landmark (13)'; this.list.append(summary);
     for (const data of galaxyLandmarks) {
@@ -25,6 +29,7 @@ export class GalaxyLandmarkPanel {
     window.addEventListener('keydown', this.onKey);
   }
   show(data) {
+    this.enterButton.hidden = data.id !== 'solar-system-region';
     if (this.element.hidden) this.returnFocus = document.activeElement;
     this.title.textContent = data.name; this.aliases.textContent = `${data.category}${data.aliases.length ? ' · ' + data.aliases.join(', ') : ''}`;
     this.description.textContent = data.description;
@@ -35,5 +40,5 @@ export class GalaxyLandmarkPanel {
     this.element.hidden = false; this.closeButton.focus({ preventScroll: true });
   }
   hide(restore = false) { this.element.hidden = true; if (restore && this.returnFocus?.isConnected) this.returnFocus.focus({ preventScroll: true }); }
-  dispose() { this.list.removeEventListener('click', this.onList); this.closeButton.removeEventListener('click', this.onClose); window.removeEventListener('keydown', this.onKey); this.list.remove(); this.element.remove(); }
+  dispose() { this.enterButton.removeEventListener('click', this.onEnter); this.list.removeEventListener('click', this.onList); this.closeButton.removeEventListener('click', this.onClose); window.removeEventListener('keydown', this.onKey); this.list.remove(); this.element.remove(); }
 }

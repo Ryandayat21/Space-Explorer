@@ -37,7 +37,7 @@ npm run preview
 
 ## Kontrol
 
-- **Galaxy · Dev / Tata Surya** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy menampilkan core, bulge, bar, empat lengan spiral ilustratif, Orion Spur, disk dan halo halus. Titik adalah sampel visual edukatif, bukan bintang katalog. Low/Medium/High memakai 12.600/30.240/50.400 titik; ubah preset di Tata Surya sebelum masuk galaksi. Tersedia 13 landmark selectable melalui klik atau daftar keyboard, dengan panel bersumber NASA. Posisi marker skematis dan approximate, bukan koordinat astronomis; objek lokal direnggangkan. Pencarian galaksi belum tersedia. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama.
+- **View Milky Way / Enter Solar System** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy menampilkan core, bulge, bar, empat lengan spiral ilustratif, Orion Spur, disk dan halo halus. Titik adalah sampel visual edukatif, bukan bintang katalog. Low/Medium/High memakai 12.600/30.240/50.400 titik; ubah preset di Tata Surya sebelum masuk galaksi. Tersedia 13 landmark selectable melalui klik atau daftar keyboard, dengan panel bersumber NASA. Posisi marker skematis dan approximate, bukan koordinat astronomis; objek lokal direnggangkan. Pencarian galaksi belum tersedia. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama.
 
 - Klik objek: membuka detail.
 - Pencarian: memilih dan mengunjungi objek.
@@ -213,3 +213,5 @@ Orbit elips menggunakan elemen sederhana, bukan n-body atau ephemeris tanggal ny
 Tombol **Asteroid** dan **Kuiper** menyembunyikan/menampilkan partikel masing-masing, tanpa menghilangkan Ceres atau Pluto. Low/Medium/High memakai 600/1200/1900 partikel asteroid dan 900/1800/3600 partikel Kuiper. Distribusi dan ukuran merupakan ilustrasi dengan skala jarak terkompresi; partikel tidak dapat dipilih.
 
 `npm run profile` menjalankan benchmark terpisah di Edge 1366×768 dan Chrome 1920×1080, membuka server Vite lokal, lalu menulis `docs/benchmarks/phase-3-performance.json`. Jalankan tanpa browser/test berat lain agar hasil sebanding. Benchmark mengukur interval animation frame, heap setelah garbage collection dan jumlah resource setelah Visit/tur/toggle berulang. Hasil headless hanya baseline mesin pengujian; bukan jaminan FPS atau bukti tidak adanya memory leak jangka panjang. Tidak ada dependency baru.
+
+Transisi mode: **View Milky Way** membuka galaksi dengan fade dan gerakan kamera lokal; panel marker **Solar System** menyediakan **Enter Solar System**. **Skip** melewati animasi. Input dikunci sementara, lalu fokus kembali ke tombol mode. Durasi normal sekitar 1,3 detik; prefers-reduced-motion sekitar 160 ms tanpa gerakan kamera. Kedua scene tetap menggunakan koordinat terpisah, dan pose kamera sebelumnya dipertahankan.

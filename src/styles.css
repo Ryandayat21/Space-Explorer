@@ -442,3 +442,11 @@ button:disabled { opacity: .4; cursor: default; }
 .galaxy-landmark-panel a { color: #72dcff; }
 .galaxy-landmark-panel .landmark-note { font-size: 12px; color: #bdcbe0; }
 .hud-hidden .galaxy-landmark-panel { visibility: hidden; pointer-events: none; }
+
+#mode-transition { position: fixed; inset: 0; z-index: 10000; pointer-events: auto; }
+.mode-transition-shade { position: absolute; inset: 0; background: #01030a; opacity: 0; }
+.mode-transition-actions { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); text-align: center; color: white; }
+.mode-transition-actions button { padding: 12px 28px; }
+.mode-transitioning #app > :not(canvas):not(.scene-container) { opacity: 0; transition: opacity 180ms ease; }
+.mode-transitioning .galaxy-landmark-panel { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .mode-transitioning #app > :not(canvas):not(.scene-container) { transition: none; } }

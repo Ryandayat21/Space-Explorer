@@ -265,6 +265,28 @@ Verifikasi: **55/55 unit test lulus**, production build berhasil (46 modul; apli
 
 Manual: buka Galaxy, klik titik biru (pusat membuka Galactic Center), baca catatan posisi dan tautan sumber. Buka daftar Landmark lalu Tab/Enter pada Sirius; Escape menutup panel dan mengembalikan fokus. Zoom/pilih preset untuk memeriksa marker tidak membesar berlebihan; kembali Tata Surya dan masuk Galaxy lagi harus membersihkan pilihan.
 
-Hasil browser: kedua test landmark lulus pada Edge 1366×768 dan Chrome 1920×1080 tanpa console warning/error aplikasi. Regresi mode awal lulus di Edge tetapi gagal di Chrome karena assertion koordinat identik (selisih floating point sekitar 1e-14). Assertion diubah menjadi toleransi 10 digit; rerun regresi mode **2/2 lulus**. Total dua skenario pada dua browser terverifikasi, bukan klaim satu run penuh 4/4 setelah perbaikan. Warning NO_COLOR/FORCE_COLOR berasal dari runner, bukan aplikasi.
+Hasil browser: kedua test landmark lulus pada Edge 1366Ã—768 dan Chrome 1920Ã—1080 tanpa console warning/error aplikasi. Regresi mode awal lulus di Edge tetapi gagal di Chrome karena assertion koordinat identik (selisih floating point sekitar 1e-14). Assertion diubah menjadi toleransi 10 digit; rerun regresi mode **2/2 lulus**. Total dua skenario pada dua browser terverifikasi, bukan klaim satu run penuh 4/4 setelah perbaikan. Warning NO_COLOR/FORCE_COLOR berasal dari runner, bukan aplikasi.
 
 File baru: src/data/galaxyLandmarks.js, src/core/GalaxyLandmarks.js, src/ui/GalaxyLandmarkPanel.js, test/galaxyLandmarks.test.js, e2e/galaxyLandmarks.spec.js. File diubah: src/modes/GalaxyMode.js, index.html, src/styles.css, e2e/modes.spec.js, README.md dan dokumen ini. Tidak ada git commit.
+
+## 12. Transisi antar-mode - 18 Oktober 2026
+
+- [x] Tombol View Milky Way dari Tata Surya dan Enter Solar System pada panel marker Solar System; tombol mode global tetap dapat dipakai kembali.
+- [x] ModeTransition dengan state preparing/out/in/idle, driven oleh RAF existing. Request berulang diabaikan selama transisi; scene/renderer/listener dipakai ulang.
+- [x] Initialize, resize dan compile tujuan selesai sebelum sumber dinonaktifkan. Scene ditukar pada fade gelap penuh; kegagalan persiapan/aktivasi memulihkan input dan mode sebelumnya.
+- [x] Fade UI dan curtain, dengan easing kamera tampilan lokal: mundur 8 unit solar / 2 unit galaxy, mendekat di scene tujuan. Kamera tampilan adalah salinan sehingga pose kamera pengguna dipertahankan. Tidak menginterpolasi koordinat solar ke galaksi.
+- [x] Durasi 650 ms keluar + 650 ms masuk. Reduced motion 80 ms per bagian tanpa gerakan kamera, termasuk perubahan preferensi selama transisi.
+- [x] Input capture guard sebelum shortcut UI dan inert sementara. Skip tetap bisa diakses keyboard. Fokus kembali ke tombol mode; Skip bekerja pada kedua bagian transisi.
+- [x] Tur/follow/selection/flight dihentikan melalui lifecycle existing; waktu simulasi berhenti selama transisi. Audio singleton tidak diganti. Kontrol solar kembali aktif sesudah masuk.
+- [x] Disposal melepas listener, overlay dan inert; tidak ada timer animasi/RAF tambahan. Resize memperbarui aspect kamera tampilan.
+- [x] Unit test readiness sebelum activation, midpoint, reduced duration, skip, repeated request, reuse, rollback dan disposal.
+- [ ] Search, tur galaksi dan koordinat astrometri tetap ditunda. P5-07 masih parsial walaupun aksi marker menuju solar kini selesai.
+
+Validasi: 58/58 unit test lulus; production build berhasil (47 modul; aplikasi 128,91 kB/gzip 41,67 kB; Three.js terpisah 499,98 kB). Profiling GPU/sesi panjang bukan cakupan tugas ini.
+
+File baru: src/core/ModeTransition.js, test/modeTransition.test.js, e2e/modeTransition.spec.js. Integrasi: main.js, GalaxyMode.js, GalaxyLandmarkPanel.js, index.html/styles.css. Tes browser mode/kamera/landmark menunggu transisi sebelum assertion. README dan dokumen ini diperbarui. Encoding campuran pada dokumen progress dinormalisasi ke UTF-8 tanpa menghapus isi. Tidak ada git commit.
+
+Manual: klik View Milky Way, coba Skip dengan Tab/Enter; pilih marker Solar System lalu Enter Solar System. Ulangi dengan transisi penuh dan reduced motion. Sesudah kembali, coba search, Visit, Follow, time controls, tur dan flight. Resize saat fade; H/P/W tidak boleh mengendalikan aplikasi selama overlay aktif.
+
+Browser: 8/8 skenario targeted lulus pada Edge 1366x768 dan Chrome 1920x1080 (kamera galaksi, landmark, regresi mode dan transisi baru), tanpa console warning/error aplikasi. Pengujian mencakup Skip, marker entry, reduced motion, request berulang, isolasi input, pose/resources/audio serta kontrol solar setelah kembali. Seluruh suite browser tidak dijalankan ulang. Warning NO_COLOR/FORCE_COLOR berasal dari environment runner.
+Catatan runner Windows: seluruh delapan test sudah melaporkan ok, tetapi proses tetap menunggu saat teardown dev server; proses runner dihentikan setelah hasil test selesai. Karena itu hasil browser merujuk laporan per-test, bukan exit code sukses keseluruhan runner.

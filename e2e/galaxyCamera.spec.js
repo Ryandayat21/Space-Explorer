@@ -2,7 +2,7 @@ import { test, expect } from './fixtures.js';
 test('galaxy presets, cancellation, flight, reset and mode isolation', async ({ page }) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   const solarSpeed = await page.evaluate(() => window.__observer.snapshot().speed);
-  await page.locator('#mode-toggle').click();
+  await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false);
   const state = () => page.evaluate(() => window.__observer.galaxyCamera());
   for (const preset of ['top', 'center', 'solar', 'overview']) {
     await page.locator(`[data-galaxy-view="${preset}"]`).click();
@@ -23,6 +23,6 @@ test('galaxy presets, cancellation, flight, reset and mode isolation', async ({ 
   await page.locator('#galaxy-reset').click();
   await expect.poll(async () => (await state()).tween, { timeout: 1000 }).toBe(false);
   expect((await state()).position).toEqual([0, 20, 30]);
-  await page.locator('#mode-toggle').click();
+  await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false);
   expect(await page.evaluate(() => window.__observer.snapshot().speed)).toBe(solarSpeed);
 });

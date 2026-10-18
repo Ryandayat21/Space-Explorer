@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures.js';
 test('galaxy landmark raycast, keyboard panel and mode isolation', async ({ page }) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
-  await page.locator('#mode-toggle').click();
+  await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false);
   const size = page.viewportSize();
   await page.mouse.click(size.width / 2, size.height / 2);
   const panel = page.locator('#galaxy-landmark-panel');
@@ -13,7 +13,7 @@ test('galaxy landmark raycast, keyboard panel and mode isolation', async ({ page
   await button.focus(); await page.keyboard.press('Enter');
   await expect(panel.locator('h2')).toHaveText('Sirius'); await expect(panel).toContainText('8,6');
   await page.keyboard.press('Escape'); await expect(button).toBeFocused();
-  await page.locator('#mode-toggle').click(); await expect(panel).toBeHidden();
-  await page.locator('#mode-toggle').click(); await expect(panel).toBeHidden();
+  await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false); await expect(panel).toBeHidden();
+  await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false); await expect(panel).toBeHidden();
   await expect(page.locator('#object-select')).toBeDisabled();
 });
