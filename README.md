@@ -37,7 +37,7 @@ npm run preview
 
 ## Kontrol
 
-- **Galaxy · Dev / Tata Surya** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy sementara hanya placeholder kosong. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama. Peta galaksi belum tersedia.
+- **Galaxy · Dev / Tata Surya** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy menampilkan core, bulge, bar, empat lengan spiral ilustratif, Orion Spur, disk dan halo halus. Titik adalah sampel visual edukatif, bukan bintang katalog. Low/Medium/High memakai 12.600/30.240/50.400 titik; ubah preset di Tata Surya sebelum masuk galaksi. Belum ada selection, landmark atau pencarian galaksi. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama.
 
 - Klik objek: membuka detail.
 - Pencarian: memilih dan mengunjungi objek.

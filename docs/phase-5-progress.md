@@ -1,7 +1,7 @@
 # Phase 5 — Interactive Milky Way Map
 
 Tanggal audit: 17 Oktober 2026 (Asia/Jakarta). Baseline Git: `7e6e951`.
-Status: **arsitektur dua mode sudah diimplementasikan; Galaxy Mode masih scene kosong dengan placeholder**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
+Status: **arsitektur dua mode dan visual dasar galaksi edukatif tersedia; belum ada katalog, landmark atau seleksi galaksi**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
 
 ## 1. Baseline dan verifikasi
 
@@ -195,3 +195,36 @@ Validasi: **49/49 unit test lulus**. **Production build berhasil**, 39 modul; HT
 `npm.cmd run test:e2e` menjalankan 56 eksekusi pada Edge 1366×768 dan Chrome 1920×1080: 55 lulus, satu test mode Edge membaca aspect sebelum event resize selesai. Assertion diperbaiki memakai expect.poll tanpa mengubah runtime; `npm.cmd run test:e2e -- e2e/modes.spec.js` kemudian **2/2 lulus**. Jadi seluruh 54 regresi existing dan kedua test mode telah terverifikasi, bukan klaim satu run penuh 56/56 setelah koreksi test. Tidak ada console warning/error aplikasi atau pageerror pada skenario yang lulus; warning NO_COLOR/FORCE_COLOR berasal dari environment runner.
 
 E2E baru memeriksa scene kosong, clear selection, solar time freeze, kamera kembali, resize, input/shortcut, resource count, audio singleton, keluar tur/flight dan pencarian setelah kembali. Pengujian resource singkat bukan bukti bebas leak sesi panjang. Screenshot placeholder juga diperiksa; belum ada visual galaksi yang perlu divalidasi.
+
+
+## 9. Visual dasar galaksi ? 18 Oktober 2026
+
+- [x] Core, bulge, central bar, empat lengan spiral ilustratif, Local/Orion Spur, disk dan halo sangat halus menggunakan Points + BufferGeometry.
+- [x] Seed tetap 512018; posisi, kecerahan, warna dan elevasi deterministik. Tiga ukuran titik per komponen: 21 draw calls, bukan satu Mesh per titik.
+- [x] Struktur lengan/spur (phase, inner/outer radius, pitch, lebar dan tinggi) serta jumlah sampel berada di `src/data/galaxyVisual.js`.
+- [x] Preset kualitas diteruskan ke mode aktif maupun instance galaksi yang belum diinisialisasi. Mengubah drawRange, tidak membangun ulang buffer.
+- [x] Raycast seluruh lapisan dinonaktifkan; tidak menambah selection, landmark, navigasi atau dataset ilmiah. Kontrol kamera existing tidak diubah.
+- [x] Geometry/material dan sprite shared dibuang tepat sekali saat dispose. Tidak ada update galaksi atau object allocation tambahan pada animation loop.
+
+| Komponen | Low | Medium | High |
+| --- | ---: | ---: | ---: |
+| Core | 600 | 1.440 | 2.400 |
+| Bulge | 1.500 | 3.600 | 6.000 |
+| Bar | 900 | 2.160 | 3.600 |
+| Lengan utama | 6.000 | 14.400 | 24.000 |
+| Local/Orion Spur | 600 | 1.440 | 2.400 |
+| Disk | 2.400 | 5.760 | 9.600 |
+| Halo | 600 | 1.440 | 2.400 |
+| **Total** | **12.600** | **30.240** | **50.400** |
+
+Semua preset mempertahankan buffer maksimum 50.400 titik: posisi + warna sekitar 1,21 MB sebelum overhead geometry/driver. Low mengurangi kerja render, bukan ukuran buffer resident. Setiap subset tetap berisi seluruh struktur karena drawRange diterapkan per komponen dan ukuran. Tidak ada tekstur eksternal, shader khusus atau dependency baru; sprite radial 16?16 dibuat lokal di memori.
+
+Visual ini representasi edukatif, **bukan hasil fit observasi, peta katalog, atau posisi bintang nyata**. Nama Local/Orion Spur merupakan label komponen ilustrasi; phase/pitch/ukuran model bukan klaim nilai astronomi. Parameter berada dalam unit model galaksi terpisah dari skala solar. Sumbu Y adalah tinggi, disk pada XZ; konvensi sumber ilmiah dan konversi kpc tetap belum diimplementasikan. Data primer tetap perlu diverifikasi pada P5-04 sebelum landmark ilmiah ditambahkan.
+
+Core/bulge/bar menggunakan distribusi Gaussian terbatas dengan sumbu berbeda; lengan memakai spiral logarithmic berlebar/elevasi bervariasi; disk lebih padat ke pusat; halo tiga dimensi sangat redup. Warna hangat pusat dan biru-putih lengan bersifat ilustratif. Panel placeholder diperkecil dan dipindah ke pojok agar tidak menutupi galaksi serta menampilkan batas interpretasi.
+
+Validasi: **51/51 unit test lulus**, termasuk seeded buffers, finite coordinates, distribusi pipih, non-pickability, hitungan preset, reuse dan disposal. **Production build berhasil**, 41 modul; aplikasi 110,94 kB (gzip 36,01 kB), Three.js terpisah 499,98 kB. **2/2 E2E mode lulus** pada Edge/Chrome tanpa warning/error console aplikasi; seluruh suite E2E tidak diulang. Ketiga jumlah preset diperiksa di browser dan screenshot disimpan di test-results (diabaikan Git). Profiling GPU lintas perangkat/sesi panjang belum dilakukan; tidak mengklaim FPS tertentu.
+
+File baru: `src/core/GalaxyScene.js`, `src/data/galaxyVisual.js`, `test/galaxyScene.test.js`. File berubah: GalaxyMode.js, main.js (routing kualitas/diagnostic), index.html/styles.css (catatan edukatif), e2e/modes.spec.js (expectation visual), README dan dokumen ini. Tidak ada perubahan orbit, material solar, data ilmiah atau git commit.
+
+P5-06 visual dasar telah diterapkan; pengukuran budget lintas GPU masih terbuka. P5-03/04/07 (provider, verifikasi data dan landmark) tetap belum selesai dan tidak dibuat pada tugas ini.

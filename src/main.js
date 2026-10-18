@@ -25,7 +25,8 @@ const onContextLost = event => {
 };
 canvas.addEventListener('webglcontextlost', onContextLost);
 const solar = new SolarSystemMode({ canvas, ui, renderer, quality: renderQuality });
-const modes = new ModeController([solar, new GalaxyMode({ canvas })]);
+const galaxy = new GalaxyMode({ canvas, quality: renderQuality });
+const modes = new ModeController([solar, galaxy]);
 modes.activate('solar-system');
 const clock = new THREE.Clock();
 function resizeRenderer() {
@@ -39,7 +40,7 @@ resizeRenderer();
 window.addEventListener('resize', resizeRenderer);
 document.addEventListener('fullscreenchange', resizeRenderer);
 ui.addEventListener('quality-change', event => {
-  renderQuality = event.detail; solar.setQuality(renderQuality); resizeRenderer();
+  renderQuality = event.detail; solar.setQuality(renderQuality); galaxy.setQuality(renderQuality); resizeRenderer();
 });
 const switchButton = document.getElementById('mode-toggle');
 switchButton.addEventListener('click', () => {
@@ -75,7 +76,7 @@ solar.integration.loadSun().then(() => { clearTimeout(startupTimeout); ui.ready(
 frameId = requestAnimationFrame(animate);
 if (import.meta.env.DEV) window.__observer = {
   ...solar.integration.diagnostics,
-  mode: () => ({ id: modes.active.id, aspect: modes.active.camera.aspect, sceneObjects: modes.active.scene.children.length }),
+  mode: () => ({ id: modes.active.id, aspect: modes.active.camera.aspect, sceneObjects: modes.active.scene.children.length, galaxyParticles: galaxy.galaxy?.particleCount }),
   rendering: () => ({ pixelRatio: renderer.getPixelRatio(), aspect: modes.active.camera.aspect,
     exposure: renderer.toneMappingExposure, colorSpace: renderer.outputColorSpace,
     toneMapping: renderer.toneMapping, quality: renderQuality })

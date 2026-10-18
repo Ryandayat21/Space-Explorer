@@ -10,7 +10,8 @@ test('mode switching isolates selection, input, time, resources and audio', asyn
   });
   await page.locator('#mode-toggle').click();
   await expect(page.locator('#galaxy-placeholder')).toBeVisible();
-  expect(await page.evaluate(() => window.__observer.mode().sceneObjects)).toBe(0);
+  expect(await page.evaluate(() => window.__observer.mode().sceneObjects)).toBe(1);
+  expect(await page.evaluate(() => window.__observer.mode().galaxyParticles)).toBe(30240);
   const days = await page.evaluate(() => window.__observer.elapsedDays());
   await page.keyboard.press('g'); await page.keyboard.press('p'); await page.keyboard.press('f');
   await page.mouse.click(800, 550);
