@@ -15,5 +15,5 @@ test('galaxy landmark raycast, keyboard panel and mode isolation', async ({ page
   await page.keyboard.press('Escape'); await expect(button).toBeFocused();
   await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false); await expect(panel).toBeHidden();
   await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false); await expect(panel).toBeHidden();
-  await expect(page.locator('#object-select')).toBeDisabled();
+  await expect(page.locator('#object-select')).toBeEnabled();
 });

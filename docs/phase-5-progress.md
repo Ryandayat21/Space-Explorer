@@ -1,7 +1,7 @@
 # Phase 5 — Interactive Milky Way Map
 
 Tanggal audit: 17 Oktober 2026 (Asia/Jakarta). Baseline Git: `7e6e951`.
-Status: **arsitektur dua mode, visual galaksi, kamera dan 13 landmark skematis selectable tersedia; pencarian/tur galaksi belum tersedia**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
+Status: **arsitektur dua mode, visual galaksi, kamera dan 13 landmark skematis selectable tersedia; pencarian galaksi tersedia; tur galaksi belum tersedia**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
 
 ## 1. Baseline dan verifikasi
 
@@ -150,7 +150,7 @@ Tidak perlu mengekstrak seluruh kamera/tur menjadi framework generik dahulu. Pin
 - [x] P5-05a: GalaxyMode kosong dengan scene/kamera sendiri, selector mode, lazy initialize sinkron dan rollback; pengujian switch/state/waktu/audio tersedia (bagian 8).
 - [ ] P5-05b: lazy activation async dan pemulihan kegagalan aset galaksi; menunggu kebutuhan dataset/visual.
 - [ ] P5-06: visual peta seeded yang ringan dan budget Low/Medium/High; model disk/struktur hanya setelah data/parameter ilustratif dijelaskan. Particle dekoratif non-pickable.
-- [ ] P5-07: marker terpilih, pencarian dataset galaksi, panel bersumber dan aksi marker Tata Surya untuk kembali ke mode solar-system. Framing/camera limits galaksi terpisah.
+- [x] P5-07: marker terpilih, pencarian dataset galaksi, panel bersumber dan aksi marker Tata Surya untuk kembali ke mode solar-system. Framing/camera limits galaksi terpisah.
 - [ ] P5-08: E2E dua viewport, resize/fullscreen, reduced motion, keyboard, mode switch saat tur/flight/texture pending, search/filter isolation, error/fallback, kualitas dan timeline audio. Ulang seluruh suite unit/build/E2E.
 - [ ] P5-09: profil switch berulang dan sesi panjang, resource/heap/draw calls, audit visual/perangkat; dokumentasikan batas dan finalisasi README/progres.
 
@@ -290,3 +290,21 @@ Manual: klik View Milky Way, coba Skip dengan Tab/Enter; pilih marker Solar Syst
 
 Browser: 8/8 skenario targeted lulus pada Edge 1366x768 dan Chrome 1920x1080 (kamera galaksi, landmark, regresi mode dan transisi baru), tanpa console warning/error aplikasi. Pengujian mencakup Skip, marker entry, reduced motion, request berulang, isolasi input, pose/resources/audio serta kontrol solar setelah kembali. Seluruh suite browser tidak dijalankan ulang. Warning NO_COLOR/FORCE_COLOR berasal dari environment runner.
 Catatan runner Windows: seluruh delapan test sudah melaporkan ok, tetapi proses tetap menunggu saat teardown dev server; proses runner dihentikan setelah hasil test selesai. Karena itu hasil browser merujuk laporan per-test, bukan exit code sukses keseluruhan runner.
+
+## 13. Search, selection dan informasi galaksi - 19 Oktober 2026
+
+- [x] Search memahami mode aktif. Galaxy mencari nama, ID, alias dan kategori dalam katalog 13 landmark. Query solar tanpa hasil lokal dan tidak kosong menawarkan hasil galaksi berlabel Milky Way; katalog tidak digabung sehingga tidak menampilkan duplikat lintas-mode.
+- [x] Enam optgroup: Galactic Center, Galactic Structure, Star System, Star, Nebula, Star Cluster. Solar System, Alpha Centauri dan Sirius dikelompokkan sebagai Star System pada presentation mapping; dataset sumber tidak diubah.
+- [x] Enter memilih hasil pertama; ArrowDown/Tab menuju native select. Escape menyembunyikan hasil atau menutup panel; panel mengembalikan fokus ke pemicu. Empty state menjelaskan hasil tidak ditemukan.
+- [x] Pemilihan hasil galaksi dari solar menunggu transisi mode selesai (termasuk Skip), lalu memakai tween preset existing untuk framing lokal landmark, memilih marker dan membuka panel. Tidak mengubah generator atau GalaxyCameraControls; tidak ada kamera/RAF baru.
+- [x] Panel menampilkan nama, kategori, alias, deskripsi, jarak bersumber, koordinat model X/Y/Z, approximate, sumber dan breadcrumb Milky Way > Region > Object. Wilayah lokal/disk diberi label skematis; tidak diklaim sebagai lokasi astrometri terverifikasi. Field kosong ditampilkan dengan keterangan data belum tersedia/tidak berlaku.
+- [x] P5-07 selesai untuk katalog ilustratif yang tersedia; pencarian dan panel solar tetap terpisah. P5-03 audit keseluruhan capability/favorit serta P5-08 suite penuh masih terbuka.
+- [x] Unit test alias/case/whitespace, kategori, ID tanpa duplikat, isolasi mode/fallback, formatter jarak/posisi/missing value/breadcrumb.
+
+Validasi: 61/61 unit test lulus; production build berhasil (48 modul, aplikasi sekitar 131,66 kB/gzip 42,43 kB; Three.js terpisah 499,98 kB). Empat skenario browser search/landmark melaporkan lulus pada Edge 1366x768 dan Chrome 1920x1080 tanpa warning/error console aplikasi. Tidak mengklaim seluruh suite E2E telah diulang.
+
+File baru: src/data/galaxySearch.js, test/galaxySearch.test.js, e2e/galaxySearch.spec.js. Perubahan: UIController.js, GalaxyLandmarkPanel.js, GalaxyMode.js, main.js, index.html, assertion E2E modes/landmarks, README dan dokumen ini. Tidak ada git commit.
+
+Manual: dari Tata Surya cari Sirius, tekan Enter, tunggu/Skip transisi; marker dan panel Sirius harus tampil dengan kamera terarah. Di Galaxy cari M42 atau Seven Sisters, gunakan Enter atau ArrowDown/native select. Coba query kosong dan tidak cocok; Escape menutup hasil/panel. Kembali ke Tata Surya lalu cari earth untuk memastikan panel Bumi tetap bekerja. Search/tur katalog besar dan koordinat astrometri bukan cakupan tugas ini.
+
+Regresi pergantian mode tambahan: 2/2 lulus (exit code 0) pada Edge/Chrome, termasuk time/input isolation, resource stability, audio singleton, tur/flight dan pencarian solar setelah kembali. Total enam eksekusi browser targeted melaporkan lulus. Runner search/landmark pertama tetap menunggu teardown dev server sesudah empat hasil ok dan dihentikan; tidak dilaporkan sebagai exit code sukses runner. Warning NO_COLOR/FORCE_COLOR berasal dari environment, bukan aplikasi.

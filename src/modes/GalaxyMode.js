@@ -6,7 +6,7 @@ import { GalaxyLandmarkPanel } from '../ui/GalaxyLandmarkPanel.js';
 import { galaxyLandmarks } from '../data/galaxyLandmarks.js';
 export class GalaxyMode {
   id = 'galaxy';
-  constructor({ canvas, quality = 'medium' }) { this.canvas = canvas; this.quality = quality; this.pickables = []; this.searchDataset = []; }
+  constructor({ canvas, quality = 'medium' }) { this.canvas = canvas; this.quality = quality; this.pickables = []; this.searchDataset = galaxyLandmarks; }
   initialize() {
     if (this.disposed) throw new Error('Mode disposed');
     if (this.scene) return;
@@ -31,6 +31,15 @@ export class GalaxyMode {
     this.canvas.addEventListener('pointerdown', this.onDown); this.canvas.addEventListener('click', this.onClick);
   }
   select(id) { const data = galaxyLandmarks.find(item => item.id === id); this.landmarks.select(id); if (data) this.panel.show(data); else this.panel.hide(); }
+  visitLandmark(id) {
+    const data = galaxyLandmarks.find(item => item.id === id);
+    if (!data || !this.active) return;
+    // Reuse the existing preset tween; no second camera controller or animation loop.
+    this.controls.preset('solar');
+    this.controls.toTarget.fromArray(data.position.coordinates);
+    this.controls.toPosition.copy(this.controls.toTarget).add(new THREE.Vector3(0, 3, 5));
+    this.select(id);
+  }
   activate() { this.active = true; this.controls.activate(); }
   setQuality(quality) { this.quality = quality; this.galaxy?.setQuality(quality); }
   deactivate() { this.active = false; this.controls?.deactivate(); this.panel?.hide(); this.landmarks?.select(null); }

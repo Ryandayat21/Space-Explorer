@@ -1,5 +1,5 @@
 import { tour } from '../data/tour.js';
-import { searchObjects } from '../data/search.js';
+import { modeSearch, galaxyGroups, galaxyCategory } from '../data/galaxySearch.js';
 import { scienceFor } from '../data/science.js';
 import { readQuality, saveQuality } from '../data/quality.js';
 import { formatScienceValue, scienceSections } from '../data/scienceFormat.js';
@@ -44,16 +44,18 @@ export class UIController extends EventTarget {
   }
 
   #populateSearch() {
-    if (this.mode === 'galaxy') return;
     const select = this['object-select'];
+    select.hidden = false;
     select.replaceChildren(new Option('Pilih hasil pencarian...', ''));
-    const results = searchObjects(document.getElementById('search-input').value, this.filter || 'all');
-    for (const [type, label] of [['star', 'Bintang'], ['planet', 'Planet'], ['dwarf-planet', 'Planet katai'], ['moon', 'Bulan'], ['comet', 'Komet']]) {
+    const { results, mode } = modeSearch(document.getElementById('search-input').value, this.mode, this.filter || 'all');
+    this.searchMode = mode;
+    const groups = mode === 'galaxy' ? galaxyGroups.map(label => [label, label]) : [['star', 'Bintang'], ['planet', 'Planet'], ['dwarf-planet', 'Planet katai'], ['moon', 'Bulan'], ['comet', 'Komet']];
+    for (const [type, label] of groups) {
       const group = document.createElement('optgroup'); group.label = label;
-      results.filter(body => (body.type || 'moon') === type).forEach(body => group.append(new Option(body.name, body.id)));
+      results.filter(body => (mode === 'galaxy' ? galaxyCategory(body) : body.type || 'moon') === type).forEach(body => group.append(new Option(body.name, body.id)));
       if (group.children.length) select.append(group);
     }
-    document.getElementById('search-status').textContent = results.length ? results.length + ' objek' : 'Tidak ada objek yang cocok';
+    document.getElementById('search-status').textContent = results.length ? results.length + (mode === 'galaxy' ? ' landmark Milky Way' : ' objek Tata Surya') : 'Tidak ada objek yang cocok';
     if (!results.length) select.options[0].textContent = 'Tidak ada objek yang cocok';
   }
 
@@ -64,17 +66,24 @@ export class UIController extends EventTarget {
       this.emit('starfield-toggle', visible);
     });
     document.getElementById('search-input').addEventListener('input', () => this.#populateSearch());
+    document.getElementById('search-input').addEventListener('focus', () => this.#populateSearch());
     document.getElementById('search-input').addEventListener('keydown', event => {
       if (event.key === 'Enter') {
-        const result = searchObjects(event.target.value, this.filter || 'all')[0];
-        if (result) this.emit('select', result.id);
+        const { results, mode } = modeSearch(event.target.value, this.mode, this.filter || 'all');
+        if (results[0]) this.chooseSearch(results[0].id, mode);
       }
+      if (event.key === 'ArrowDown') { event.preventDefault(); this['object-select'].focus(); }
+      if (event.key === 'Escape') { this['object-select'].hidden = true; event.target.blur(); }
     });
     document.getElementById('hud-button').addEventListener('click', () => this.toggleHud());
     document.getElementById('flight-exit').addEventListener('click', () => this.emit('flight-toggle'));
     document.getElementById('tour-skip').addEventListener('click', () => this.stepTour(1));
     this['object-select'].addEventListener('change', (event) => {
-      if (event.target.value) this.emit('select', event.target.value);
+      if (event.target.value) this.chooseSearch(event.target.value, this.searchMode);
+    });
+    this['object-select'].addEventListener('keydown', event => {
+      if (event.key === 'Enter' && event.target.value) this.chooseSearch(event.target.value, this.searchMode);
+      if (event.key === 'Escape') { document.getElementById('search-input').focus(); this['object-select'].hidden = true; }
     });
     this['explore-button'].addEventListener('click', () => {
       this.hideWelcome();
@@ -233,6 +242,10 @@ export class UIController extends EventTarget {
     this['time-label'].textContent = speed < 1 ? `${speed} hari/detik` : `${speed} hari/detik`;
   }
 
+  chooseSearch(id, mode) {
+    if (mode === 'galaxy') this.dispatchEvent(new CustomEvent('galaxy-select', { detail: id }));
+    else this.emit('select', id);
+  }
   emit(name, detail) {
     if (this.mode === 'galaxy' && name !== 'quality-change') return;
     this.dispatchEvent(new CustomEvent(name, { detail }));
@@ -248,11 +261,9 @@ export class UIController extends EventTarget {
       const active = button.dataset.filter === 'all';
       button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
     }
-    for (const control of document.querySelectorAll('.left-rail button, .time-dock button, .time-dock input, #search-input, #object-select, #tour-button, #flight-button, #favorites-button')) control.disabled = galaxy;
+    for (const control of document.querySelectorAll('.left-rail button, .time-dock button, .time-dock input, #tour-button, #flight-button, #favorites-button')) control.disabled = galaxy;
     document.getElementById('search-input').value = '';
-    this['object-select'].replaceChildren(new Option('Galaxy Mode belum memiliki objek', ''));
-    if (!galaxy) this.#populateSearch();
-    document.getElementById('search-status').textContent = galaxy ? 'Belum ada katalog galaksi' : '';
+    this.#populateSearch();
     document.getElementById('galaxy-placeholder').hidden = !galaxy;
   }
 

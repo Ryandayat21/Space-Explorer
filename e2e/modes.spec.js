@@ -18,7 +18,7 @@ test('mode switching isolates selection, input, time, resources and audio', asyn
   await page.waitForTimeout(150);
   expect(await page.evaluate(() => window.__observer.elapsedDays())).toBe(days);
   expect(await page.evaluate(() => window.__observer.snapshot().selected)).toBeUndefined();
-  await expect(page.locator('#object-select')).toBeDisabled();
+  await expect(page.locator('#object-select')).toBeEnabled();
   await expect(page.locator('#tour-panel')).toBeHidden();
   await page.setViewportSize({ width: 1500, height: 850 });
   await expect.poll(() => page.evaluate(() => window.__observer.mode().aspect)).toBeCloseTo(1500/850);

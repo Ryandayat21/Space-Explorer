@@ -66,6 +66,7 @@ const skipButton = curtain.querySelector('button'), shade = curtain.firstElement
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const renderCamera = new THREE.PerspectiveCamera(), basePosition = new THREE.Vector3(), retreat = new THREE.Vector3();
 const inertState = new Map();
+let pendingLandmark = null;
 transition = new ModeTransition(modes, {
   prepare(next) { renderer.compile(next.scene, next.camera); },
   lock() {
@@ -95,6 +96,8 @@ transition = new ModeTransition(modes, {
     curtain.hidden = true; document.body.classList.remove('mode-transitioning');
     for (const [element, previous] of inertState) element.inert = previous;
     inertState.clear(); clock.getDelta(); switchButton.focus({ preventScroll: true });
+    if (pendingLandmark && modes.active.id === 'galaxy') galaxy.visitLandmark(pendingLandmark);
+    pendingLandmark = null;
   },
   error() { ui.status('Mode tidak dapat dibuka. Mode sebelumnya dipertahankan.'); }
 });
@@ -104,6 +107,12 @@ const onSkip = () => transition.skip();
 const onMotion = () => { if (motion.matches) transition.duration = .08; };
 switchButton.addEventListener('click', onSwitch); skipButton.addEventListener('click', onSkip); motion.addEventListener('change', onMotion);
 galaxy.onEnterSolarSystem = () => requestMode('solar-system');
+const onGalaxySelect = event => {
+  if (transition.busy) return;
+  if (modes.active.id === 'galaxy') galaxy.visitLandmark(event.detail);
+  else { pendingLandmark = event.detail; if (!requestMode('galaxy')) pendingLandmark = null; }
+};
+ui.addEventListener('galaxy-select', onGalaxySelect);
 const fpsDebug = import.meta.env.DEV && new URLSearchParams(location.search).has('debug');
 let fpsNode, fpsFrames = 0, fpsStart = performance.now();
 if (fpsDebug) {
@@ -137,6 +146,7 @@ if (import.meta.env.DEV) window.__observer = {
 window.addEventListener('pagehide', event => {
   if (event.persisted) return;
   clearTimeout(startupTimeout); cancelAnimationFrame(frameId); transition.dispose(); modes.dispose(); renderer.dispose();
+  ui.removeEventListener('galaxy-select', onGalaxySelect);
   for (const type of gateTypes) window.removeEventListener(type, gateInput, true);
   switchButton.removeEventListener('click', onSwitch); skipButton.removeEventListener('click', onSkip); motion.removeEventListener('change', onMotion); curtain.remove();
   window.removeEventListener('resize', resizeRenderer);

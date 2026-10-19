@@ -1,4 +1,5 @@
 import { galaxyLandmarks, landmarkPositionNotice } from '../data/galaxyLandmarks.js';
+import { galaxyInfo } from '../data/galaxySearch.js';
 
 export class GalaxyLandmarkPanel {
   constructor(onSelect, onEnterSolarSystem) {
@@ -9,6 +10,8 @@ export class GalaxyLandmarkPanel {
     this.closeButton = node('button', 'Tutup ×'); this.closeButton.title = 'Tutup informasi landmark (Escape)';
     this.closeButton.setAttribute('aria-label', 'Tutup informasi landmark');
     this.title = node('h2', ''); this.aliases = node('p', ''); this.description = node('p', '');
+    this.breadcrumb = node('nav', ''); this.breadcrumb.setAttribute('aria-label', 'Breadcrumb mode');
+    this.position = node('p', '');
     this.distance = node('p', ''); node('p', landmarkPositionNotice).className = 'landmark-note';
     this.sources = node('div', '');
     this.enterButton = node('button', 'Enter Solar System'); this.enterButton.hidden = true;
@@ -33,8 +36,10 @@ export class GalaxyLandmarkPanel {
     if (this.element.hidden) this.returnFocus = document.activeElement;
     this.title.textContent = data.name; this.aliases.textContent = `${data.category}${data.aliases.length ? ' · ' + data.aliases.join(', ') : ''}`;
     this.description.textContent = data.description;
-    const d = data.science.distance;
-    this.distance.textContent = d ? `Jarak dari Bumi: sekitar ${new Intl.NumberFormat('id-ID').format(d.value)} tahun cahaya (perkiraan).` : 'Jarak tunggal: tidak berlaku untuk marker wilayah ini.';
+    const info = galaxyInfo(data);
+    this.aliases.textContent = [info.category, ...data.aliases].join(' · ');
+    this.breadcrumb.textContent = info.breadcrumb; this.position.textContent = info.position;
+    this.distance.textContent = info.distance;
     this.sources.replaceChildren();
     for (const source of data.sources) { const a = document.createElement('a'); a.textContent = source.title; a.href = source.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; this.sources.append(a); }
     this.element.hidden = false; this.closeButton.focus({ preventScroll: true });
