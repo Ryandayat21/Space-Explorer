@@ -17,6 +17,11 @@ export class GalaxyScene extends THREE.Group {
     }
     this.sprite = new THREE.DataTexture(pixels, 16, 16);
     this.sprite.magFilter = THREE.LinearFilter; this.sprite.needsUpdate = true;
+    // All seven components encode brightness in vertex colors; only size differs.
+    this.materials = [1.5, 2.5, 4].map(size => new THREE.PointsMaterial({ map: this.sprite, size,
+      sizeAttenuation: false, vertexColors: true, transparent: true,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    this.matrixAutoUpdate = false;
     const color = new THREE.Color();
     for (const [component, total] of Object.entries(galaxyVisual.counts)) {
       for (let sizeBin = 0; sizeBin < 3; sizeBin++) {
@@ -51,10 +56,10 @@ export class GalaxyScene extends THREE.Group {
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         geometry.computeBoundingSphere();
-        const material = new THREE.PointsMaterial({ map: this.sprite, size: [1.5, 2.5, 4][sizeBin],
-          sizeAttenuation: false, vertexColors: true, transparent: true,
-          blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+        const material = this.materials[sizeBin];
         const points = new THREE.Points(geometry, material);
+        points.matrixAutoUpdate = false; // Positions are static buffer data.
+        points.frustumCulled = true; // Per-layer bounds computed above; no per-point CPU work.
         points.name = component; points.raycast = () => {};
         this.pointLayers.push(points); this.add(points);
       }
@@ -70,7 +75,8 @@ export class GalaxyScene extends THREE.Group {
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
-    for (const layer of this.pointLayers) { layer.geometry.dispose(); layer.material.dispose(); }
+    for (const layer of this.pointLayers) layer.geometry.dispose();
+    for (const material of this.materials) material.dispose();
     this.sprite.dispose(); this.clear(); this.pointLayers.length = 0;
   }
 }

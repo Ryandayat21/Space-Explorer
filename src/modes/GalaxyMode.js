@@ -46,7 +46,7 @@ export class GalaxyMode {
   activate() { this.active = true; this.controls.activate(); }
   setQuality(quality) { this.quality = quality; this.galaxy?.setQuality(quality); }
   deactivate() { this.tour?.exit(false); this.active = false; this.controls?.deactivate(); this.panel?.hide(); this.landmarks?.select(null); }
-  update(delta, now) { this.controls.update(delta, now); this.tour.update(delta); this.camera.updateMatrixWorld(); this.landmarks.update(this.camera, this.canvas.clientHeight); }
+  update(delta, now) { if (!this.active) return; this.controls.update(delta, now); this.tour.update(delta); this.camera.updateMatrixWorld(); this.landmarks.update(this.camera, this.canvas.clientHeight); }
   resize(width, height) { if (this.camera) { this.camera.aspect = width / height; this.camera.updateProjectionMatrix(); } }
   dispose() {
     if (this.disposed) return;

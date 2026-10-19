@@ -16,6 +16,7 @@ export class GalaxyLandmarks extends THREE.Group {
     this.selectedMaterial = this.material.clone(); this.selectedMaterial.color.set(0xffda7c);
     this.hitMaterial = new THREE.SpriteMaterial({ visible: false });
     this.pickables = []; this.markers = []; this.viewPosition = new THREE.Vector3();
+    this.lastView = new THREE.Matrix4(); this.lastHeight = -1; this.lastFov = -1;
     for (const data of galaxyLandmarks) {
       const marker = new THREE.Sprite(this.material); marker.position.fromArray(data.position.coordinates);
       marker.raycast = () => {}; marker.renderOrder = 5;
@@ -24,6 +25,8 @@ export class GalaxyLandmarks extends THREE.Group {
     }
   }
   update(camera, height) {
+    if (this.lastHeight === height && this.lastFov === camera.fov && this.lastView.equals(camera.matrixWorldInverse)) return false;
+    this.lastHeight = height; this.lastFov = camera.fov; this.lastView.copy(camera.matrixWorldInverse);
     const factor = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / Math.max(1, height);
     for (let i = 0; i < this.markers.length; i++) {
       this.viewPosition.copy(this.markers[i].position).applyMatrix4(camera.matrixWorldInverse);
@@ -31,6 +34,7 @@ export class GalaxyLandmarks extends THREE.Group {
       this.markers[i].scale.setScalar(unit * 10);
       this.pickables[i].scale.setScalar(unit * 24);
     }
+    return true;
   }
   select(id) {
     this.markers.forEach((marker, i) => { marker.material = this.pickables[i].userData.landmark.id === id ? this.selectedMaterial : this.material; });

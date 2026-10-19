@@ -4,6 +4,7 @@ import './styles.css';
 import { qualityPresets, readQuality } from './data/quality.js';
 import { ModeController } from './core/ModeController.js';
 import { ModeTransition } from './core/ModeTransition.js';
+import { renderStats } from './core/renderStats.js';
 import { SolarSystemMode } from './modes/SolarSystemMode.js';
 import { GalaxyMode } from './modes/GalaxyMode.js';
 import { UIController } from './ui/UIController.js';
@@ -127,11 +128,13 @@ if (fpsDebug) {
 let frameId;
 function animate(now) {
   if (fpsDebug && ++fpsFrames && now - fpsStart >= 1000) {
-    fpsNode.textContent = `${Math.round(fpsFrames * 1000 / (now - fpsStart))} FPS`;
+    const stats = renderStats(renderer, modes.active);
+    fpsNode.textContent = `${Math.round(fpsFrames * 1000 / (now - fpsStart))} FPS | ${stats.calls} calls | ${stats.triangles} triangles | ${stats.points}/${stats.particles} points | ${stats.geometries} geometries | ${stats.materials} materials`;
     fpsFrames = 0; fpsStart = now;
   }
   frameId = requestAnimationFrame(animate);
   const delta = Math.min(clock.getDelta(), .05);
+  if (document.hidden) return; // Keep one RAF; skip simulation/render while hidden, consume clock delta.
   if (transition.busy) transition.update(delta); else modes.update(delta, now);
   renderer.render(modes.active.scene, transition.busy ? renderCamera : modes.active.camera);
 }
@@ -140,6 +143,7 @@ const startupTimeout = setTimeout(() => ui.ready(), 4000);
 solar.integration.loadSun().then(() => { clearTimeout(startupTimeout); ui.ready(); });
 frameId = requestAnimationFrame(animate);
 if (import.meta.env.DEV) window.__observer = {
+  performance: () => renderStats(renderer, modes.active),
   ...solar.integration.diagnostics,
   galaxyCamera: () => galaxy.camera ? ({ position: galaxy.camera.position.toArray(), flight: !!galaxy.controls.flight, tween: !!galaxy.controls.tween, multiplier: galaxy.controls.multiplier }) : null,
   mode: () => ({ id: modes.active.id, transitioning: transition.busy, aspect: modes.active.camera.aspect, sceneObjects: modes.active.scene.children.length, galaxyParticles: galaxy.galaxy?.particleCount }),
