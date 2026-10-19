@@ -7,14 +7,16 @@ export class GalaxyTour {
     this.element = document.createElement('section'); this.element.id = 'galaxy-tour-panel';
     this.element.className = 'galaxy-tour-panel glass-panel'; this.element.hidden = true;
     this.element.setAttribute('aria-label', 'Guided tour Bima Sakti');
-    this.element.innerHTML = '<p data-progress></p><h2 tabindex="-1"></h2><p data-narration></p><div><button data-action="previous" title="Stop sebelumnya">Previous</button><button data-action="pause" title="Pause atau resume tur">Pause</button><button data-action="next" title="Stop berikutnya">Next</button><button data-action="exit" title="Tutup tur (Escape)">Exit</button></div>';
+    this.element.innerHTML = '<header class="galaxy-tour-heading"><p data-progress></p><h2 tabindex="-1" aria-live="polite"></h2><button data-action="minimize" aria-controls="galaxy-tour-description" aria-expanded="true" title="Minimalkan penjelasan" aria-label="Minimalkan penjelasan">Minimize</button></header><p id="galaxy-tour-description" data-narration aria-live="polite"></p><div class="galaxy-tour-actions"><button data-action="previous" title="Stop sebelumnya" aria-label="Stop sebelumnya">Previous</button><button data-action="pause" title="Pause atau resume tur" aria-label="Pause atau resume tur">Pause</button><button data-action="next" title="Stop berikutnya" aria-label="Stop berikutnya">Next</button><button data-action="exit" title="Tutup tur (Escape)" aria-label="Tutup tur">Exit</button></div>';
     document.body.append(this.element);
     this.heading = this.element.querySelector('h2'); this.text = this.element.querySelector('[data-narration]');
     this.progress = this.element.querySelector('[data-progress]'); this.progress.setAttribute('aria-live', 'polite');
     this.pauseButton = this.element.querySelector('[data-action="pause"]');
+    this.minimizeButton = this.element.querySelector('[data-action="minimize"]');
     this.previous = this.element.querySelector('[data-action="previous"]'); this.next = this.element.querySelector('[data-action="next"]');
     this.onClick = e => {
       const action = e.target.dataset.action;
+      if (action === 'minimize') { this.minimized = !this.minimized; this.syncPresentation(); }
       if (action === 'exit') this.exit();
       if (action === 'pause') this.togglePause();
       if (action === 'previous') this.go(this.index - 1);
@@ -33,6 +35,7 @@ export class GalaxyTour {
   start() {
     if (!this.mode.active) return;
     this.returnFocus = document.activeElement; this.active = true; this.paused = false;
+    this.minimized = false;
     this.mode.panel.hide(); this.element.hidden = false; this.go(0); this.heading.focus();
   }
   go(index) {
@@ -70,6 +73,23 @@ export class GalaxyTour {
     this.pauseButton.textContent = this.paused ? 'Resume' : 'Pause';
     this.pauseButton.setAttribute('aria-pressed', String(this.paused));
     this.controls.button.disabled = moving;
+    this.syncPresentation();
+  }
+  syncPresentation() {
+    const moving = !!this.controls.tween, collapsed = moving || this.minimized;
+    const focused = document.activeElement;
+    // Move focus only if the current control is about to disappear.
+    if (collapsed && (focused === this.previous || focused === this.next || focused === this.pauseButton)) this.minimizeButton.focus({ preventScroll: true });
+    this.element.classList.toggle('is-collapsed', collapsed);
+    this.element.classList.toggle('is-minimized', !!this.minimized);
+    this.element.classList.toggle('is-moving', moving);
+    this.text.hidden = collapsed;
+    this.previous.hidden = this.next.hidden = this.pauseButton.hidden = collapsed;
+    this.minimizeButton.textContent = this.minimized ? 'Expand' : 'Minimize';
+    const label = this.minimized ? 'Tampilkan penjelasan' : 'Minimalkan penjelasan';
+    this.minimizeButton.title = moving && this.minimized ? 'Tampilkan penjelasan setelah kamera tiba' : label;
+    this.minimizeButton.setAttribute('aria-label', label);
+    this.minimizeButton.setAttribute('aria-expanded', String(!collapsed));
   }
   update(delta) {
     if (!this.active) return;

@@ -348,3 +348,19 @@ File baru: src/core/renderStats.js, e2e/galaxyPerformance.spec.js. File berubah:
 
 Manual: jalankan npm run dev, buka /?debug, masuk Galaxy; ubah kualitas dari Tata Surya lalu masuk kembali. Periksa jumlah points, resize, klik marker dan pencarian landmark. Buka URL tanpa query untuk memastikan statistik tidak muncul. FPS bergantung perangkat dan posisi kamera; jumlah points adalah sampel visual, bukan bintang katalog.
 Browser final: test performa 2/2 lulus dengan exit code 0 pada Edge 1366x768 dan Chrome 1920x1080. Ketiga preset mencatat 34 calls/26 triangles, 22 geometry, 5 attached material dan 1.209.692 byte buffers; resident renderer 92 geometry/20 texture pada sesi ini mencakup solar cache. Search/transisi 2/2 juga melaporkan lulus tanpa console error/warning aplikasi. Assertion awal audit dikoreksi karena material selected belum attached dan urutan siklus kualitas existing adalah Medium-Low-High; tidak mengubah runtime untuk menyesuaikan tes. Runner awal tertahan saat teardown setelah hasil selesai dan dihentikan; run performa final selesai normal. Tidak menjalankan seluruh suite E2E.
+
+## 16. Layout Guided Tour Galaxy - 19 Oktober 2026
+
+- [x] Panel dipindahkan ke bawah-tengah desktop, bottom max(18px, safe-area), width min(600px, 100vw - 380px). Ruang horizontal disisakan untuk Enter Solar System dan Cinematic Mode di sudut.
+- [x] Padding 12x16px, judul 17px, deskripsi 13px, tinggi mengikuti isi dengan maksimum min(260px, 32dvh) dan internal scroll. Background navy alpha .78 + backdrop blur 12px mempertahankan kontras.
+- [x] Progress, judul, deskripsi dan kontrol Previous/Pause/Next/Exit tetap berurutan; kontrol normal dalam satu baris. Panel hanya menerima pointer pada footprint sendiri, tanpa wrapper fullscreen yang memblokir canvas.
+- [x] Saat tween kamera existing aktif, UI otomatis collapsed: progress/judul, minimize dan Exit tetap tersedia; deskripsi serta navigasi disembunyikan. Tidak menambahkan Skip karena kontrol tersebut belum tersedia pada tur; tidak mengubah navigasi kamera.
+- [x] Setelah tween selesai, deskripsi kembali dengan fade ringan 160ms kecuali pengguna memilih Minimize. Pill manual (maksimum 540px desktop) berisi progress, judul dan Expand; tur/timer/kamera terus berjalan. Expand saat kamera bergerak menunggu kamera tiba sebelum menampilkan deskripsi. Escape tetap keluar.
+- [x] Judul/deskripsi aria-live polite, semua tombol memiliki title/aria-label; aria-expanded/controls pada minimize. Fokus dipindah hanya jika tombol yang sedang fokus akan disembunyikan. Tidak ada focus trap.
+- [x] Di bawah 900px, panel menjadi compact bottom sheet: width min(600px, 100vw - 24px), bottom minimal 82px agar tombol sudut tetap tersedia, maksimum min(220px, 29dvh); kontrol boleh wrap. Reduced motion mematikan animasi deskripsi.
+- [x] Data/urutan/durasi tur, renderer, sistem kamera dan logika next/previous/pause/resume tidak diubah.
+
+Validasi: npm test 63/63 lulus; npm run build berhasil (51 modul; aplikasi 140,49 kB/gzip 44,74 kB). Tes browser layout dan regresi tur memeriksa collapse selama tween, minimize keyboard, expand, Escape, reduced motion, posisi panel terhadap pusat/left panel/tombol sudut pada desktop serta ukuran compact 390x844.
+
+File task ini: src/ui/GalaxyTour.js, src/styles.css, e2e/galaxyTourLayout.spec.js dan docs/phase-5-progress.md. Tidak ada git commit. Perubahan performa sebelumnya tidak dihapus/reset.
+Hasil browser: 4/4 test melaporkan lulus pada Edge 1366x768 dan Chrome 1920x1080, termasuk resize ke 390x844, tanpa console warning/error aplikasi. Runner Windows tertahan saat teardown server setelah hasil selesai dan dihentikan; bukan klaim exit code sukses runner. Warning NO_COLOR/FORCE_COLOR berasal dari environment.

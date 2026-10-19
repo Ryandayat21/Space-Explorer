@@ -451,7 +451,21 @@ button:disabled { opacity: .4; cursor: default; }
 .mode-transitioning .galaxy-landmark-panel { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .mode-transitioning #app > :not(canvas):not(.scene-container) { transition: none; } }
 
-.galaxy-tour-panel { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: min(580px, calc(100vw - 40px)); padding: 20px; border-radius: 18px; z-index: 25; line-height: 1.6; max-height: 55vh; overflow: auto; }
-.galaxy-tour-panel h2 { font-size: 22px; }
-.galaxy-tour-panel button { padding: 8px 14px; margin-right: 6px; }
+.galaxy-tour-panel { position: fixed; bottom: max(18px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(600px, calc(100vw - 380px)); padding: 12px 16px; border-radius: 16px; z-index: 25; line-height: 1.45; max-height: min(260px, 32dvh); overflow: auto; pointer-events: auto; background: rgba(8, 17, 34, .78); backdrop-filter: blur(12px); }
+.galaxy-tour-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; align-items: center; }
+.galaxy-tour-heading [data-progress] { grid-column: 1; margin: 0; font-size: 11px; color: #72dcff; }
+.galaxy-tour-heading h2 { grid-column: 1; margin: 0; font-size: 17px; line-height: 1.3; overflow-wrap: anywhere; }
+.galaxy-tour-heading [data-action="minimize"] { grid-column: 2; grid-row: 1 / 3; }
+.galaxy-tour-panel [data-narration] { margin: 8px 0 10px; font-size: 13px; color: #d5dfef; animation: galaxy-tour-reveal 160ms ease-out; }
+.galaxy-tour-actions { display: flex; gap: 6px; }
+.galaxy-tour-panel button { padding: 6px 10px; margin: 0; font-size: 12px; }
+.galaxy-tour-panel.is-collapsed { width: min(540px, calc(100vw - 380px)); padding: 9px 14px; border-radius: 24px; display: flex; align-items: center; gap: 10px; }
+.galaxy-tour-panel.is-collapsed .galaxy-tour-heading { flex: 1; min-width: 0; }
+.galaxy-tour-panel.is-minimized .galaxy-tour-actions { display: none; }
+@keyframes galaxy-tour-reveal { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+@media (max-width: 900px) {
+  .galaxy-tour-panel, .galaxy-tour-panel.is-collapsed { width: min(600px, calc(100vw - 24px)); bottom: max(82px, calc(env(safe-area-inset-bottom) + 76px)); max-height: min(220px, 29dvh); padding: 10px 12px; }
+  .galaxy-tour-actions { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .galaxy-tour-panel [data-narration] { animation: none; } }
 .hud-hidden .galaxy-tour-panel, .mode-transitioning .galaxy-tour-panel { visibility: hidden; pointer-events: none; }
