@@ -13,6 +13,10 @@ test('mode-aware search activates galaxy, frames marker and formats its panel', 
   const position = await page.evaluate(() => window.__observer.galaxyCamera().position);
   expect(position[0]).toBeCloseTo(7.2); expect(position[1]).toBeCloseTo(3); expect(position[2]).toBeCloseTo(6);
   await page.keyboard.press('Escape'); await expect(panel).toBeHidden();
+  // Enter while already in Galaxy must not activate the newly focused close button.
+  await input.fill('Sirius'); await input.press('Enter');
+  await expect(panel).toBeVisible(); await page.waitForTimeout(200); await expect(panel).toBeVisible();
+  await page.keyboard.press('Escape');
   await input.fill(''); expect(await select.locator('optgroup').count()).toBe(6);
   await input.fill('M42'); await input.press('ArrowDown'); await expect(select).toBeFocused();
   await select.selectOption('orion-nebula'); await expect(panel.locator('h2')).toHaveText('Orion Nebula');

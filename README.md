@@ -1,12 +1,12 @@
 # Milky Way Observer
 
-Simulasi 3D Tata Surya yang menggabungkan eksplorasi sinematik dan informasi ilmiah. Dibangun dengan Vite, Three.js, dan JavaScript modular untuk deployment statis di Vercel. Cakupan Phase 3: 37 objek mandiri, 36 orbit dan dua sabuk dekoratif; audit final 14 Oktober 2026 dicatat di [progres proyek](docs/phase-3-progress.md#17-finalisasi-phase-3---14-oktober-2026).
+Eksplorasi 3D Tata Surya dan peta Bima Sakti edukatif dengan scene serta skala koordinat terpisah. Dibangun dengan Vite, Three.js, dan JavaScript modular untuk deployment statis di Vercel. Cakupan Phase 3: 37 objek mandiri, 36 orbit dan dua sabuk dekoratif; audit final 14 Oktober 2026 dicatat di [progres proyek](docs/phase-3-progress.md#17-finalisasi-phase-3---14-oktober-2026).
 
 ## Fitur saat ini
 
 Phase 4 menambahkan rendering sRGB/ACES dengan exposure 1, pencahayaan Matahari, atmosfer rim glow dan corona ringan dengan fallback, starfield berlapis seeded serta haze dekoratif. Kamera Visit/Follow/tur memakai transisi bersama dengan perlindungan permukaan dan cincin. Mode sinematik, fullscreen, panel ilmiah berkelompok, fokus keyboard dan prefers-reduced-motion tersedia. Catatan verifikasi dan batas implementasi ada di [progres Phase 4](docs/phase-4-progress.md).
 
-Finalisasi 17 Oktober 2026: **43/43 unit test**, **52/52 E2E** (Edge 1366×768 dan Chrome 1920×1080), serta production build berhasil. Perencanaan Visit antarbulan diperbaiki agar memakai volume tabrakan cincin aktual dan endpoint aman. Tidak ditemukan warning/error console aplikasi dalam skenario yang diuji. Batas validasi dan pekerjaan Phase 5 tercatat di dokumen progres.
+Verifikasi historis Phase 4 (17 Oktober 2026): **43/43 unit test**, **52/52 E2E** (Edge 1366×768 dan Chrome 1920×1080), serta production build berhasil. Perencanaan Visit antarbulan diperbaiki agar memakai volume tabrakan cincin aktual dan endpoint aman. Tidak ditemukan warning/error console aplikasi dalam skenario yang diuji. Batas validasi dan pekerjaan Phase 5 tercatat di dokumen progres.
 
 - Matahari dan delapan planet dengan orbit elips, inclination, serta rotasi.
 - 22 bulan utama sebagai objek 3D.
@@ -20,6 +20,21 @@ Finalisasi 17 Oktober 2026: **43/43 unit test**, **52/52 E2E** (Edge 1366×768 d
 - Bookmark objek dan daftar favorit lokal; perbandingan maksimal dua objek dengan rasio diameter ilmiah.
 - Kontrol waktu, orbit, label, dan kualitas render.
 - Tampilan desktop-first dan pemeriksaan WebGL 2.
+
+## Phase 5: Interactive Milky Way Map
+
+Galaxy Mode menyediakan core/bulge, central bar, disk, halo, spiral arms dan Orion Spur prosedural seeded. Sebanyak 13 landmark dapat dipilih lewat klik, daftar keyboard atau search enam kategori. Panel menyajikan sumber, jarak ilmiah, posisi skematis dan breadcrumb. Bookmark/perbandingan serta kontrol waktu tetap khusus Tata Surya.
+
+- Kamera galaksi: orbit, free-flight, kecepatan adaptif, empat preset dan reset view. Kontrol serta batas 80 unit model terpisah dari Solar System.
+- View Milky Way / Enter Solar System: fade dan gerakan kamera lokal, swap scene setelah siap, tombol Skip serta reduced motion. Aksi masuk solar juga tersedia pada marker Solar System.
+- Guided Tour/G mengikuti mode aktif. Tur galaksi berisi 10 stop dengan Previous, Next, Pause/Resume dan Exit; Escape keluar. Panel ringkas di bawah otomatis collapsed ketika kamera bergerak; Minimize/Expand tidak menghentikan tur. Waktu baca 12 detik sesudah kamera tiba.
+- H menyembunyikan HUD; L fullscreen. Tab/Enter dan panah digunakan pada kontrol native; Escape menutup hasil/panel atau keluar tur/flight sesuai konteks. Enter search tidak mengaktifkan tombol Tutup panel secara tidak sengaja.
+
+**Batas ilmiah:** visual galaksi disederhanakan, titik bukan satu bintang katalog atau katalog lengkap, dan koordinat menggunakan unit model pada disk XZ dengan tinggi Y. Tidak ada transform kpc/astrometri terverifikasi atau zoom fisik dari planet ke galaksi. Jarak visual tidak proporsional; marker lokal sengaja direnggangkan agar bisa dipilih. Jarak ilmiah pada panel tetap terpisah dan diberi status perkiraan. Gunakan sumber panel untuk data, bukan jarak antar titik model.
+
+Validasi final dan hasil pengukuran dicatat di [progres Phase 5](docs/phase-5-progress.md#17-finalisasi-phase-5---19-oktober-2026). Jalankan `npm test`, `npm run build`, `npm run test:e2e` untuk unit/build/seluruh regresi browser; `node scripts/audit-phase5.mjs` memeriksa siklus mode, RAF/listener/resource/heap dan smoke test production (jalankan build dahulu). Script E2E memiliki server Vite sendiri agar lifecycle tes Windows tidak bergantung pada wrapper npm.
+
+Finalisasi 19 Oktober 2026: **63/63 unit test**, production build dan smoke preview berhasil. Full E2E menghasilkan 69/70 lulus; satu assertion roundoff kamera diperbaiki, lalu seluruh file regresi terkait lulus **6/6** pada Edge/Chrome. Semua skenario terverifikasi melalui run tersebut. Audit 30 siklus per browser menunjukkan RAF/listener/resource stabil; kenaikan heap kecil masih perlu profiling sesi panjang.
 
 ## Menjalankan di VS Code
 
@@ -37,7 +52,7 @@ npm run preview
 
 ## Kontrol
 
-- **View Milky Way / Enter Solar System** di kiri bawah: beralih scene untuk pengembangan Phase 5. Galaxy menampilkan core, bulge, bar, empat lengan spiral ilustratif, Orion Spur, disk dan halo halus. Titik adalah sampel visual edukatif, bukan bintang katalog. Low/Medium/High memakai 12.600/30.240/50.400 titik; ubah preset di Tata Surya sebelum masuk galaksi. Tersedia 13 landmark selectable melalui klik atau daftar keyboard, dengan panel bersumber NASA. Posisi marker skematis dan approximate, bukan koordinat astronomis; objek lokal direnggangkan. Pencarian mengikuti mode aktif, dengan enam kelompok landmark galaksi. Query solar tanpa hasil lokal menawarkan landmark Milky Way; Enter memilih, ArrowDown menuju daftar, Escape menutup hasil/panel. Pemilihan hasil galaksi mengaktifkan mode bila perlu, mengarahkan kamera dan membuka panel dengan breadcrumb serta posisi skematis. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama.
+- **View Milky Way / Enter Solar System** di kiri bawah: beralih antara Solar System Mode dan Galaxy Mode. Galaxy menampilkan core, bulge, bar, empat lengan spiral ilustratif, Orion Spur, disk dan halo halus. Titik adalah sampel visual edukatif, bukan bintang katalog. Low/Medium/High memakai 12.600/30.240/50.400 titik; ubah preset di Tata Surya sebelum masuk galaksi. Tersedia 13 landmark selectable melalui klik atau daftar keyboard, dengan panel bersumber NASA. Posisi marker skematis dan approximate, bukan koordinat astronomis; objek lokal direnggangkan. Pencarian mengikuti mode aktif, dengan enam kelompok landmark galaksi. Query solar tanpa hasil lokal menawarkan landmark Milky Way; Enter memilih, ArrowDown menuju daftar, Escape menutup hasil/panel. Pemilihan hasil galaksi mengaktifkan mode bila perlu, mengarahkan kamera dan membuka panel dengan breadcrumb serta posisi skematis. Seleksi/tur/Follow/flight dihentikan saat switch; waktu solar dibekukan dan audio tetap memakai instance yang sama.
 
 - Klik objek: membuka detail.
 - Pencarian: memilih dan mengunjungi objek.
@@ -80,12 +95,13 @@ Default **Medium**. Pilihan disimpan di localStorage; data rusak atau storage ti
 | Batas device pixel ratio | 0,85 | 1,25 | 1,75 |
 | Segmen sphere planet | 24 × 16 | 40 × 24 | 64 × 40 |
 | Segmen sphere bulan | 12 × 8 | 16 × 12 | 24 × 16 |
-| Bintang | 2.520 | 5.040 | 9.000 |
+| Bintang dekoratif Tata Surya | 2.520 | 5.040 | 9.000 |
+| Partikel Galaxy Mode | 12.600 | 30.240 | 50.400 |
 | Asteroid dekoratif | 600 | 1.200 | 1.900 |
 | Objek Kuiper dekoratif | 900 | 1.800 | 3.600 |
 | Atmosfer, glow, coma dan haze | Nonaktif | Aktif | Aktif |
 
-Pergantian kualitas membuang geometry sphere lama dan memakai ulang buffer sabuk/bintang; tidak membuat ulang scene setiap frame. Low tetap mempertahankan alokasi buffer maksimum dan tekstur yang sudah dimuat. Tekstur lokal dimuat sesuai kebutuhan dengan fallback procedural. Tidak ada bloom atau shadow map mahal. Penghitung FPS hanya tersedia pada server development melalui `/?debug`, bukan build produksi.
+Pergantian kualitas membuang geometry sphere lama dan memakai ulang buffer sabuk/bintang; tidak membuat ulang scene setiap frame. Low tetap mempertahankan alokasi buffer maksimum dan tekstur yang sudah dimuat. Tekstur lokal dimuat sesuai kebutuhan dengan fallback procedural. Tidak ada bloom atau shadow map mahal. Statistik FPS, draw calls, triangles, points, geometry dan material hanya tersedia pada server development melalui `/?debug`, bukan build produksi.
 
 ## Deployment Vercel
 
@@ -93,7 +109,11 @@ Pergantian kualitas membuang geometry sphere lama dan memakai ulang buffer sabuk
 2. Buat proyek baru di Vercel dan pilih repository ini.
 3. Vercel akan mendeteksi Vite secara otomatis.
 4. Build command: `npm run build`.
-5. Output directory: `dist`.
+5. Output directory: `dist`. Konfigurasi sudah tersedia di `vercel.json`; tidak membutuhkan backend atau environment secret. Mode memakai state aplikasi pada satu URL, sehingga tidak memerlukan route server terpisah.
+6. Build lokal diverifikasi dengan Node 22.20.0. Gunakan versi Node yang memenuhi engines dependency Vite.
+7. Sebelum rilis publik, selesaikan sumber/lisensi audio lokal yang masih belum diverifikasi pada `public/audio/README.md`. File MP3 saat ini ikut tersalin ke dist; build berhasil tidak berarti izin distribusi aset sudah diverifikasi.
+
+Dukungan platform: [Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite). Kesiapan ini berbasis build dan preview lokal; deployment Vercel/CDN/domain belum dilakukan atau diuji pada tugas finalisasi.
 
 Alternatif CLI:
 
@@ -123,11 +143,11 @@ Kecepatan waktu, fase awal dan elemen orbit adalah ilustrasi, bukan ephemeris ta
 
 Data sumber dan tanggal verifikasi tersimpan dalam modul data serta panel. Dari 22 bulan, 17 mempunyai pengayaan sains; nilai yang belum diverifikasi tidak diisi dengan nilai visual. Finalisasi ini tidak memperbarui angka astronomi atau mengklaim posisi ephemeris saat ini.
 
-## Ditunda ke Phase 5
+## Pekerjaan lanjutan Phase 6
 
 - Melengkapi parameter ilmiah yang masih kosong, lima bulan tambahan, serta aset bulan/awan Venus berlisensi.
 - Kalender/epoch, elemen orbit lengkap, ephemeris, kebijakan tab background/catch-up dan tidal locking.
-- Charon/pendamping lain, rute tur tambahan dan Galaxy Scene beserta lifecycle lintas-scene.
+- Charon/pendamping lain dan rute tur tambahan. Galaxy Scene, tur galaksi dan lifecycle lintas-scene sudah tersedia pada Phase 5.
 - Perluasan perbandingan jarak fisik; sinkronisasi favorit antar-tab/perangkat jika diperlukan.
 - Profiling interaktif panjang lintas GPU, retained-heap analysis dan kualitas adaptif. Benchmark headless satu mesin tidak menggantikannya.
 - Audit screen reader/zoom dan perpindahan monitor fisik; penghindaran overlap/occlusion label serta matriks screenshot deterministik seluruh objek/kualitas.
@@ -201,7 +221,7 @@ Ditambahkan: `src/core/cameraMath.js`, `src/data/science.js`, `src/data/search.j
 - Peta permukaan berlisensi untuk 21 bulan lainnya dan peta awan Venus; verifikasi parameter ilmiah bulan yang masih kosong.
 - Ephemeris, perluasan perbandingan jarak fisik, serta pembaruan jumlah bulan dengan versi sumber.
 - Profiling heap/FPS jangka panjang pada beberapa GPU desktop; kualitas adaptif bila diperlukan.
-- Charon dan Galaxy Scene sesuai roadmap awal; Halley sudah tersedia sebagai komet representatif.
+- Charon sesuai roadmap awal; Halley dan Galaxy Scene sudah tersedia.
 
 ### Phase 3 dan pengukuran performa
 

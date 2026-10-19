@@ -1,7 +1,7 @@
 # Phase 5 — Interactive Milky Way Map
 
 Tanggal audit: 17 Oktober 2026 (Asia/Jakarta). Baseline Git: `7e6e951`.
-Status: **arsitektur dua mode, visual galaksi, kamera dan 13 landmark skematis selectable tersedia; pencarian dan guided tour galaksi tersedia**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
+Status: **arsitektur dua mode, visual galaksi, kamera dan 13 landmark skematis selectable tersedia; pencarian dan guided tour galaksi tersedia**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi ada di bagian 8-16; audit final dan batas rilis ada di bagian 17.
 
 ## 1. Baseline dan verifikasi
 
@@ -145,14 +145,16 @@ Tidak perlu mengekstrak seluruh kamera/tur menjadi framework generik dahulu. Pin
 - [x] P5-01a: lifecycle sinkron + ModeController dengan test doubles: deactivate, update active-only, resize, switch berulang, rollback dan dispose idempotent (bagian 8).
 - [ ] P5-01b: async activation/cancellation dan latest-request-wins jika mode membutuhkan lazy import/aset async; belum diperlukan placeholder lokal.
 - [x] P5-02: adapter SolarSystemMode dan delegasi main; integrasi existing dipertahankan dan seluruh 54 E2E existing lulus. Sesuai tugas terbaru, mode kedua berupa placeholder turut disediakan (bagian 8).
-- [ ] P5-03: provider UI/search/detail serta capability solar; audit shortcut/dialog/fokus, pertahankan favorit lama. Validasi semua fitur solar tetap tersedia.
-- [ ] P5-04: verifikasi sumber/lisensi katalog dan konvensi koordinat; tulis helper murni beserta test finite, unit, sumbu, handedness, ID unik dan pemisahan science/visual.
+- [x] P5-03: provider UI/search/detail serta capability solar; audit shortcut/dialog/fokus, pertahankan favorit lama. Validasi semua fitur solar tetap tersedia.
+- [x] P5-04a: katalog kecil bersumber, metadata approximate, unit model XZ/Y, posisi finite, ID unik dan pemisahan science/visual; diuji. Tidak ada aset katalog eksternal baru.
+- [ ] P5-04b (Phase 6): transform astrometri kpc/handedness terverifikasi dan katalog observasional presisi; tidak mengklaim layout model sebagai koordinat ilmiah.
 - [x] P5-05a: GalaxyMode kosong dengan scene/kamera sendiri, selector mode, lazy initialize sinkron dan rollback; pengujian switch/state/waktu/audio tersedia (bagian 8).
 - [ ] P5-05b: lazy activation async dan pemulihan kegagalan aset galaksi; menunggu kebutuhan dataset/visual.
-- [ ] P5-06: visual peta seeded yang ringan dan budget Low/Medium/High; model disk/struktur hanya setelah data/parameter ilustratif dijelaskan. Particle dekoratif non-pickable.
+- [x] P5-06: visual peta seeded yang ringan dan budget Low/Medium/High; model disk/struktur hanya setelah data/parameter ilustratif dijelaskan. Particle dekoratif non-pickable.
 - [x] P5-07: marker terpilih, pencarian dataset galaksi, panel bersumber dan aksi marker Tata Surya untuk kembali ke mode solar-system. Framing/camera limits galaksi terpisah.
-- [ ] P5-08: E2E dua viewport, resize/fullscreen, reduced motion, keyboard, mode switch saat tur/flight/texture pending, search/filter isolation, error/fallback, kualitas dan timeline audio. Ulang seluruh suite unit/build/E2E.
-- [ ] P5-09: profil switch berulang dan sesi panjang, resource/heap/draw calls, audit visual/perangkat; dokumentasikan batas dan finalisasi README/progres.
+- [x] P5-08: E2E dua viewport, resize/fullscreen, reduced motion, keyboard, mode switch saat tur/flight/texture pending, search/filter isolation, error/fallback, kualitas dan timeline audio. Seluruh suite dijalankan; hasil dan pengulangan tes yang diperbaiki dicatat di bagian 17.
+- [x] P5-09a: 30 siklus per browser, sampling resource/listener/RAF/heap, draw calls, production smoke dan dokumentasi final.
+- [ ] P5-09b (Phase 6): profil sesi panjang/heap snapshots dan matriks GPU/perangkat; drift heap kecil belum dijelaskan secara definitif.
 
 **Rekomendasi awal audit P5-01/P5-02 sudah dikerjakan pada bagian 8.** Berikutnya pisahkan provider katalog/detail (P5-03) dan verifikasi konvensi/data (P5-04) sebelum membuat visual. Jangan memakai starfield dekoratif sebagai katalog galaksi.
 
@@ -364,3 +366,38 @@ Validasi: npm test 63/63 lulus; npm run build berhasil (51 modul; aplikasi 140,4
 
 File task ini: src/ui/GalaxyTour.js, src/styles.css, e2e/galaxyTourLayout.spec.js dan docs/phase-5-progress.md. Tidak ada git commit. Perubahan performa sebelumnya tidak dihapus/reset.
 Hasil browser: 4/4 test melaporkan lulus pada Edge 1366x768 dan Chrome 1920x1080, termasuk resize ke 390x844, tanpa console warning/error aplikasi. Runner Windows tertahan saat teardown server setelah hasil selesai dan dihentikan; bukan klaim exit code sukses runner. Warning NO_COLOR/FORCE_COLOR berasal dari environment.
+
+## 17. Finalisasi Phase 5 - 19 Oktober 2026
+
+Cakupan fungsional Phase 5 selesai untuk peta edukatif skematis. Tidak menambah fitur besar, deploy, atau git commit. Bagian 1-16 tetap catatan historis; hasil di bagian ini mengungguli angka verifikasi sebelumnya.
+
+Audit integrasi mencakup dua scene/lifecycle, partikel seeded, kamera/preset/free-flight, 13 landmark, raycast/search/panel, transisi masuk/keluar solar, guided tour, kualitas dan layout ringkas. Satu renderer dan satu RAF dimiliki main; hanya mode aktif di-update. Listener mode dibuat sekali saat initialize dan dicabut pada dispose. Scene inactive sengaja di-cache untuk digunakan kembali, bukan di-dispose tiap switch. Geometry/material/texture milik modul mempunyai disposal teruji; Sprite geometry shared engine tidak dibuang oleh marker individual. UI/audio global adalah singleton sepanjang umur halaman.
+
+Temuan dan perbaikan:
+- Enter pada search dapat memindahkan fokus ke tombol Tutup lalu memicu aksi bawaan tombol itu, sehingga panel Galaxy langsung tertutup. Ditambahkan preventDefault pada Enter input/select; regresi diperluas untuk Enter ketika Galaxy sudah aktif. Terlihat pada smoke production dan telah diperbaiki tanpa mengubah kamera/data.
+- Launcher E2E Windows sebelumnya tertahan ketika menutup proses server. scripts/test-browser.mjs kini memiliki instance Vite sendiri, menjalankan Playwright tanpa shell npm child-server, dan menutup server melalui finally. Konfigurasi menerima URL server dari launcher; pemanggilan langsung Playwright masih memiliki fallback webServer.
+
+Verifikasi teknis: npm test 63/63 lulus; npm run build berhasil (51 modul; aplikasi 140,53 kB/gzip 44,75 kB; Three.js terpisah 499,99 kB). Smoke preview production lulus: boot, switch, search Enter Sirius, panel, tur/Exit, kembali solar/Bumi; diagnostic __observer dan debug HUD tidak tersedia pada production walaupun URL memakai ?debug. Node lokal 22.20.0.
+
+Seluruh 70 skenario E2E dijalankan pada Edge 1366x768 dan Chrome 1920x1080: 69 lulus, satu assertion perbandingan gagal hanya karena roundoff kamera sekitar 1e-14. Assertion kamera/target kemudian memakai toleransi 10 desimal; selection, waktu, resource dan status tur tetap dibandingkan persis. Pengulangan seluruh exploration.spec.js lulus 6/6 dengan exit code 0 pada kedua browser. Jadi seluruh skenario telah terverifikasi melalui full run dan targeted rerun, bukan klaim satu full run 70/70. Launcher selesai normal. Tidak ditemukan console warning/error dari aplikasi pada skenario yang lulus; warning NO_COLOR/FORCE_COLOR berasal dari environment runner.
+
+Pemeriksaan tambahan: switch ke Galaxy saat texture Bumi masih pending, kemudian respons gambar invalid, tidak mengganggu mode/pencarian dan tidak memunculkan error. Inspeksi visual stop Central Bar pada 1366x768 menunjukkan pusat galaksi tetap terbuka dengan panel tur di bawah. Tes mencakup keyboard, reduced motion, fullscreen/resize, fallback texture, storage rusak, free-flight, bookmark, comparison dan time controls. Pemindaian API lama outputEncoding/sRGBEncoding/useLegacyLights/physicallyCorrectLights/GammaEncoding tidak menemukan penggunaan di src (Three.js 0.180.0).
+
+Performa dan resource: scripts/audit-phase5.mjs menjalankan 30 siklus bolak-balik pada masing-masing Edge/Chrome dengan tur/search/selection di setiap siklus. Setelah dua siklus pemanasan: 1 pending RAF, 168 JS event listener, renderer resident 92 geometry/20 texture tetap stabil. Resource resident mencakup cache dua mode. Scene Galaxy memakai 22 geometry; 5 material attached tanpa highlight, 6 bila highlight terpasang. Overview semua marker terlihat: 34 calls/26 triangles; view dekat Sirius pada audit: 29 calls/16 triangles karena culling. Point budget Low/Medium/High 12.600/30.240/50.400, buffer sekitar 1,21 MB. Heap sesudah GC naik dari sekitar 8,41 ke 8,93 MB (Edge), 8,43 ke 9,04 MB (Chrome); bukan bukti bebas leak dan belum diatribusikan ke retained objects/JIT. Tidak terlihat pertumbuhan listener/GPU resource/RAF. Tidak mengklaim target FPS lintas perangkat.
+
+Hasil mentah: docs/benchmarks/phase-5-finalization.json (versi browser, tiap sampel heap/DOM/listener/resource/RAF dan production smoke). Profiling ini singkat, bukan sesi berjam-jam atau seluruh jenis GPU.
+
+DOM counter audit dengan input browser naik sekitar satu node per siklus (1239 ke 1266 setelah pemanasan). Kontrol diagnostik 12 siklus Chrome dengan pengisian value dan dispatch input/keydown, tanpa native editing Playwright fill, menghasilkan 1232 node konstan. Ini mempersempit penyelidikan ke jalur editing/automation tetapi belum membuktikan penyebab retained heap. Tetap ditunda untuk analisis heap jangka panjang, bukan disembunyikan sebagai hasil bebas leak.
+
+Keterbatasan ilmiah sudah tampil pada panel mode, panel landmark dan tur: struktur/skala disederhanakan, partikel adalah sampel visual bukan katalog bintang lengkap, posisi model bukan astrometri. Tata Surya dan galaksi tidak berbagi skala fisik; jarak visual dipadatkan/disederhanakan dan marker lokal direnggangkan untuk keterbacaan. Data jarak ilmiah dan sumber dipisahkan dari posisi display.
+
+Phase 6 / pekerjaan yang sengaja ditunda:
+- Async mode import/asset cancellation jika katalog eksternal kelak diperlukan; konten galaksi sekarang lokal dan sinkron.
+- Katalog observasional/transform koordinat terverifikasi, ketidakpastian dan pemetaan lengan lebih akurat.
+- Heap snapshots dan soak test panjang, profiling GPU rendah/menengah/tinggi, optimasi overdraw/buffer resident bila diperlukan.
+- Favorit/perbandingan lintas-mode dan mobile penuh; fitur tersebut tetap solar-only/desktop-first sekarang.
+- Uji deployment Vercel nyata, CDN, jaringan lambat dan kompatibilitas Safari/mobile di lingkungan target.
+
+Kesiapan rilis: kode/build siap untuk staging desktop berbasis WebGL2. vercel.json sudah memilih vite, build npm run build, output dist; tidak perlu backend/secret atau route per-mode. Build preview lokal teruji, tetapi tidak ada deployment Vercel/domain/CDN pada tugas ini. Sebelum publikasi, sumber/lisensi MP3 12,55 MB yang sudah ada tetap perlu diselesaikan (public/audio/README.md); tidak dihapus atau diunduh ulang. Lisensi aset belum dianggap terverifikasi hanya karena build berhasil. Sumber dukungan platform: https://vercel.com/docs/frameworks/frontend/vite .
+
+File finalisasi: src/ui/UIController.js, e2e/galaxySearch.spec.js, e2e/exploration.spec.js, package.json, playwright.config.js, scripts/test-browser.mjs, scripts/audit-phase5.mjs, docs/benchmarks/phase-5-finalization.json, README.md dan dokumen ini.

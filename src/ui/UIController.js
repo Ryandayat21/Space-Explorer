@@ -69,6 +69,7 @@ export class UIController extends EventTarget {
     document.getElementById('search-input').addEventListener('focus', () => this.#populateSearch());
     document.getElementById('search-input').addEventListener('keydown', event => {
       if (event.key === 'Enter') {
+        event.preventDefault(); // Focus moves into the detail panel; do not activate its close button.
         const { results, mode } = modeSearch(event.target.value, this.mode, this.filter || 'all');
         if (results[0]) this.chooseSearch(results[0].id, mode);
       }
@@ -82,7 +83,7 @@ export class UIController extends EventTarget {
       if (event.target.value) this.chooseSearch(event.target.value, this.searchMode);
     });
     this['object-select'].addEventListener('keydown', event => {
-      if (event.key === 'Enter' && event.target.value) this.chooseSearch(event.target.value, this.searchMode);
+      if (event.key === 'Enter' && event.target.value) { event.preventDefault(); this.chooseSearch(event.target.value, this.searchMode); }
       if (event.key === 'Escape') { document.getElementById('search-input').focus(); this['object-select'].hidden = true; }
     });
     this['explore-button'].addEventListener('click', () => {

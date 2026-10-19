@@ -58,7 +58,12 @@ test('comparison is limited to two scientific records and does not change scene 
   await expect(page.locator('#comparison-table')).toContainText('jarak katalog bulan');
   await page.keyboard.press('Escape');
   await expect(page.locator('#compare-button')).toBeFocused();
-  expect(await snapshot()).toEqual(before);
+  const after = await snapshot();
+  // OrbitControls can introduce floating-point roundoff while the camera is idle.
+  for (const key of ['camera', 'target']) {
+    after[key].forEach((value, index) => expect(value).toBeCloseTo(before[key][index], 10));
+  }
+  expect({ ...after, camera: before.camera, target: before.target }).toEqual(before);
   await page.locator('#favorites-button').click(); await page.locator('#favorites-compare').click();
   await expect(page.locator('#comparison-empty')).toBeVisible();
   await page.keyboard.press('Escape'); await expect(page.locator('#favorites-button')).toBeFocused();

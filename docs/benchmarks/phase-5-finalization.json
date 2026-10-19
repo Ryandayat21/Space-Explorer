@@ -1,0 +1,1345 @@
+{
+  "date": "2026-10-19 Asia/Jakarta",
+  "scope": "Short controlled mode-switch audit, not a long-session leak proof",
+  "runs": [
+    {
+      "channel": "msedge",
+      "version": "155.0.4283.62",
+      "samples": [
+        {
+          "cycle": 0,
+          "heap": 7756968,
+          "dom": {
+            "documents": 1,
+            "nodes": 1237,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 1,
+          "heap": 8358588,
+          "dom": {
+            "documents": 1,
+            "nodes": 1238,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 2,
+          "heap": 8408536,
+          "dom": {
+            "documents": 1,
+            "nodes": 1239,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 3,
+          "heap": 8467284,
+          "dom": {
+            "documents": 1,
+            "nodes": 1240,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 4,
+          "heap": 8571036,
+          "dom": {
+            "documents": 1,
+            "nodes": 1241,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 5,
+          "heap": 8579164,
+          "dom": {
+            "documents": 1,
+            "nodes": 1242,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 6,
+          "heap": 8609004,
+          "dom": {
+            "documents": 1,
+            "nodes": 1243,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 7,
+          "heap": 8632268,
+          "dom": {
+            "documents": 1,
+            "nodes": 1244,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 8,
+          "heap": 8674768,
+          "dom": {
+            "documents": 1,
+            "nodes": 1245,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 9,
+          "heap": 8710896,
+          "dom": {
+            "documents": 1,
+            "nodes": 1246,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 10,
+          "heap": 8793688,
+          "dom": {
+            "documents": 1,
+            "nodes": 1247,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 11,
+          "heap": 8817704,
+          "dom": {
+            "documents": 1,
+            "nodes": 1248,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 12,
+          "heap": 8819740,
+          "dom": {
+            "documents": 1,
+            "nodes": 1249,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 13,
+          "heap": 8821532,
+          "dom": {
+            "documents": 1,
+            "nodes": 1250,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 14,
+          "heap": 8821532,
+          "dom": {
+            "documents": 1,
+            "nodes": 1251,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 15,
+          "heap": 8838664,
+          "dom": {
+            "documents": 1,
+            "nodes": 1252,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 16,
+          "heap": 8835640,
+          "dom": {
+            "documents": 1,
+            "nodes": 1253,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 17,
+          "heap": 8839904,
+          "dom": {
+            "documents": 1,
+            "nodes": 1254,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 18,
+          "heap": 8856272,
+          "dom": {
+            "documents": 1,
+            "nodes": 1255,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 19,
+          "heap": 8859544,
+          "dom": {
+            "documents": 1,
+            "nodes": 1256,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 20,
+          "heap": 8873324,
+          "dom": {
+            "documents": 1,
+            "nodes": 1257,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 21,
+          "heap": 8875304,
+          "dom": {
+            "documents": 1,
+            "nodes": 1258,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 22,
+          "heap": 8885656,
+          "dom": {
+            "documents": 1,
+            "nodes": 1259,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 23,
+          "heap": 8892228,
+          "dom": {
+            "documents": 1,
+            "nodes": 1260,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 24,
+          "heap": 8899336,
+          "dom": {
+            "documents": 1,
+            "nodes": 1261,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 25,
+          "heap": 8916688,
+          "dom": {
+            "documents": 1,
+            "nodes": 1262,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 26,
+          "heap": 8922872,
+          "dom": {
+            "documents": 1,
+            "nodes": 1263,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 27,
+          "heap": 8929592,
+          "dom": {
+            "documents": 1,
+            "nodes": 1264,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 28,
+          "heap": 8936124,
+          "dom": {
+            "documents": 1,
+            "nodes": 1265,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 29,
+          "heap": 8931928,
+          "dom": {
+            "documents": 1,
+            "nodes": 1266,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "channel": "chrome",
+      "version": "155.0.8059.84",
+      "samples": [
+        {
+          "cycle": 0,
+          "heap": 7828084,
+          "dom": {
+            "documents": 1,
+            "nodes": 1237,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 1,
+          "heap": 8371628,
+          "dom": {
+            "documents": 1,
+            "nodes": 1238,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 2,
+          "heap": 8427216,
+          "dom": {
+            "documents": 1,
+            "nodes": 1239,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 3,
+          "heap": 8490068,
+          "dom": {
+            "documents": 1,
+            "nodes": 1240,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 4,
+          "heap": 8620348,
+          "dom": {
+            "documents": 1,
+            "nodes": 1241,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 5,
+          "heap": 8620364,
+          "dom": {
+            "documents": 1,
+            "nodes": 1242,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 6,
+          "heap": 8650896,
+          "dom": {
+            "documents": 1,
+            "nodes": 1243,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 7,
+          "heap": 8682112,
+          "dom": {
+            "documents": 1,
+            "nodes": 1244,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 8,
+          "heap": 8721040,
+          "dom": {
+            "documents": 1,
+            "nodes": 1245,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 9,
+          "heap": 8789316,
+          "dom": {
+            "documents": 1,
+            "nodes": 1246,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 10,
+          "heap": 8859992,
+          "dom": {
+            "documents": 1,
+            "nodes": 1247,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 11,
+          "heap": 8894388,
+          "dom": {
+            "documents": 1,
+            "nodes": 1248,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 12,
+          "heap": 8915284,
+          "dom": {
+            "documents": 1,
+            "nodes": 1249,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 13,
+          "heap": 8912864,
+          "dom": {
+            "documents": 1,
+            "nodes": 1250,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 14,
+          "heap": 8918836,
+          "dom": {
+            "documents": 1,
+            "nodes": 1251,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 15,
+          "heap": 8927220,
+          "dom": {
+            "documents": 1,
+            "nodes": 1252,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 16,
+          "heap": 8928272,
+          "dom": {
+            "documents": 1,
+            "nodes": 1253,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 17,
+          "heap": 8932768,
+          "dom": {
+            "documents": 1,
+            "nodes": 1254,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 18,
+          "heap": 8952116,
+          "dom": {
+            "documents": 1,
+            "nodes": 1255,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 19,
+          "heap": 8964680,
+          "dom": {
+            "documents": 1,
+            "nodes": 1256,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 20,
+          "heap": 8981948,
+          "dom": {
+            "documents": 1,
+            "nodes": 1257,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 21,
+          "heap": 8983940,
+          "dom": {
+            "documents": 1,
+            "nodes": 1258,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 22,
+          "heap": 8993960,
+          "dom": {
+            "documents": 1,
+            "nodes": 1259,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 23,
+          "heap": 9004944,
+          "dom": {
+            "documents": 1,
+            "nodes": 1260,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 24,
+          "heap": 9002832,
+          "dom": {
+            "documents": 1,
+            "nodes": 1261,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 25,
+          "heap": 9025440,
+          "dom": {
+            "documents": 1,
+            "nodes": 1262,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 26,
+          "heap": 9027404,
+          "dom": {
+            "documents": 1,
+            "nodes": 1263,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 27,
+          "heap": 9027940,
+          "dom": {
+            "documents": 1,
+            "nodes": 1264,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 28,
+          "heap": 9030252,
+          "dom": {
+            "documents": 1,
+            "nodes": 1265,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        },
+        {
+          "cycle": 29,
+          "heap": 9041196,
+          "dom": {
+            "documents": 1,
+            "nodes": 1266,
+            "jsEventListeners": 168
+          },
+          "stats": {
+            "mode": "galaxy",
+            "calls": 29,
+            "triangles": 16,
+            "points": 30240,
+            "particles": 30240,
+            "geometries": 22,
+            "materials": 5,
+            "bufferBytes": 1209692,
+            "residentGeometries": 92,
+            "residentTextures": 20
+          },
+          "pendingRAF": 1
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "production": {
+    "passed": true,
+    "errors": [],
+    "diagnosticsAbsent": true
+  }
+}
