@@ -1,7 +1,7 @@
 # Phase 5 — Interactive Milky Way Map
 
 Tanggal audit: 17 Oktober 2026 (Asia/Jakarta). Baseline Git: `7e6e951`.
-Status: **arsitektur dua mode, visual galaksi, kamera dan 13 landmark skematis selectable tersedia; pencarian galaksi tersedia; tur galaksi belum tersedia**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
+Status: **arsitektur dua mode, visual galaksi, kamera dan 13 landmark skematis selectable tersedia; pencarian dan guided tour galaksi tersedia**. Bagian 1–7 adalah baseline/rancangan awal; hasil implementasi terbaru ada di bagian 8.
 
 ## 1. Baseline dan verifikasi
 
@@ -308,3 +308,22 @@ File baru: src/data/galaxySearch.js, test/galaxySearch.test.js, e2e/galaxySearch
 Manual: dari Tata Surya cari Sirius, tekan Enter, tunggu/Skip transisi; marker dan panel Sirius harus tampil dengan kamera terarah. Di Galaxy cari M42 atau Seven Sisters, gunakan Enter atau ArrowDown/native select. Coba query kosong dan tidak cocok; Escape menutup hasil/panel. Kembali ke Tata Surya lalu cari earth untuk memastikan panel Bumi tetap bekerja. Search/tur katalog besar dan koordinat astrometri bukan cakupan tugas ini.
 
 Regresi pergantian mode tambahan: 2/2 lulus (exit code 0) pada Edge/Chrome, termasuk time/input isolation, resource stability, audio singleton, tur/flight dan pencarian solar setelah kembali. Total enam eksekusi browser targeted melaporkan lulus. Runner search/landmark pertama tetap menunggu teardown dev server sesudah empat hasil ok dan dihentikan; tidak dilaporkan sebagai exit code sukses runner. Warning NO_COLOR/FORCE_COLOR berasal dari environment, bukan aplikasi.
+
+## 14. Guided tour Galaxy Mode - 19 Oktober 2026
+
+- [x] Konfigurasi terpisah src/data/galaxyTour.js: overview, disk/halo, Galactic Center, central bar, spiral arms, Local Spur, Solar System, Alpha Centauri, Orion Nebula, kembali overview. Tahap landmark berisi dua stop sehingga total 10 stop.
+- [x] Setiap stop memiliki ID, judul, penjelasan singkat, preset/posisi kamera atau ID landmark dan durasi baca 12 detik. Timer dimulai setelah tween selesai, berhenti saat pause/tab tersembunyi. Stop terakhir menutup tur setelah waktu baca.
+- [x] Tombol Guided Tour dan shortcut G mengikuti mode aktif. Kontrol native Previous, Next, Pause/Resume, Exit dengan indikator progres. Escape membatalkan, termasuk saat cinematic mode menyembunyikan UI.
+- [x] GalaxyTour memakai tween GalaxyCameraControls existing (smootherstep/quaternion), bukan controller/RAF baru. Reduced motion mengikuti durasi 150 ms existing, termasuk perubahan preferensi saat tween berjalan.
+- [x] Pause membatalkan tween di pose saat ini dan menghentikan timer; Resume mengarahkan kembali ke stop yang sama dari pose saat ini. Next/Previous ketika paused mengganti narasi tanpa menjalankan kamera sampai Resume.
+- [x] Free-flight dinonaktifkan saat kamera tur bergerak. Saat berhenti, pengguna dapat mengambil alih melalui flight, preset, drag/scroll, pencarian atau klik marker; tur berakhir. Exit memulihkan kontrol orbit tanpa memaksa pointer lock.
+- [x] Pergantian mode menutup tur dan selection, listener dibuat sekali serta dilepas saat dispose. Scratch/tween kamera existing dipakai ulang; DOM status diperbarui hanya ketika state berubah.
+- [x] Narasi menjelaskan bahwa visual/posisi bersifat skematis. Sumber konteks struktur tercantum di konfigurasi; fakta landmark tetap merujuk katalog bersumber. Tidak ada voice-over atau perubahan sistem audio.
+- [x] Unit test memvalidasi urutan, ID unik, ID landmark, preset, posisi finite dan durasi baca.
+
+Validasi: 62/62 unit test lulus; production build berhasil (50 modul; aplikasi 138,69 kB/gzip 44,28 kB; Three.js tetap terpisah 499,98 kB). Pengujian browser targeted mencakup navigasi seluruh stop, pause/resume, Escape, exit, reduced motion, switch mode dan tur solar. Tidak menjalankan seluruh suite browser atau profiling sesi panjang.
+
+File baru: src/data/galaxyTour.js, src/ui/GalaxyTour.js, test/galaxyTour.test.js, e2e/galaxyTour.spec.js. Perubahan integrasi: GalaxyMode.js, UIController.js, main.js, styles.css, README dan dokumen ini. Tidak mengubah generator galaksi, dataset landmark, solver orbit, atau menambahkan audio/library. Tidak ada git commit.
+
+Manual: masuk Galaxy lalu Guided Tour/G. Coba Next/Previous, Pause saat kamera bergerak, Resume, dan Escape. Tunggu satu stop untuk melihat auto-advance. Coba reduced motion, sembunyikan HUD dengan H lalu Escape, serta kembali ke Tata Surya saat tur berlangsung. Tur Tata Surya tetap memakai konfigurasi sebelumnya.
+Hasil browser final: 2/2 lulus dengan exit code 0 di Edge 1366x768 dan Chrome 1920x1080, termasuk Escape saat HUD tersembunyi. Tidak ada console warning/error aplikasi; warning NO_COLOR/FORCE_COLOR berasal dari runner. Run awal juga melaporkan kedua test lulus tetapi tertahan saat teardown server; run final memakai server tersebut dan selesai normal.

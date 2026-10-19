@@ -110,6 +110,7 @@ export class UIController extends EventTarget {
       if (exited && document.body.classList.contains('hud-hidden')) this.toggleHud();
     });
     window.addEventListener('keydown', event => {
+      if (event.code === 'Escape' && this.mode === 'galaxy') this.dispatchEvent(new Event('galaxy-tour-exit'));
       if (event.code !== 'Escape' || document.querySelector('dialog[open]')) return;
       const cinematic = document.body.classList.contains('hud-hidden');
       if (!cinematic && !document.fullscreenElement) {
@@ -261,7 +262,7 @@ export class UIController extends EventTarget {
       const active = button.dataset.filter === 'all';
       button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
     }
-    for (const control of document.querySelectorAll('.left-rail button, .time-dock button, .time-dock input, #tour-button, #flight-button, #favorites-button')) control.disabled = galaxy;
+    for (const control of document.querySelectorAll('.left-rail button, .time-dock button, .time-dock input, #flight-button, #favorites-button')) control.disabled = galaxy;
     document.getElementById('search-input').value = '';
     this.#populateSearch();
     document.getElementById('galaxy-placeholder').hidden = !galaxy;
@@ -349,7 +350,7 @@ export class UIController extends EventTarget {
   }
 
   startTour() {
-    if (this.mode === 'galaxy') return;
+    if (this.mode === 'galaxy') { this.dispatchEvent(new Event('galaxy-tour-start')); return; }
     this.hideWelcome();
     this.tourIndex = 0;
     this.tourPaused = false;

@@ -113,6 +113,10 @@ const onGalaxySelect = event => {
   else { pendingLandmark = event.detail; if (!requestMode('galaxy')) pendingLandmark = null; }
 };
 ui.addEventListener('galaxy-select', onGalaxySelect);
+const onGalaxyTour = () => { if (!transition.busy && modes.active.id === 'galaxy') galaxy.tour.start(); };
+ui.addEventListener('galaxy-tour-start', onGalaxyTour);
+const onGalaxyTourExit = () => galaxy.tour?.exit();
+ui.addEventListener('galaxy-tour-exit', onGalaxyTourExit);
 const fpsDebug = import.meta.env.DEV && new URLSearchParams(location.search).has('debug');
 let fpsNode, fpsFrames = 0, fpsStart = performance.now();
 if (fpsDebug) {
@@ -147,6 +151,8 @@ window.addEventListener('pagehide', event => {
   if (event.persisted) return;
   clearTimeout(startupTimeout); cancelAnimationFrame(frameId); transition.dispose(); modes.dispose(); renderer.dispose();
   ui.removeEventListener('galaxy-select', onGalaxySelect);
+  ui.removeEventListener('galaxy-tour-start', onGalaxyTour);
+  ui.removeEventListener('galaxy-tour-exit', onGalaxyTourExit);
   for (const type of gateTypes) window.removeEventListener(type, gateInput, true);
   switchButton.removeEventListener('click', onSwitch); skipButton.removeEventListener('click', onSkip); motion.removeEventListener('change', onMotion); curtain.remove();
   window.removeEventListener('resize', resizeRenderer);

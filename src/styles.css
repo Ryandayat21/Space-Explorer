@@ -450,3 +450,8 @@ button:disabled { opacity: .4; cursor: default; }
 .mode-transitioning #app > :not(canvas):not(.scene-container) { opacity: 0; transition: opacity 180ms ease; }
 .mode-transitioning .galaxy-landmark-panel { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .mode-transitioning #app > :not(canvas):not(.scene-container) { transition: none; } }
+
+.galaxy-tour-panel { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: min(580px, calc(100vw - 40px)); padding: 20px; border-radius: 18px; z-index: 25; line-height: 1.6; max-height: 55vh; overflow: auto; }
+.galaxy-tour-panel h2 { font-size: 22px; }
+.galaxy-tour-panel button { padding: 8px 14px; margin-right: 6px; }
+.hud-hidden .galaxy-tour-panel, .mode-transitioning .galaxy-tour-panel { visibility: hidden; pointer-events: none; }
