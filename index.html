@@ -5,10 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Jelajahi Tata Surya melalui simulasi 3D ilmiah dan sinematik."
+      content="Eksplorasi edukatif Tata Surya dan Bima Sakti dalam 3D, dengan tur terpandu, landmark skematis, dan informasi astronomi."
     />
     <meta name="theme-color" content="#030712" />
-    <link rel="icon" href="data:," />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Milky Way Observer" />
+    <meta property="og:title" content="Milky Way Observer" />
+    <meta property="og:description" content="Eksplorasi edukatif Tata Surya dan Bima Sakti dalam 3D, dengan tur terpandu, landmark skematis, dan informasi astronomi." />
+    <meta property="og:locale" content="id_ID" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Milky Way Observer" />
+    <meta name="twitter:description" content="Eksplorasi edukatif Tata Surya dan Bima Sakti dalam 3D, dengan tur terpandu, landmark skematis, dan informasi astronomi." />
+    <!-- Before publication: add verified canonical/og:url and approved absolute
+         og:image/twitter:image URLs with image alt text. No deployment URL yet. -->
     <title>Milky Way Observer</title>
   </head>
   <body>
@@ -19,9 +29,10 @@
         <div class="loading-orbit" aria-hidden="true"><span></span></div>
         <p class="eyebrow">MILKY WAY OBSERVER</p>
         <h1 id="loading-title">Inisialisasi</h1>
+        <p class="project-intro">Milky Way Observer adalah eksplorasi 3D edukatif Tata Surya dan Bima Sakti. Ukuran, jarak, dan landmark visual disederhanakan.</p>
         <p id="loading-detail" class="muted">Menunggu modul aplikasi. Jika proses berhenti atau koneksi gagal, muat ulang halaman.</p>
         <a id="loading-reload" class="button button-ghost" href="" title="Muat ulang aplikasi">Muat Ulang</a>
-        <noscript>JavaScript diperlukan untuk membuka simulasi ini. Aktifkan JavaScript lalu muat ulang.</noscript>
+        <noscript>Simulasi interaktif memerlukan JavaScript dan WebGL 2. Aktifkan JavaScript lalu muat ulang. Visual ini bersifat edukatif, bukan peta astronomi presisi atau katalog bintang lengkap.</noscript>
       </div>
 
       <header class="topbar glass-panel">
@@ -51,7 +62,7 @@
           <button id="flight-button" class="icon-button text-button" type="button" title="Aktifkan mode terbang bebas">
             <span aria-hidden="true">⌁</span><span>Free Flight</span>
           </button>
-          <button id="help-button" class="icon-button" type="button" title="Bantuan kontrol" aria-label="Bantuan kontrol">?</button>
+          <button id="help-button" class="icon-button" type="button" title="Bantuan, About dan Credits" aria-label="Bantuan, About dan Credits">?</button>
           <button id="fullscreen-button" class="icon-button" type="button" title="Layar penuh" aria-label="Layar penuh">⛶</button>
         </nav>
       </header>
@@ -200,6 +211,25 @@
         <button id="close-help" class="panel-close" type="button" aria-label="Tutup bantuan">×</button>
         <p class="eyebrow">KONTROL OBSERVER</p>
         <h2 id="help-title">Jelajahi semesta dengan caramu.</h2>
+        <details id="about-credits" class="about-credits">
+          <summary title="Tentang proyek dan kredit">About / Credits ? Milky Way Observer</summary>
+          <section aria-labelledby="about-purpose">
+            <h3 id="about-purpose">Belajar melalui eksplorasi</h3>
+            <p>Proyek edukatif untuk menjelajahi Tata Surya dan struktur Bima Sakti melalui simulasi 3D, tur terpandu, serta informasi astronomi bersumber.</p>
+            <h3>Batas visualisasi</h3>
+            <p>Ukuran, jarak, dan kecepatan visual disederhanakan. Landmark galaksi bersifat skematis; partikel galaksi bukan katalog bintang lengkap. Posisi model bukan koordinat astronomi presisi. Data ilmiah dan sumber per objek tersedia di panel informasi.</p>
+            <h3>Sumber data</h3>
+            <ul>
+              <li><a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/" target="_blank" rel="noopener noreferrer">NASA Planetary Fact Sheet</a> dan <a href="https://science.nasa.gov/solar-system/" target="_blank" rel="noopener noreferrer">NASA Science</a>.</li>
+              <li><a href="https://ssd.jpl.nasa.gov/sats/phys_par/" target="_blank" rel="noopener noreferrer">NASA/JPL: parameter fisik satelit</a>.</li>
+              <li><a href="https://science.nasa.gov/resource/the-milky-way-galaxy/" target="_blank" rel="noopener noreferrer">NASA: struktur Bima Sakti</a>; referensi landmark lainnya tercantum pada panel masing-masing.</li>
+            </ul>
+            <h3>Kredit aset dan izin publikasi</h3>
+            <p>Sepuluh tekstur JPEG dikreditkan kepada Solar System Scope / INOVE; catatan aset lokal mencantumkan CC BY 4.0. Sumber mirror, perubahan, serta tautan lisensi tersedia dalam <a href="./textures/ATTRIBUTION.md" target="_blank" rel="noopener noreferrer">catatan attribution tekstur</a>. Provenance dan kelengkapan atribusi masih perlu diverifikasi sebelum publikasi.</p>
+            <p>Cincin, starfield, galaksi, dan material fallback dibuat secara procedural oleh proyek. Ikon halaman SVG dibuat untuk Milky Way Observer.</p>
+            <p class="credits-notice"><strong>Belum siap untuk publikasi audio:</strong> berkas lokal ?Interstellar Main Theme.mp3? disediakan pengguna; lisensi dan persyaratan attribution belum diverifikasi. Nama file bukan bukti izin. Selesaikan izin rekaman dan komposisi sebelum distribusi. Lihat <a href="./audio/README.md" target="_blank" rel="noopener noreferrer">catatan audio</a>.</p>
+          </section>
+        </details>
         <div class="control-grid">
           <div><kbd>W A S D</kbd><span>Terbang (pointer terkunci)</span></div>
           <div><kbd>Mouse</kbd><span>Drag untuk orbit; lihat sekitar saat terbang</span></div>

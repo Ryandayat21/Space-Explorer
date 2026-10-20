@@ -285,3 +285,25 @@ File: src/main.js, src/core/ModeTransition.js, src/core/lazyModule.js (baru), te
 - Production preview lokal: **4/4 lulus**, dua browser yang sama. Pengamatan request membuktikan Galaxy chunk=0 dan MP3=0 saat startup, Galaxy chunk=1 setelah kunjungan pertama dan tetap 1 setelah keluar/masuk lagi. Uji module evaluation failure menampilkan recovery dan reload berhasil. Request gagal jaringan asli/HTTP cache CDN bukan bagian pengukuran ini; rejection dan timeout juga diuji di unit test.
 - Console warning/error dan pageerror diaudit oleh fixture; error constructor Three.js yang sengaja diinjeksi dicocokkan eksplisit. Tidak ada error aplikasi tak terduga. git diff --check lulus.
 - Belum menjalankan full E2E, throttling jaringan representatif, profil FPS/startup timing, perbandingan visual kompresi texture, validasi encoding transfer CDN atau deployment Vercel. Tidak ada commit/deploy.
+
+## 13. Identitas halaman dan informasi publik - 20 Oktober 2026
+
+- [x] Title/nama publik Milky Way Observer; deskripsi meliputi Tata Surya dan Bima Sakti edukatif. Theme-color navy existing dipertahankan (#030712).
+- [x] Favicon SVG lokal dibuat dalam proyek, menggantikan data URI kosong. Tidak ada unduhan/layanan eksternal.
+- [x] Open Graph: website, site_name, title, description, locale id_ID. Twitter: summary, title, description. Tidak mengisi domain produksi, akun Twitter, atau URL gambar yang belum diketahui.
+- [x] Pengantar HTML menjelaskan tujuan/batas visualisasi; noscript menyebut JavaScript dan WebGL 2. Konten singkat tidak bergantung pada renderer atau sukses startup.
+- [x] About/Credits melalui tombol bantuan existing, memakai details/summary native di dalam dialog. Tersedia tujuan edukatif, skala disederhanakan, landmark skematis dan partikel bukan katalog bintang lengkap. Keyboard/fokus/Escape memakai mekanisme dialog existing, tanpa listener baru.
+- [x] Tautan NASA/JPL sesuai sumber yang dipakai proyek; referensi spesifik tetap di panel objek. Kredit Solar System Scope/INOVE dan klaim CC BY 4.0 ditampilkan sebagai catatan aset lokal, dengan verifikasi provenance/attribution masih tertunda. Aset procedural dan favicon dikreditkan ke proyek.
+- [x] Audio pengguna ditandai jelas: izin rekaman/komposisi serta attribution belum terverifikasi; pekerjaan sebelum publikasi, bukan klaim aman karena ada kredit.
+- [x] Pemberitahuan desktop existing tetap ringan/nonmodal; pointer-events none agar tidak menangkap klik di atas canvas. Tidak menambah kontrol mobile penuh, analytics, banner cookie, atau layanan eksternal.
+- [ ] Setelah URL deployment diketahui: canonical dan og:url absolut yang benar.
+- [ ] Setelah gambar sosial berizin tersedia: og:image/twitter:image absolut, og:image:alt/twitter:image:alt dan dimensi yang benar. Jangan memakai placeholder produksi. Uji crawler/kartu sosial setelah URL publik tersedia.
+- [ ] Verifikasi provenance/lisensi texture dan izin audio tetap blocker publikasi sesuai audit; tugas ini hanya memperjelas informasi, bukan menyelesaikan izin.
+
+File berubah: index.html, src/styles.css, README.md, dokumen ini. File baru: public/favicon.svg dan e2e/publicInfo.spec.js. Tidak mengubah kamera, orbit, scene, dataset atau dependency; tidak commit/deploy.
+
+Hasil perintah: npm test **77/77 lulus**, exit 0; npm run build **berhasil, 59 modul**, exit 0. HTML 19,87 kB (gzip 5,81 kB), CSS 26,52 kB (gzip 6,75 kB); JavaScript main/Galaxy/Three tidak berubah dari bagian 12. Tidak ada warning build baru.
+
+Browser final: **4/4 lulus** di Edge 1366x768 dan Chrome 1920x1080. Memeriksa title/meta tanpa URL palsu, respons favicon lokal, About via keyboard, expand/close/Escape dan pengembalian fokus, viewport 390x844 dengan notice nonblocking, serta HTML/noscript ketika JavaScript dinonaktifkan. Console warning/error dan pageerror fixture kosong. Pada run awal assertion teks noscript memakai matcher Playwright yang mengabaikan teks elemen tersebut; diganti pembacaan textContent, lalu seluruh tes diulang dan lulus.
+
+Belum diverifikasi: social crawler pada URL publik, screen reader, semua browser/perangkat mobile, full E2E dan audit kontras menyeluruh. Link sumber mengacu catatan/data lokal; tidak memverifikasi ulang ketersediaan atau lisensi upstream dalam tugas ini.
