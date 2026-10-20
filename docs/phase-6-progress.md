@@ -144,7 +144,7 @@ Tugas implementasi pertama yang paling aman: perbaiki jalur startup/error/reload
 - [x] Periksa tracking/ignore dan pola secret terbatas; baca sumber/lisensi lokal.
 - [x] Dokumentasikan blocker, batas verifikasi dan prioritas tanpa mengubah implementasi.
 - [ ] Selesaikan izin/provenance audio dan verifikasi attribution texture/notice distribusi.
-- [ ] Implementasikan dan uji recovery startup/context loss serta fallback JS/no-WebGL.
+- [x] Implementasikan dan uji recovery startup/context loss serta fallback JS/no-WebGL (pemulihan melalui reload; lihat bagian 10-11).
 - [ ] Tentukan Node/install deterministik, CI dan hygiene deployment.
 - [ ] Selaraskan README/kontrol/metadata dengan Discovery UI dan Galaxy Mode.
 - [ ] Jalankan full E2E dan smoke production terbaru, Linux clean build, fault injection dan storage/capability matrix.
@@ -193,6 +193,34 @@ File berubah: index.html, src/main.js, src/core/ModeTransition.js, src/ui/UICont
 
 - [x] Startup, optional asset deadline dan loading Galaxy dengan recovery Muat Ulang.
 - [x] Fallback WebGL2 unavailable dan pesan statis untuk JS/modul tidak terbuka.
-- [ ] Recovery context loss/restoration penuh, termasuk kondisi cinematic, masih terpisah dari tugas ini; checklist gabungan bagian 9 belum seluruhnya selesai.
+- [x] Tindak lanjut context loss/restoration dan kondisi cinematic diselesaikan pada bagian 11 dengan kebijakan Muat Ulang, bukan pemulihan GPU in-place.
 - [ ] Fault injection seluruh jenis error GPU, clean Linux build, full E2E, slow-network nyata dan profiling GPU lemah.
 - [ ] Lisensi audio, provenance aset, metadata/CI dan validasi Vercel tetap mengikuti backlog audit; belum dianggap selesai oleh perbaikan loading.
+
+## 11. Penanganan kegagalan aplikasi - 20 Oktober 2026
+
+Scope hanya kegagalan aplikasi vanilla JavaScript. Tidak mengubah orbit, kamera, dataset, dependency, atau membuat renderer/loader/animation loop tambahan. Tidak ada commit atau deployment.
+
+### Implementasi
+
+- [x] Kegagalan constructor WebGLRenderer diberi kode terpisah dari WebGL2 unavailable dan ditangkap bootstrap. Fallback HTML existing tetap memuat nama proyek, penjelasan, langkah akselerasi grafis/browser/tutup tab berat, dan Muat Ulang.
+- [x] Context loss membatalkan RAF, menghentikan update/render dan resize GPU, membatalkan transisi, membersihkan target selection tertunda, menonaktifkan kontrol mode serta menghentikan audio/listener audio. Overlay pemulihan tetap dapat difokuskan saat cinematic atau pergantian mode; dialog/popover ditutup dan ancestor inert dibuka.
+- [x] Context restored hanya memperbarui status: konteks tersedia tetapi scene belum dipulihkan. Tidak melanjutkan render atau mengklaim resource GPU sehat. Pemulihan selalu navigasi penuh melalui Muat Ulang, bukan retry instance parsial.
+- [x] Listener context loss/restoration dipasang sekali per startup dan dilepas saat pagehide non-BFCache. Cleanup audio idempotent. Callback persiapan transisi async yang terlambat diabaikan setelah dispose; promise rejection diarahkan ke jalur error/unlock existing.
+- [x] TextureLoader menangani error callback maupun throw sinkron dan kegagalan pemasangan texture; promise diselesaikan sebagai fallback, sehingga pemanggil lazy-load tidak meninggalkan rejection tanpa handler. Optional-asset rejection tetap nonfatal.
+- [x] Rejection fullscreen dan audio play tetap memakai status yang sudah ada. Audio/localStorage yang gagal tetap nonfatal; default atau preferensi sesi dipertahankan.
+- [x] Diagnostik terstruktur menggunakan console.info dengan kode kegagalan, nama, dan pesan; deduplikasi per kode selama sesi. Level info sengaja dipakai untuk kegagalan yang sudah ditangani, bukan menyembunyikan exception global. Error Three.js dari constructor tetap terlihat; tidak memasang global handler yang menelan semua error.
+
+### Verifikasi dan batas pemulihan
+
+Hasil perintah dan browser dicatat setelah verifikasi akhir di bawah. Tidak ada pemulihan scene GPU in-place: semua sumber daya baru dibuat oleh halaman baru saat reload. Sumber daya scene lama tetap dimiliki instance yang dihentikan hingga cleanup pagehide/reload; bukan klaim membangun ulang resource yang rusak.
+
+Belum diverifikasi: GPU/driver crash fisik, kehabisan VRAM sungguhan, Safari/Firefox/mobile, context loss dalam fullscreen native pada tiap platform, BFCache lintas browser, sesi soak panjang, screen reader, dan production deployment. WEBGL_lose_context di browser lokal adalah fault injection, bukan pengujian semua kegagalan perangkat keras. Full suite E2E dan preview production tidak dijalankan ulang dalam scope ini.
+
+File implementasi: src/core/failures.js (baru), src/bootstrap.js, src/main.js, src/core/ModeTransition.js, src/core/SolarSystem.js, src/core/loading.js, src/core/AudioManager.js, src/data/audioPreferences.js, src/data/quality.js, src/data/exploration.js, src/ui/AudioControls.js, src/ui/UIController.js, src/ui/loadingScreen.js, src/styles.css.
+File pengujian: test/failures.test.js (baru), test/modeTransition.test.js, e2e/failures.spec.js (baru). Dokumentasi: docs/phase-6-progress.md.
+
+- npm test: **73/73 lulus**, exit 0. Termasuk deduplikasi diagnostik, context loss/restoration/cleanup, rejection persiapan mode async dan late completion setelah dispose. Tes audio/storage/fallback existing tetap lulus.
+- npm run build: **berhasil, 58 modul**, exit 0. Main 149,66 kB (gzip 47,65 kB), Three.js terpisah 499,99 kB (gzip 126,49 kB), loadingScreen 2,73 kB, entry 2,91 kB, CSS 25,88 kB. Tidak ada dependency baru.
+- Browser final: **26/26 lulus** di Edge 1366x768 dan Chrome 1920x1080. Mencakup renderer throw, WebGL unavailable, WEBGL_lose_context dan restore (RAF tetap nol sampai reload), cinematic recovery, context loss saat mode preparation, reload berhasil, optional texture fallback/deadline, startup watchdog, module/scene failure, audio failure, fullscreen rejection, quality/storage rusak dan pergantian mode berulang. Console/pageerror diaudit; satu error Three.js yang sengaja dipicu pada tes constructor dicocokkan secara eksplisit, bukan diabaikan global. Pesan NO_COLOR/FORCE_COLOR berasal dari test runner Node, bukan aplikasi.
+- Pada run awal terdapat satu kegagalan assertion teks WebGL lama; pesan WebGL unavailable dan constructor renderer kemudian dipisahkan. Run final di atas lulus seluruhnya. git diff --check tidak menemukan kesalahan whitespace.

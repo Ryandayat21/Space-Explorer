@@ -1,3 +1,4 @@
+import { reportFailure } from '../core/failures.js';
 import { loadingScreen } from './loadingScreen.js';
 import { SearchCombobox } from './SearchCombobox.js';
 import { tour } from '../data/tour.js';
@@ -207,7 +208,7 @@ export class UIController extends EventTarget {
         await document.documentElement.requestFullscreen();
       }
       this.syncFullscreen();
-    } catch { this.status('Layar penuh tidak tersedia pada browser ini.'); this.syncFullscreen(); }
+    } catch (error) { reportFailure('fullscreen', error); this.status('Layar penuh tidak tersedia pada browser ini.'); this.syncFullscreen(); }
   }
 
   #updateTimeLabel() {

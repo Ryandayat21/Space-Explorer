@@ -1,3 +1,4 @@
+import { reportFailure } from './failures.js';
 // Driven by the existing RAF. Preparation completes before either scene is deactivated.
 export class ModeTransition {
   constructor(manager, hooks = {}) { this.manager = manager; this.hooks = hooks; this.phase = 'idle'; }
@@ -23,12 +24,22 @@ export class ModeTransition {
     } else if (this.preparationStep === 3) {
       this.hooks.stage?.('scene');
     } else {
-      this.hooks.prepare?.(this.next);
-      this.manager.active.deactivate();
-      this.phase = 'out'; this.hooks.scene?.(this.manager.active);
-      this.hooks.stage?.('ready');
-      if (this.skipRequested) this.skip();
+      const preparation = this.hooks.prepare?.(this.next);
+      if (preparation?.then) {
+        this.phase = 'waiting';
+        Promise.resolve(preparation).then(() => {
+          if (!this.disposed && this.phase === 'waiting') this.prepared();
+        }).catch(error => {
+          if (!this.disposed && this.busy) this.fail(error);
+        });
+      } else this.prepared();
     }
+  }
+  prepared() {
+    this.manager.active.deactivate();
+    this.phase = 'out'; this.hooks.scene?.(this.manager.active);
+    this.hooks.stage?.('ready');
+    if (this.skipRequested) this.skip();
   }
   swap() {
     this.manager.activate(this.target);
@@ -38,6 +49,7 @@ export class ModeTransition {
   }
   update(delta) {
     if (!this.busy) return;
+    if (this.phase === 'waiting') return;
     try {
       if (this.phase === 'preparing') { this.prepare(); return; }
       this.elapsed += Math.max(0, delta);
@@ -48,10 +60,16 @@ export class ModeTransition {
   }
   skip() {
     if (!this.busy) return;
-    if (this.phase === 'preparing') { this.skipRequested = true; return; }
+    if (this.phase === 'preparing' || this.phase === 'waiting') { this.skipRequested = true; return; }
     try { if (this.phase === 'out') this.swap(); this.finish(); } catch (error) { this.fail(error); }
   }
   finish() { this.phase = 'idle'; this.hooks.unlock?.(); }
-  fail(error) { this.manager.active?.activate(); this.finish(); this.hooks.error?.(error); }
+  fail(error) {
+    try { this.manager.active?.activate(); }
+    catch (recoveryError) { reportFailure('mode-recovery', recoveryError); }
+    try { this.finish(); }
+    catch (unlockError) { reportFailure('mode-unlock', unlockError); }
+    this.hooks.error?.(error);
+  }
   dispose() { if (this.disposed) return; this.disposed = true; if (this.busy) this.finish(); }
 }

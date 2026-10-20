@@ -1,3 +1,4 @@
+import { reportFailure } from '../core/failures.js';
 import { searchObjects } from './search.js';
 import { scienceFor } from './science.js';
 
@@ -17,7 +18,7 @@ export class Favorites {
       const value = raw === null ? [] : JSON.parse(raw);
       this.ids = validFavorites(value);
       if (!Array.isArray(value) || this.ids.length !== value.length) this.error = 'Data favorit tidak valid telah diabaikan.';
-    } catch {
+    } catch (error) { reportFailure('storage-exploration', error);
       this.error = 'Favorit tersimpan tidak dapat dibaca. Daftar sementara tetap dapat digunakan.';
     }
   }
@@ -28,7 +29,7 @@ export class Favorites {
     try {
       this.storage().setItem(FAVORITES_KEY, JSON.stringify(this.ids));
       this.error = '';
-    } catch {
+    } catch (error) { reportFailure('storage-exploration', error);
       this.error = 'Favorit hanya tersimpan untuk sesi ini; penyimpanan browser tidak tersedia.';
     }
     return true;

@@ -1,3 +1,4 @@
+import { reportFailure } from '../core/failures.js';
 import { readAudioPreferences, saveAudioPreferences } from '../data/audioPreferences.js';
 
 // Application-owned, independent of scene lifecycles. Never reset currentTime.
@@ -11,6 +12,7 @@ export class AudioManager extends EventTarget {
     audio.src = (import.meta.env?.BASE_URL ?? '/') + 'audio/Interstellar%20Main%20Theme.mp3';
     this.onError = () => {
       if (this.disposed || this.state === 'unavailable') return;
+      reportFailure('audio-unavailable', audio.error);
       this.revision++; this.wantsPlayback = false; this.stopFade(); audio.pause();
       this.state = 'unavailable'; this.changed();
     };
@@ -49,6 +51,7 @@ export class AudioManager extends EventTarget {
       this.state = 'playing'; this.fade(this.muted ? 0 : this.volume); this.changed();
     } catch (error) {
       if (revision !== this.revision || this.disposed) return;
+      reportFailure('audio-play', error);
       if (error?.name === 'NotAllowedError' || error?.name === 'AbortError') {
         this.wantsPlayback = false; this.audio.pause(); this.state = 'blocked'; this.changed();
       } else this.onError();

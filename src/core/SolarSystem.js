@@ -1,3 +1,4 @@
+import { reportFailure } from './failures.js';
 import * as THREE from 'three';
 import { bodies, moons, visualRadiusFromEarth } from '../data/celestialBodies.js';
 
@@ -306,8 +307,14 @@ export class SolarSystem {
     if (this.loadedTextures.has(id)) return this.loadedTextures.get(id);
     if (!textureIds.has(id) || this.disposed) return;
     const request = new Promise(resolve => {
-      this.textureLoader.load(import.meta.env.BASE_URL + 'textures/' + id + '.jpg', texture => {
+      const failed = error => {
+        reportFailure(`texture-${id}`, error);
+        if (!this.disposed) window.dispatchEvent(new CustomEvent('texture-fallback', { detail: id }));
+        resolve(false);
+      };
+      try { this.textureLoader.load(import.meta.env.BASE_URL + 'textures/' + id + '.jpg', texture => {
         if (this.disposed) { texture.dispose(); resolve(false); return; }
+        try {
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.anisotropy = 4;
         const material = this.getObject(id).mesh.material;
@@ -315,10 +322,8 @@ export class SolarSystem {
         material.color.setRGB(id === 'sun' ? 1.3 : 1, id === 'sun' ? 1.3 : 1, id === 'sun' ? 1.3 : 1);
         material.needsUpdate = true;
         resolve(true);
-      }, undefined, () => {
-        window.dispatchEvent(new CustomEvent('texture-fallback', { detail: id }));
-        resolve(false);
-      });
+        } catch (error) { texture.dispose(); failed(error); }
+      }, undefined, failed); } catch (error) { failed(error); }
     });
     this.loadedTextures.set(id, request);
     return request;

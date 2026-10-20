@@ -1,4 +1,5 @@
-﻿import * as THREE from 'three';
+﻿import { reportFailure, watchGraphicsContext } from './core/failures.js';
+import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { loadingScreen, paintLoading } from './ui/loadingScreen.js';
 import { waitForOptionalAsset, loadingStages } from './core/loading.js';
@@ -18,7 +19,27 @@ loadingScreen.stage('scene', 'Inisialisasi renderer dan scene Tata Surya wajib.'
 await paintLoading();
 if (loadingScreen.failed) return;
 const canvas = document.getElementById('space-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }); }
+catch (cause) { const error = new Error('WebGLRenderer initialization failed', { cause }); error.code = 'RENDERER_INIT'; throw error; }
+let frameId, stopped = false;
+let stopAudio = () => {};
+let stopMode = () => {};
+const stopRendering = () => {
+  if (stopped) return;
+  stopped = true; cancelAnimationFrame(frameId);
+  for (const cleanup of [stopMode, stopAudio]) {
+    try { cleanup(); } catch (error) { reportFailure('failure-cleanup', error); }
+  }
+};
+window.addEventListener('observer-fatal', stopRendering);
+const removeContextListeners = watchGraphicsContext(canvas, { stop: stopRendering, status: message => loadingScreen.fail(message) });
+window.addEventListener('pagehide', event => {
+  if (!event.persisted) {
+    stopRendering(); removeContextListeners();
+    window.removeEventListener('observer-fatal', stopRendering);
+  }
+});
 THREE.ColorManagement.enabled = true;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -40,21 +61,20 @@ const gateInput = event => {
 };
 for (const type of gateTypes) window.addEventListener(type, gateInput, { capture: true, passive: false });
 const ui = new UIController();
-try { initializeAudioControls(); }
-catch {
+try { stopAudio = initializeAudioControls() ?? stopAudio; }
+catch (error) {
+  reportFailure('audio-initialization', error);
   document.getElementById('audio-status').textContent = 'Audio unavailable. Simulasi tetap dapat digunakan.';
   for (const id of ['audio-play', 'audio-mute', 'audio-volume']) document.getElementById(id).disabled = true;
 }
-const onContextLost = event => {
-  event.preventDefault(); ui.status('Konteks grafis terputus. Muat ulang halaman untuk memulihkan simulasi.');
-};
-canvas.addEventListener('webglcontextlost', onContextLost);
 const solar = new SolarSystemMode({ canvas, ui, renderer, quality: renderQuality });
 const galaxy = new GalaxyMode({ canvas, quality: renderQuality });
 const modes = new ModeController([solar, galaxy]);
+stopMode = () => modes.active?.deactivate();
 modes.activate('solar-system');
 const clock = new THREE.Clock();
 function resizeRenderer() {
+  if (stopped || loadingScreen.failed) return;
   const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
   modes.resize(width, height);
   const ratio = Math.min(devicePixelRatio || 1, qualityPresets[renderQuality].pixelRatio);
@@ -113,13 +133,18 @@ transition = new ModeTransition(modes, {
     curtain.hidden = true; document.body.classList.remove('mode-transitioning');
     for (const [element, previous] of inertState) element.inert = previous;
     inertState.clear(); clock.getDelta(); switchButton.focus({ preventScroll: true });
-    if (pendingLandmark && modes.active.id === 'galaxy') galaxy.visitLandmark(pendingLandmark);
-    if (pendingSolar && modes.active.id === 'solar-system') ui.emit('select', pendingSolar);
+    if (!stopped && pendingLandmark && modes.active.id === 'galaxy') galaxy.visitLandmark(pendingLandmark);
+    if (!stopped && pendingSolar && modes.active.id === 'solar-system') ui.emit('select', pendingSolar);
     pendingSolar = null;
     pendingLandmark = null;
   },
-  error() { loadingScreen.fail('Scene tujuan gagal disiapkan. Muat ulang untuk mencoba kembali dengan instance baru yang bersih.'); }
+  error(error) { reportFailure('mode-transition', error); stopRendering(); loadingScreen.fail('Scene tujuan gagal disiapkan. Muat ulang untuk mencoba kembali dengan instance baru yang bersih.'); }
 });
+stopMode = () => {
+  pendingLandmark = pendingSolar = null;
+  transition.dispose();
+  modes.active?.deactivate();
+};
 const requestMode = id => transition.start(id, motion.matches);
 const onSwitch = () => requestMode(modes.active.id === 'solar-system' ? 'galaxy' : 'solar-system');
 const onSkip = () => transition.skip();
@@ -149,9 +174,8 @@ if (fpsDebug) {
   fpsNode.style.cssText = 'position:fixed;left:8px;top:88px;z-index:99;color:white;background:#000c;padding:4px;pointer-events:none';
   document.body.append(fpsNode);
 }
-let frameId;
 function animate(now) {
-  if (loadingScreen.failed) return;
+  if (stopped || loadingScreen.failed) return;
   if (fpsDebug && ++fpsFrames && now - fpsStart >= 1000) {
     const stats = renderStats(renderer, modes.active);
     fpsNode.textContent = `${Math.round(fpsFrames * 1000 / (now - fpsStart))} FPS | ${stats.calls} calls | ${stats.triangles} triangles | ${stats.points}/${stats.particles} points | ${stats.geometries} geometries | ${stats.materials} materials`;
@@ -162,9 +186,10 @@ function animate(now) {
   if (document.hidden) return; // Keep one RAF; skip simulation/render while hidden, consume clock delta.
   try {
     if (transition.busy) transition.update(delta); else modes.update(delta, now);
+    if (stopped || loadingScreen.failed) { cancelAnimationFrame(frameId); return; }
     renderer.render(modes.active.scene, transition.busy ? renderCamera : modes.active.camera);
   } catch (error) {
-    cancelAnimationFrame(frameId);
+    stopRendering(); reportFailure('render-loop', error);
     if (transition.busy) transition.fail(error);
     else loadingScreen.fail('Tampilan scene gagal disiapkan. Muat ulang untuk memulihkan aplikasi.');
   }
@@ -202,7 +227,7 @@ window.addEventListener('pagehide', event => {
   switchButton.removeEventListener('click', onSwitch); skipButton.removeEventListener('click', onSkip); motion.removeEventListener('change', onMotion); curtain.remove();
   window.removeEventListener('resize', resizeRenderer);
   document.removeEventListener('fullscreenchange', resizeRenderer);
-  canvas.removeEventListener('webglcontextlost', onContextLost);
+  removeContextListeners();
 });
 }
 if (import.meta.hot) import.meta.hot.accept(() => location.reload());

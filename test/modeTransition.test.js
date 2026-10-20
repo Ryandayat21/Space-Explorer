@@ -53,3 +53,21 @@ test('preparation exposes real stages before swap and never activates an unprepa
   assert.deepEqual(stages, ['initializing', 'assets', 'scene', 'ready']);
   assert.equal(initialized, 1); assert.equal(manager.active.id, 'galaxy'); assert.equal(transition.busy, false);
 });
+
+test('async preparation rejection unlocks without activating destination', async () => {
+  const errors = [];
+  const { manager, transition } = setup({ prepare: () => Promise.reject(new Error('asset unavailable')), error: error => errors.push(error) });
+  transition.start('galaxy'); prepare(transition);
+  assert.equal(transition.phase, 'waiting'); transition.skip();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(manager.active.id, 'solar'); assert.equal(transition.busy, false);
+  assert.equal(errors.length, 1);
+});
+
+test('disposed transition ignores late preparation completion', async () => {
+  let resolve;
+  const { manager, transition } = setup({ prepare: () => new Promise(done => { resolve = done; }) });
+  transition.start('galaxy'); prepare(transition); transition.dispose(); resolve();
+  await new Promise(done => setImmediate(done));
+  assert.equal(manager.active.id, 'solar'); assert.equal(transition.busy, false);
+});

@@ -27,6 +27,13 @@ export const loadingScreen = {
     readyTimer = setTimeout(() => { if (failed) return; screen.classList.add('done'); unlock(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 550);
   },
   fail(message) {
+    window.dispatchEvent(new Event('observer-fatal'));
+    // Fatal fallback must remain reachable even during cinematic mode or a scene switch.
+    document.body.classList.remove('mode-transitioning');
+    document.getElementById('app').inert = false;
+    for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+    for (const popover of document.querySelectorAll(':popover-open')) popover.hidePopover();
+    document.body.append(screen);
     failed = true; clearTimeout(readyTimer); lock(); screen.inert = false;
     screen.classList.remove('done'); screen.dataset.stage = 'error'; screen.setAttribute('aria-busy', 'false');
     title.textContent = loadingStages.error; detail.textContent = message;
