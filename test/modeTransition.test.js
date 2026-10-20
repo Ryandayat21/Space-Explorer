@@ -71,3 +71,15 @@ test('disposed transition ignores late preparation completion', async () => {
   await new Promise(done => setImmediate(done));
   assert.equal(manager.active.id, 'solar'); assert.equal(transition.busy, false);
 });
+
+test('mode module loads before initialize and ignores completion after dispose', async () => {
+  let finish, loaded = false;
+  const { manager, transition } = setup({ load: () => loaded ? undefined : new Promise(resolve => { finish = () => { loaded = true; resolve(); }; }) });
+  transition.start('galaxy'); transition.update(0); transition.update(0);
+  assert.equal(transition.phase, 'waiting'); assert.equal(manager.initialized.has('galaxy'), false);
+  finish(); await new Promise(resolve => setImmediate(resolve));
+  prepare(transition); transition.skip(); assert.equal(manager.active.id, 'galaxy');
+  loaded = false; transition.start('solar'); transition.update(0); transition.update(0);
+  transition.dispose(); finish(); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(transition.busy, false); assert.equal(manager.active.id, 'galaxy');
+});

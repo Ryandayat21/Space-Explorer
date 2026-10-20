@@ -8,7 +8,7 @@ import { ModeController } from './core/ModeController.js';
 import { ModeTransition } from './core/ModeTransition.js';
 import { renderStats } from './core/renderStats.js';
 import { SolarSystemMode } from './modes/SolarSystemMode.js';
-import { GalaxyMode } from './modes/GalaxyMode.js';
+import { lazyModule } from './core/lazyModule.js';
 import { UIController } from './ui/UIController.js';
 import { initializeAudioControls } from './ui/AudioControls.js';
 export async function start() {
@@ -68,8 +68,9 @@ catch (error) {
   for (const id of ['audio-play', 'audio-mute', 'audio-volume']) document.getElementById(id).disabled = true;
 }
 const solar = new SolarSystemMode({ canvas, ui, renderer, quality: renderQuality });
-const galaxy = new GalaxyMode({ canvas, quality: renderQuality });
-const modes = new ModeController([solar, galaxy]);
+let galaxy;
+const importGalaxy = lazyModule(() => import('./modes/GalaxyMode.js'));
+const modes = new ModeController([solar]);
 stopMode = () => modes.active?.deactivate();
 modes.activate('solar-system');
 const clock = new THREE.Clock();
@@ -85,7 +86,7 @@ resizeRenderer();
 window.addEventListener('resize', resizeRenderer);
 document.addEventListener('fullscreenchange', resizeRenderer);
 ui.addEventListener('quality-change', event => {
-  renderQuality = event.detail; solar.setQuality(renderQuality); galaxy.setQuality(renderQuality); resizeRenderer();
+  renderQuality = event.detail; solar.setQuality(renderQuality); galaxy?.setQuality(renderQuality); resizeRenderer();
 });
 const switchButton = document.getElementById('mode-toggle');
 const curtain = document.createElement('div'); curtain.id = 'mode-transition'; curtain.hidden = true;
@@ -98,9 +99,18 @@ const inertState = new Map();
 let pendingLandmark = null;
 let pendingSolar = null;
 transition = new ModeTransition(modes, {
+  load(id) {
+    if (id !== 'galaxy' || galaxy) return;
+    return importGalaxy().then(({ GalaxyMode }) => {
+      if (stopped) return;
+      galaxy = new GalaxyMode({ canvas, quality: renderQuality });
+      galaxy.onEnterSolarSystem = () => requestMode('solar-system');
+      modes.modes.set('galaxy', galaxy);
+    });
+  },
   stage(stage) {
     const label = transition.target === 'galaxy' ? 'Galaxy Mode' : 'Solar System Mode';
-    curtain.querySelector('[role=status]').textContent = `${loadingStages[stage]} — ${label}${stage === 'assets' ? ': aset lokal/procedural, tanpa unduhan audio' : ''}`;
+    curtain.querySelector('[role=status]').textContent = `${loadingStages[stage]} — ${label}${stage === 'assets' ? ': modul dan aset lokal/procedural, tanpa unduhan audio' : ''}`;
     curtain.dataset.stage = stage;
     skipButton.disabled = stage !== 'ready';
     if (stage === 'ready') skipButton.focus({ preventScroll: true });
@@ -138,7 +148,7 @@ transition = new ModeTransition(modes, {
     pendingSolar = null;
     pendingLandmark = null;
   },
-  error(error) { reportFailure('mode-transition', error); stopRendering(); loadingScreen.fail('Scene tujuan gagal disiapkan. Muat ulang untuk mencoba kembali dengan instance baru yang bersih.'); }
+  error(error) { reportFailure('mode-transition', error); stopRendering(); loadingScreen.fail('Modul atau scene tujuan gagal disiapkan. Periksa koneksi lalu Muat Ulang untuk mencoba kembali dengan instance baru yang bersih.'); }
 });
 stopMode = () => {
   pendingLandmark = pendingSolar = null;
@@ -150,7 +160,6 @@ const onSwitch = () => requestMode(modes.active.id === 'solar-system' ? 'galaxy'
 const onSkip = () => transition.skip();
 const onMotion = () => { if (motion.matches) transition.duration = .08; };
 switchButton.addEventListener('click', onSwitch); skipButton.addEventListener('click', onSkip); motion.addEventListener('change', onMotion);
-galaxy.onEnterSolarSystem = () => requestMode('solar-system');
 const onSolarSearch = event => {
   if (transition.busy) return;
   pendingSolar = event.detail;
@@ -165,7 +174,7 @@ const onGalaxySelect = event => {
 ui.addEventListener('galaxy-select', onGalaxySelect);
 const onGalaxyTour = () => { if (!transition.busy && modes.active.id === 'galaxy') galaxy.tour.start(); };
 ui.addEventListener('galaxy-tour-start', onGalaxyTour);
-const onGalaxyTourExit = () => galaxy.tour?.exit();
+const onGalaxyTourExit = () => galaxy?.tour?.exit();
 ui.addEventListener('galaxy-tour-exit', onGalaxyTourExit);
 const fpsDebug = import.meta.env.DEV && new URLSearchParams(location.search).has('debug');
 let fpsNode, fpsFrames = 0, fpsStart = performance.now();
@@ -209,8 +218,8 @@ frameId = requestAnimationFrame(animate);
 if (import.meta.env.DEV) window.__observer = {
   performance: () => renderStats(renderer, modes.active),
   ...solar.integration.diagnostics,
-  galaxyCamera: () => galaxy.camera ? ({ position: galaxy.camera.position.toArray(), flight: !!galaxy.controls.flight, tween: !!galaxy.controls.tween, multiplier: galaxy.controls.multiplier }) : null,
-  mode: () => ({ id: modes.active.id, transitioning: transition.busy, aspect: modes.active.camera.aspect, sceneObjects: modes.active.scene.children.length, galaxyParticles: galaxy.galaxy?.particleCount }),
+  galaxyCamera: () => galaxy?.camera ? ({ position: galaxy.camera.position.toArray(), flight: !!galaxy.controls.flight, tween: !!galaxy.controls.tween, multiplier: galaxy.controls.multiplier }) : null,
+  mode: () => ({ id: modes.active.id, transitioning: transition.busy, aspect: modes.active.camera.aspect, sceneObjects: modes.active.scene.children.length, galaxyParticles: galaxy?.galaxy?.particleCount }),
   rendering: () => ({ pixelRatio: renderer.getPixelRatio(), aspect: modes.active.camera.aspect,
     exposure: renderer.toneMappingExposure, colorSpace: renderer.outputColorSpace,
     toneMapping: renderer.toneMapping, quality: renderQuality })

@@ -224,3 +224,64 @@ File pengujian: test/failures.test.js (baru), test/modeTransition.test.js, e2e/f
 - npm run build: **berhasil, 58 modul**, exit 0. Main 149,66 kB (gzip 47,65 kB), Three.js terpisah 499,99 kB (gzip 126,49 kB), loadingScreen 2,73 kB, entry 2,91 kB, CSS 25,88 kB. Tidak ada dependency baru.
 - Browser final: **26/26 lulus** di Edge 1366x768 dan Chrome 1920x1080. Mencakup renderer throw, WebGL unavailable, WEBGL_lose_context dan restore (RAF tetap nol sampai reload), cinematic recovery, context loss saat mode preparation, reload berhasil, optional texture fallback/deadline, startup watchdog, module/scene failure, audio failure, fullscreen rejection, quality/storage rusak dan pergantian mode berulang. Console/pageerror diaudit; satu error Three.js yang sengaja dipicu pada tes constructor dicocokkan secara eksplisit, bukan diabaikan global. Pesan NO_COLOR/FORCE_COLOR berasal dari test runner Node, bukan aplikasi.
 - Pada run awal terdapat satu kegagalan assertion teks WebGL lama; pesan WebGL unavailable dan constructor renderer kemudian dipisahkan. Run final di atas lulus seluruhnya. git diff --check tidak menemukan kesalahan whitespace.
+
+## 12. Ukuran unduhan dan lazy loading Galaxy - 20 Oktober 2026
+
+### Baseline dan perubahan
+
+Working tree bersih sebelum tugas. Build baseline diulang sebelum edit (58 modul). GalaxyScene sebelumnya memang baru di-initialize ketika dikunjungi, tetapi import GalaxyMode statis masih memasukkan kode generator, kontrol, marker/panel dan tour ke main. Setelah perubahan, import dinamis baru dipanggil dari fase persiapan ModeTransition pada kunjungan pertama. Solar System tetap menjadi satu-satunya mode terdaftar saat startup. Dataset pencarian/landmark kecil yang dipakai lintas mode tetap tersedia agar pencarian lintas mode berfungsi.
+
+- [x] GalaxyMode dan dependensi khususnya dipisah ke chunk lazy; tanpa preload Galaxy saat startup.
+- [x] Satu promise import per halaman; kunjungan berikutnya memakai modul dan scene existing. Quality terbaru dipakai saat konstruksi Galaxy pertama.
+- [x] Memakai curtain/loading stage dan RAF existing. Scene sumber tetap dirender saat menunggu modul; swap tetap setelah initialize/resize/compile selesai.
+- [x] Import gagal atau lebih dari 15 detik menampilkan pesan koneksi/Muat Ulang melalui fallback existing. Tidak membuat retry renderer atau loop baru. Batas waktu tidak dapat membatalkan unduhan import browser; hasil terlambat tidak menginisialisasi scene setelah timeout/dispose.
+- [x] Audio tetap preload=none dan opt-in, bukan dependensi startup atau persiapan Galaxy.
+- [x] Tidak mengubah chunkSizeWarningLimit, memasang service worker, cache offline, dependency, atau mengambil aset internet.
+
+### Ukuran sebelum/sesudah
+
+Ukuran byte diukur dari hasil build di filesystem; gzip memakai node:zlib.gzipSync per file. Ini bukan ukuran transfer jaringan terkompresi yang telah diverifikasi pada server Vercel. kB pada output Vite memakai basis 1.000 byte. Jumlah JS awal mencakup entry, loadingScreen/shared, main dan Three.js; tidak mencakup HTML/CSS/texture/audio.
+
+| Komponen | Sebelum (byte / gzip) | Sesudah (byte / gzip) |
+| --- | ---: | ---: |
+| Main | 149.664 / 47.653 | 124.392 / 40.746 |
+| Three.js | 499.985 / 126.493 | 499.985 / 126.492 |
+| Entry | 2.914 / 1.459 | 1.840 / 951 |
+| loadingScreen/shared | 2.727 / 1.353 | 3.828 / 1.857 |
+| Galaxy lazy | termasuk main | 26.589 / 8.799 |
+| Jumlah JS awal | 655.290 / 176.958 | 630.045 / 170.046 |
+| Jumlah seluruh JS | 655.290 / 176.958 | 656.634 / 178.845 |
+
+JS awal berkurang **25.245 byte mentah / 6.912 byte gzip (~3,9%)**. Total JS justru bertambah 1.344 byte mentah karena penanganan import dan pemisahan chunk; manfaatnya penundaan unduhan Galaxy, bukan pengurangan semua kode. Three.js tetap komponen JS terbesar. CSS tetap 25,88 kB; HTML sekitar 16,14 kB. Tidak mengukur atau mengklaim peningkatan FPS maupun waktu loading.
+
+### Audit texture dan aset
+
+Dimensi dibaca langsung melalui System.Drawing.Image, ukuran melalui filesystem. Public berisi 13 file, total **16.639.394 byte**, tidak berubah. Sepuluh JPEG total **4.086.422 byte**. Tidak mengubah/menghapus sumber asli, format, kualitas atau catatan attribution.
+
+| Texture | Resolusi | Byte sebelum = sesudah |
+| --- | --- | ---: |
+| earth.jpg | 1024x512 | 149.296 |
+| moon.jpg | 1024x512 | 265.744 |
+| sun.jpg | 1024x512 | 144.982 |
+| mercury.jpg | 2048x1024 | 872.555 |
+| venus.jpg | 2048x1024 | 885.075 |
+| mars.jpg | 2048x1024 | 750.547 |
+| jupiter.jpg | 2048x1024 | 498.976 |
+| saturn.jpg | 2048x1024 | 199.916 |
+| uranus.jpg | 2048x1024 | 77.751 |
+| neptune.jpg | 2048x1024 | 241.580 |
+
+Mercury/Venus/Mars adalah kandidat terbesar untuk kompresi terpisah pada tugas berikutnya. Planet kecil di overview tidak memerlukan detail 2K, tetapi Visit/free-flight memungkinkan close-up; belum ada perbandingan visual lossless/lossy yang membenarkan penurunan resolusi. Loader existing tetap meminta texture ketika dekat atau dipilih dan memakai fallback procedural; kualitas Low membatasi geometry/DPR tetapi belum memilih resolusi texture khusus. Matahari/Earth/Moon 1K dapat terlihat terbatas pada close-up ekstrem; tidak meningkatkan resolusi atau mengunduh pengganti dalam tugas ini.
+
+MP3 **12.549.142 byte** tetap aset terbesar, tidak dimuat sebelum opt-in. Font eksternal tidak ditambahkan. Catatan sumber/lisensi existing di public/textures/ATTRIBUTION.md dan public/audio/README.md dipertahankan; provenance/lisensi belum diverifikasi ulang dan belum dinyatakan aman untuk rilis.
+
+File: src/main.js, src/core/ModeTransition.js, src/core/lazyModule.js (baru), test/modeTransition.test.js, test/lazyModule.test.js (baru), e2e/lazyLoading.spec.js (baru), dokumen ini.
+
+### Hasil verifikasi
+
+- npm test: **77/77 lulus**, exit 0; mencakup import sesuai permintaan, satu promise, rejection tanpa retry otomatis, timeout/late resolution, serta module preparation/dispose sebelum inisialisasi mode.
+- npm run build: **berhasil, 59 modul**, exit 0. Nilai tabel di atas berasal dari build final dan baseline yang diukur dalam tugas ini; tidak menaikkan ambang warning.
+- Dev browser Edge 1366x768 dan Chrome 1920x1080: **24 skenario tercakup dan akhirnya lulus**. Run awal 22/24; dua kegagalan hanya assertion pesan lama `Scene tujuan gagal` setelah pesan diperluas untuk modul. e2e/loading.spec.js disesuaikan dan kedua skenario dijalankan ulang: **2/2 lulus**. Cakupan: lazy download, reuse, module failure/reload, cross-mode search, texture fallback/deadline, context recovery, constructor failure, mode switch/Skip dan watchdog startup.
+- Production preview lokal: **4/4 lulus**, dua browser yang sama. Pengamatan request membuktikan Galaxy chunk=0 dan MP3=0 saat startup, Galaxy chunk=1 setelah kunjungan pertama dan tetap 1 setelah keluar/masuk lagi. Uji module evaluation failure menampilkan recovery dan reload berhasil. Request gagal jaringan asli/HTTP cache CDN bukan bagian pengukuran ini; rejection dan timeout juga diuji di unit test.
+- Console warning/error dan pageerror diaudit oleh fixture; error constructor Three.js yang sengaja diinjeksi dicocokkan eksplisit. Tidak ada error aplikasi tak terduga. git diff --check lulus.
+- Belum menjalankan full E2E, throttling jaringan representatif, profil FPS/startup timing, perbandingan visual kompresi texture, validasi encoding transfer CDN atau deployment Vercel. Tidak ada commit/deploy.

@@ -62,7 +62,7 @@ test('Galaxy preparation failure retains a rendered source and offers reload', a
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   await page.locator('#mode-toggle').click();
   await expect(page.locator('#loading-screen')).toHaveAttribute('data-stage', 'error');
-  await expect(page.locator('#loading-detail')).toContainText('Scene tujuan gagal');
+  await expect(page.locator('#loading-detail')).toContainText(/scene tujuan gagal/i);
   expect(await page.evaluate(() => window.__observer.mode().id)).toBe('solar-system');
   await expect(page.locator('#loading-reload')).toBeVisible();
 });

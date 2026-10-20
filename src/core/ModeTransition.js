@@ -18,6 +18,16 @@ export class ModeTransition {
     // Let the existing RAF paint the curtain before synchronous construction.
     if (this.preparationStep++ === 0) return;
     if (this.preparationStep === 2) {
+      const loading = this.hooks.load?.(this.target);
+      if (loading?.then) {
+        this.phase = 'waiting';
+        this.hooks.stage?.('assets');
+        Promise.resolve(loading).then(() => {
+          if (this.disposed || this.phase !== 'waiting') return;
+          this.phase = 'preparing'; this.preparationStep = 1;
+        }).catch(error => { if (!this.disposed && this.busy) this.fail(error); });
+        return;
+      }
       this.next = this.manager.initialize(this.target);
       this.next.resize(this.manager.width, this.manager.height);
       this.hooks.stage?.('assets');
