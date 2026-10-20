@@ -565,3 +565,23 @@ button:disabled { opacity: .4; cursor: default; }
 .mode-transition-actions p { max-width: min(480px, 80vw); font-size: 13px; line-height: 1.6; }
 .mode-transition-actions button:disabled { opacity: .4; cursor: wait; }
 @media (prefers-reduced-motion: reduce) { .loading-screen { transition: none; } }
+
+/* Desktop reflow at high zoom: retain existing controls instead of mobile hiding. */
+@media (pointer: fine) and (max-width: 1050px) and (max-height: 650px) {
+  .topbar, .galaxy-mode .topbar { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 42px 40px; gap: 4px; top: 8px; left: 12px; right: 12px; height: 96px; padding: 4px 8px; }
+  .topbar .brand { display: none; }
+  .topbar .top-actions { display: flex; grid-row: 1; justify-self: stretch; justify-content: flex-end; overflow-x: auto; }
+  .object-search { grid-row: 2; width: 100%; min-width: 0; }
+  #search-results { max-height: 45dvh; }
+  .welcome-card, .left-rail, .mobile-notice { display: none; }
+  .time-dock { display: flex; bottom: 66px; left: 12px; right: 12px; min-width: 0; min-height: 44px; width: auto; max-height: 52px; transform: none; overflow-x: auto; padding: 4px 8px; }
+  .time-dock > * { flex-shrink: 0; }
+  .mode-toggle, .hud-button { bottom: 12px; }
+  .info-panel { display: block; top: 112px; right: 12px; bottom: 126px; width: min(360px, calc(100vw - 24px)); max-height: none; overflow-y: auto; }
+  .tour-panel { display: flex; top: 112px; left: 12px; width: min(400px, calc(100vw - 24px)); max-height: calc(100dvh - 238px); overflow-y: auto; }
+  .galaxy-placeholder { top: 112px; left: 12px; width: 230px; max-height: calc(100dvh - 180px); }
+  .galaxy-mode:has(.galaxy-landmark-panel:not([hidden])) .galaxy-placeholder { max-height: calc(100dvh - 180px); }
+  .galaxy-landmark-panel { top: 112px; bottom: auto; left: auto; right: 12px; width: calc(100vw - 266px); max-height: calc(100dvh - 180px); }
+  .galaxy-tour-panel, .galaxy-tour-panel.is-collapsed { left: auto; right: 12px; bottom: 76px; transform: none; width: calc(100vw - 266px); max-height: calc(100dvh - 188px); }
+  .audio-controls { top: 110px; max-height: calc(100dvh - 130px); overflow-y: auto; }
+}

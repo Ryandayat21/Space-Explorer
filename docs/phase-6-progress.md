@@ -307,3 +307,18 @@ Hasil perintah: npm test **77/77 lulus**, exit 0; npm run build **berhasil, 59 m
 Browser final: **4/4 lulus** di Edge 1366x768 dan Chrome 1920x1080. Memeriksa title/meta tanpa URL palsu, respons favicon lokal, About via keyboard, expand/close/Escape dan pengembalian fokus, viewport 390x844 dengan notice nonblocking, serta HTML/noscript ketika JavaScript dinonaktifkan. Console warning/error dan pageerror fixture kosong. Pada run awal assertion teks noscript memakai matcher Playwright yang mengabaikan teks elemen tersebut; diganti pembacaan textContent, lalu seluruh tes diulang dan lulus.
 
 Belum diverifikasi: social crawler pada URL publik, screen reader, semua browser/perangkat mobile, full E2E dan audit kontras menyeluruh. Link sumber mengacu catatan/data lokal; tidak memverifikasi ulang ketersediaan atau lisensi upstream dalam tugas ini.
+
+## 14. Verifikasi build produksi - 20 Oktober 2026
+
+- [x] npm test **77/77 lulus**, npm run build **berhasil, 59 modul**, exit 0.
+- [x] Menjalankan script npm run preview pada 127.0.0.1:5186. Test produksi menegaskan __observer tidak tersedia; tidak memakai source-module import atau diagnostik dev.
+- [x] Tambahan e2e/productionRelease.spec.js menguji startup/fallback texture, mode berulang, search/keyboard/empty, selected landmark/panel, tur kedua mode, minimize/expand, flight/reset, quality, bookmark/compare, audio opt-in/preferences/visibility handler, fullscreen/sinematik, input shortcuts, reduced-motion, storage rusak/ditolak serta console/network.
+- [x] Bug rilis ditemukan: aturan mobile menyembunyikan tur dan kontrol lain pada reflow 683x384 (setengah viewport 1366x768). Perbaikan CSS khusus pointer presisi/viewport desktop pendek mempertahankan kontrol, toolbar dua baris, scroll internal dan area panel terpisah. Tidak mengubah scene, kamera, data atau menambah kontrol mobile penuh.
+- [x] Regression reflow menguji 683x384 dan 960x540, klik kontrol dan bounding-box pemisahan tur dari panel Galaxy kiri serta tombol sudut. Ini bukan bukti zoom browser asli 200%.
+- [x] Final **16/16 browser test produksi lulus** (productionRelease, lazyLoading, publicInfo) pada Edge 1366x768 dan Chrome 1920x1080. Run awal release 7/8; kegagalan reflow menjadi regression lalu lulus setelah rebuild. Console/pageerror bersih; alur normal tidak memiliki requestfailed/HTTP >=400. Invalid texture dan module evaluation failures adalah fault injection yang disengaja.
+- [x] Screenshot reflow-tour 683x384, tur 1366x768 dan panel Sirius 1920x1080 ditinjau visual. Artefak berada di test-results dan tidak ditambahkan ke Git.
+- [x] docs/release-checklist.md berisi matriks PASS/FAIL/NOT TESTED beserta perintah reproduksi, batas bukti dan checklist manual.
+- [ ] Zoom native menu browser 200%, pergantian tab/window OS sungguhan, screen reader/headed fullscreen dan hosting Vercel belum diuji. Visibility handler diuji dengan injeksi event, bukan klaim background-tab/OS behavior.
+- [ ] Full suite lama yang memakai __observer tidak dianggap lulus terhadap production; hanya suite produksi yang disebutkan dijalankan. Izin audio/provenance aset tetap blocker publikasi.
+
+Perubahan: src/styles.css, e2e/productionRelease.spec.js (baru), docs/release-checklist.md (baru), dokumen ini. Build akhir: HTML 19,87 kB, CSS 28,04 kB; main 124,39 kB, Galaxy 26,59 kB, Three 499,99 kB. Tidak ada library baru, commit, atau deploy. Tidak mengklaim peningkatan performa, bebas leak, atau production-ready.
