@@ -8,7 +8,7 @@ test('Halley search, panel, Visit, picking and Follow', async ({ page }, testInf
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   await page.locator('#time-toggle').click();
   await page.locator('#search-input').fill('1P/Halley');
-  await expect(page.locator('#object-select optgroup')).toHaveAttribute('label', 'Komet');
+  await expect(page.locator('#search-results [role=option]')).toHaveCount(1);
   await page.locator('#search-input').press('Enter');
   await expect(page.locator('#object-type')).toHaveText('KOMET');
   await expect(page.locator('#object-description')).toContainText('0,92');

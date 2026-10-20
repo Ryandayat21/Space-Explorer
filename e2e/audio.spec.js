@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('ambience requires activation, persists only preferences and handles media failure', async ({ page }) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
@@ -32,6 +32,6 @@ test('ambience requires activation, persists only preferences and handles media 
   await expect(page.locator('#audio-play')).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(page.locator('#audio-panel')).toBeHidden();
-  await page.locator('#object-select').selectOption('earth');
+  await chooseObject(page, 'earth');
   await expect(page.locator('#object-name')).toHaveText('Bumi');
 });

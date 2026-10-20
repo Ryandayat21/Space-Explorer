@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 const key = 'milky-way-observer.favorites.v1';
 async function ready(page) {
@@ -6,7 +6,7 @@ async function ready(page) {
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
 }
 async function earth(page) {
-  await page.locator('#object-select').selectOption('earth');
+  await chooseObject(page, 'earth');
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
 }
 

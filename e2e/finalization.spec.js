@@ -1,8 +1,8 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('resizing, hidden HUD keyboard focus and time control labels remain consistent', async ({ page }) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
-  await page.locator('#object-select').selectOption('earth');
+  await chooseObject(page, 'earth');
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
   await page.locator('#time-toggle').click();
   for (const viewport of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]) {
@@ -39,7 +39,7 @@ test('all texture decode failures preserve exploration, regions and comparison',
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   await expect(page.locator('#app-status')).toContainText('procedural');
   for (const id of ['earth', 'moon', 'ceres', 'saturn', 'uranus', 'halley']) {
-    await page.locator('#object-select').selectOption(id);
+    await chooseObject(page, id);
     await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
     await page.locator('#bookmark-button').click();
     await expect(page.locator('#bookmark-button')).toHaveAttribute('aria-pressed', 'true');

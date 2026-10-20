@@ -17,7 +17,7 @@ export class GalaxyMode {
     this.camera.position.set(0, 20, 30);
     this.controls = new GalaxyCameraControls(this.camera, this.canvas);
     this.landmarks = new GalaxyLandmarks(); this.scene.add(this.landmarks); this.pickables = this.landmarks.pickables;
-    this.panel = new GalaxyLandmarkPanel(id => this.select(id), () => this.onEnterSolarSystem?.());
+    this.panel = new GalaxyLandmarkPanel(id => this.select(id), () => this.onEnterSolarSystem?.(), id => this.visitLandmark(id));
     this.tour = new GalaxyTour(this);
     this.raycaster = new THREE.Raycaster(); this.pointer = new THREE.Vector2(); this.hits = [];
     this.onDown = e => { this.downX = e.clientX; this.downY = e.clientY; };

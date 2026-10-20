@@ -1,7 +1,7 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 test('mode switching isolates selection, input, time, resources and audio', async ({ page }) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
-  await page.locator('#object-select').selectOption('earth');
+  await chooseObject(page, 'earth');
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
   await page.locator('#time-toggle').click();
   const before = await page.evaluate(() => window.__observer.snapshot());
@@ -18,12 +18,12 @@ test('mode switching isolates selection, input, time, resources and audio', asyn
   await page.waitForTimeout(150);
   expect(await page.evaluate(() => window.__observer.elapsedDays())).toBe(days);
   expect(await page.evaluate(() => window.__observer.snapshot().selected)).toBeUndefined();
-  await expect(page.locator('#object-select')).toBeEnabled();
+  await expect(page.locator('#search-input')).toBeEnabled();
   await expect(page.locator('#tour-panel')).toBeHidden();
   await page.setViewportSize({ width: 1500, height: 850 });
   await expect.poll(() => page.evaluate(() => window.__observer.mode().aspect)).toBeCloseTo(1500/850);
   await page.locator('#mode-toggle').click(); await expect.poll(() => page.evaluate(() => window.__observer.mode().transitioning)).toBe(false);
-  await expect(page.locator('#object-select')).toBeEnabled();
+  await expect(page.locator('#search-input')).toBeEnabled();
   const restoredCamera = await page.evaluate(() => window.__observer.snapshot().camera);
   restoredCamera.forEach((value, axis) => expect(value).toBeCloseTo(before.camera[axis], 10));
   expect(await page.evaluate(async () => {

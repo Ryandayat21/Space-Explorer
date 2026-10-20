@@ -29,7 +29,7 @@ try {
       };
       const cycle = async () => {
         for (const id of ['earth', 'jupiter', 'pluto']) {
-          await page.locator('#object-select').selectOption(id);
+          await page.locator('#search-input').fill(id); await page.locator('#search-input').press('Enter');
           await page.waitForFunction(() => !window.__observer.snapshot().tween);
         }
         await page.locator('#tour-button').click();
@@ -45,7 +45,7 @@ try {
       for (let repeat = 0; repeat < 5; repeat++) { await cycle(); samples.push(await measure()); }
       const frameTimes = [];
       // Fixed Sun view and paused simulation make quality samples comparable.
-      await page.locator('#object-select').selectOption('sun');
+      await page.locator('#search-input').fill('sun'); await page.locator('#search-input').press('Enter');
       await page.waitForFunction(() => !window.__observer.snapshot().tween);
       await page.locator('#close-info').click();
       while (await page.locator('#quality-button').getAttribute('data-quality') !== 'high') await page.locator('#quality-button').click();

@@ -68,6 +68,7 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const renderCamera = new THREE.PerspectiveCamera(), basePosition = new THREE.Vector3(), retreat = new THREE.Vector3();
 const inertState = new Map();
 let pendingLandmark = null;
+let pendingSolar = null;
 transition = new ModeTransition(modes, {
   prepare(next) { renderer.compile(next.scene, next.camera); },
   lock() {
@@ -98,6 +99,8 @@ transition = new ModeTransition(modes, {
     for (const [element, previous] of inertState) element.inert = previous;
     inertState.clear(); clock.getDelta(); switchButton.focus({ preventScroll: true });
     if (pendingLandmark && modes.active.id === 'galaxy') galaxy.visitLandmark(pendingLandmark);
+    if (pendingSolar && modes.active.id === 'solar-system') ui.emit('select', pendingSolar);
+    pendingSolar = null;
     pendingLandmark = null;
   },
   error() { ui.status('Mode tidak dapat dibuka. Mode sebelumnya dipertahankan.'); }
@@ -108,6 +111,12 @@ const onSkip = () => transition.skip();
 const onMotion = () => { if (motion.matches) transition.duration = .08; };
 switchButton.addEventListener('click', onSwitch); skipButton.addEventListener('click', onSkip); motion.addEventListener('change', onMotion);
 galaxy.onEnterSolarSystem = () => requestMode('solar-system');
+const onSolarSearch = event => {
+  if (transition.busy) return;
+  pendingSolar = event.detail;
+  if (!requestMode('solar-system')) pendingSolar = null;
+};
+ui.addEventListener('solar-search', onSolarSearch);
 const onGalaxySelect = event => {
   if (transition.busy) return;
   if (modes.active.id === 'galaxy') galaxy.visitLandmark(event.detail);
@@ -154,6 +163,8 @@ if (import.meta.env.DEV) window.__observer = {
 window.addEventListener('pagehide', event => {
   if (event.persisted) return;
   clearTimeout(startupTimeout); cancelAnimationFrame(frameId); transition.dispose(); modes.dispose(); renderer.dispose();
+  ui.search.dispose();
+  ui.removeEventListener('solar-search', onSolarSearch);
   ui.removeEventListener('galaxy-select', onGalaxySelect);
   ui.removeEventListener('galaxy-tour-start', onGalaxyTour);
   ui.removeEventListener('galaxy-tour-exit', onGalaxyTourExit);

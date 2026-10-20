@@ -57,7 +57,7 @@ try {
     assert.equal(await page.locator('#galaxy-landmark-panel h2').textContent(), 'Sirius');
     await page.locator('#tour-button').click(); await page.locator('#galaxy-tour-panel').waitFor({state:'visible'}); await page.keyboard.press('Escape');
     await page.locator('#mode-toggle').click(); await page.locator('#mode-transition').waitFor({state:'hidden'});
-    await page.locator('#object-select').selectOption('earth'); assert.equal(await page.locator('#object-name').textContent(),'Bumi');
+    await page.locator('#search-input').fill('earth'); await page.locator('#search-input').press('Enter'); assert.equal(await page.locator('#object-name').textContent(),'Bumi');
     assert.deepEqual(errors,[]); report.production = { passed:true, errors, diagnosticsAbsent:true };
   } finally { await browser.close(); }
 } finally { await new Promise(resolve=>production.httpServer.close(resolve)); }

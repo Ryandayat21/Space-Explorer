@@ -32,13 +32,12 @@
         </a>
 
         <div class="object-search">
-          <label class="sr-only" for="object-select">Cari objek langit</label>
+          <label class="sr-only" for="search-input">Cari objek langit</label>
           <span aria-hidden="true">⌕</span>
-          <input id="search-input" type="search" placeholder="Cari nama objek..." aria-label="Cari nama objek" autocomplete="off" />
+          <input id="search-input" type="search" placeholder="Cari planet, bintang, nebula, atau landmark..." role="combobox" aria-keyshortcuts="/" title="Cari objek (/)" aria-autocomplete="list" aria-expanded="false" aria-controls="search-results" aria-label="Cari nama objek" autocomplete="off" />
           <span id="search-status" class="sr-only" aria-live="polite"></span>
-          <select id="object-select" aria-label="Hasil pencarian">
-            <option value="">Cari objek langit…</option>
-          </select>
+          <button id="search-clear" type="button" aria-label="Hapus pencarian" title="Hapus pencarian" hidden>&times;</button>
+          <div id="search-results" role="listbox" aria-label="Hasil pencarian" hidden></div>
         </div>
 
         <nav class="top-actions" aria-label="Kontrol aplikasi">

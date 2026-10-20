@@ -1,5 +1,5 @@
+import { SearchCombobox } from './SearchCombobox.js';
 import { tour } from '../data/tour.js';
-import { modeSearch, galaxyGroups, galaxyCategory } from '../data/galaxySearch.js';
 import { scienceFor } from '../data/science.js';
 import { readQuality, saveQuality } from '../data/quality.js';
 import { formatScienceValue, scienceSections } from '../data/scienceFormat.js';
@@ -19,6 +19,7 @@ export class UIController extends EventTarget {
     this.setQualityLabel(readQuality());
     this.#populateSearch();
     this.#bindEvents();
+    this.search = new SearchCombobox(this);
     this.exploration = new ExplorationUI(this);
     for (const button of document.querySelectorAll('button')) {
       if (!button.hasAttribute('title') && !button.hasAttribute('aria-label')) button.title = button.textContent.trim();
@@ -34,7 +35,7 @@ export class UIController extends EventTarget {
   #cacheElements() {
     const ids = [
       'loading-screen', 'welcome-card', 'info-panel', 'close-info', 'object-symbol', 'object-type', 'object-name',
-      'object-description', 'object-stats', 'object-fact', 'visit-button', 'follow-button', 'object-select',
+      'object-description', 'object-stats', 'object-fact', 'visit-button', 'follow-button',
       'explore-button', 'sun-button', 'tour-button', 'flight-button', 'help-button', 'fullscreen-button',
       'help-dialog', 'close-help', 'time-toggle', 'time-speed', 'time-label', 'orbit-toggle', 'label-toggle',
       'quality-button', 'tour-panel', 'tour-progress', 'tour-title', 'tour-copy', 'tour-prev', 'tour-pause',
@@ -44,19 +45,7 @@ export class UIController extends EventTarget {
   }
 
   #populateSearch() {
-    const select = this['object-select'];
-    select.hidden = false;
-    select.replaceChildren(new Option('Pilih hasil pencarian...', ''));
-    const { results, mode } = modeSearch(document.getElementById('search-input').value, this.mode, this.filter || 'all');
-    this.searchMode = mode;
-    const groups = mode === 'galaxy' ? galaxyGroups.map(label => [label, label]) : [['star', 'Bintang'], ['planet', 'Planet'], ['dwarf-planet', 'Planet katai'], ['moon', 'Bulan'], ['comet', 'Komet']];
-    for (const [type, label] of groups) {
-      const group = document.createElement('optgroup'); group.label = label;
-      results.filter(body => (mode === 'galaxy' ? galaxyCategory(body) : body.type || 'moon') === type).forEach(body => group.append(new Option(body.name, body.id)));
-      if (group.children.length) select.append(group);
-    }
-    document.getElementById('search-status').textContent = results.length ? results.length + (mode === 'galaxy' ? ' landmark Milky Way' : ' objek Tata Surya') : 'Tidak ada objek yang cocok';
-    if (!results.length) select.options[0].textContent = 'Tidak ada objek yang cocok';
+    this.search?.render(document.activeElement === document.getElementById('search-input'));
   }
 
   #bindEvents() {
@@ -65,27 +54,9 @@ export class UIController extends EventTarget {
       event.currentTarget.setAttribute('aria-pressed', String(visible));
       this.emit('starfield-toggle', visible);
     });
-    document.getElementById('search-input').addEventListener('input', () => this.#populateSearch());
-    document.getElementById('search-input').addEventListener('focus', () => this.#populateSearch());
-    document.getElementById('search-input').addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        event.preventDefault(); // Focus moves into the detail panel; do not activate its close button.
-        const { results, mode } = modeSearch(event.target.value, this.mode, this.filter || 'all');
-        if (results[0]) this.chooseSearch(results[0].id, mode);
-      }
-      if (event.key === 'ArrowDown') { event.preventDefault(); this['object-select'].focus(); }
-      if (event.key === 'Escape') { this['object-select'].hidden = true; event.target.blur(); }
-    });
     document.getElementById('hud-button').addEventListener('click', () => this.toggleHud());
     document.getElementById('flight-exit').addEventListener('click', () => this.emit('flight-toggle'));
     document.getElementById('tour-skip').addEventListener('click', () => this.stepTour(1));
-    this['object-select'].addEventListener('change', (event) => {
-      if (event.target.value) this.chooseSearch(event.target.value, this.searchMode);
-    });
-    this['object-select'].addEventListener('keydown', event => {
-      if (event.key === 'Enter' && event.target.value) { event.preventDefault(); this.chooseSearch(event.target.value, this.searchMode); }
-      if (event.key === 'Escape') { document.getElementById('search-input').focus(); this['object-select'].hidden = true; }
-    });
     this['explore-button'].addEventListener('click', () => {
       this.hideWelcome();
       this.emit('overview');
@@ -245,6 +216,8 @@ export class UIController extends EventTarget {
   }
 
   chooseSearch(id, mode) {
+    this.search?.close();
+    if (mode === 'solar-system' && this.mode === 'galaxy') { this.dispatchEvent(new CustomEvent('solar-search', { detail: id })); return; }
     if (mode === 'galaxy') this.dispatchEvent(new CustomEvent('galaxy-select', { detail: id }));
     else this.emit('select', id);
   }
@@ -279,9 +252,10 @@ export class UIController extends EventTarget {
   }
 
   showInfo(data) {
+    document.dispatchEvent(new CustomEvent('observer-selection', { detail: data.id }));
     const active = document.activeElement;
     const focusPanel = this['tour-panel'].hidden && !document.pointerLockElement &&
-      (['search-input', 'object-select', 'space-canvas'].includes(active?.id) || active === document.body);
+      (['search-input', 'space-canvas'].includes(active?.id) || active === document.body);
     if (!this['info-panel'].contains(active)) this.infoReturnFocus = active;
     data = scienceFor(data);
     this.hideWelcome();
@@ -312,7 +286,6 @@ export class UIController extends EventTarget {
       const link = document.createElement('a'); link.href = source.url; link.textContent = source.label || source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
     }));
     if (!document.getElementById('object-sources').children.length) document.getElementById('object-sources').textContent = 'Data belum tersedia';
-    this['object-select'].value = data.id;
     this['info-panel'].inert = document.body.classList.contains('hud-hidden');
     this['info-panel'].scrollTop = 0;
     this['info-panel'].classList.add('open');
