@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('rendering preserves quality caps across DPR changes and resize', async ({ page }, testInfo) => {
   await page.goto('/');
@@ -27,7 +27,7 @@ test('rendering preserves quality caps across DPR changes and resize', async ({ 
   });
   expect((await page.evaluate(() => window.__observer.rendering())).pixelRatio).toBe(1);
   for (const id of ['sun', 'earth', 'saturn']) {
-    await page.locator('#object-select').selectOption(id);
+    await chooseObject(page, id);
     await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
     await page.screenshot({ path: testInfo.outputPath(`${id}.png`) });
   }

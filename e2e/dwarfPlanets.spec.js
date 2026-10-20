@@ -9,8 +9,8 @@ test('dwarf planets have category, labels, panels, picking and Follow', async ({
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   await page.locator('#time-toggle').click();
   await page.locator('[data-filter="dwarf-planet"]').click();
-  await expect(page.locator('#object-select optgroup')).toHaveAttribute('label', 'Planet katai');
-  await expect(page.locator('#object-select option')).toHaveCount(6);
+  await expect(page.locator('#search-results [role=option]')).toHaveCount(5);
+
   for (const body of dwarfPlanets) {
     await expect(page.locator('.space-label').filter({ hasText: new RegExp(`^${body.name}$`) })).toHaveCount(1);
     await page.locator('#search-input').fill(body.name);

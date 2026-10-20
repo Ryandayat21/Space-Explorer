@@ -1,5 +1,5 @@
+import { SearchCombobox } from './SearchCombobox.js';
 import { tour } from '../data/tour.js';
-import { searchObjects } from '../data/search.js';
 import { scienceFor } from '../data/science.js';
 import { readQuality, saveQuality } from '../data/quality.js';
 import { formatScienceValue, scienceSections } from '../data/scienceFormat.js';
@@ -19,6 +19,7 @@ export class UIController extends EventTarget {
     this.setQualityLabel(readQuality());
     this.#populateSearch();
     this.#bindEvents();
+    this.search = new SearchCombobox(this);
     this.exploration = new ExplorationUI(this);
     for (const button of document.querySelectorAll('button')) {
       if (!button.hasAttribute('title') && !button.hasAttribute('aria-label')) button.title = button.textContent.trim();
@@ -34,7 +35,7 @@ export class UIController extends EventTarget {
   #cacheElements() {
     const ids = [
       'loading-screen', 'welcome-card', 'info-panel', 'close-info', 'object-symbol', 'object-type', 'object-name',
-      'object-description', 'object-stats', 'object-fact', 'visit-button', 'follow-button', 'object-select',
+      'object-description', 'object-stats', 'object-fact', 'visit-button', 'follow-button',
       'explore-button', 'sun-button', 'tour-button', 'flight-button', 'help-button', 'fullscreen-button',
       'help-dialog', 'close-help', 'time-toggle', 'time-speed', 'time-label', 'orbit-toggle', 'label-toggle',
       'quality-button', 'tour-panel', 'tour-progress', 'tour-title', 'tour-copy', 'tour-prev', 'tour-pause',
@@ -44,16 +45,7 @@ export class UIController extends EventTarget {
   }
 
   #populateSearch() {
-    const select = this['object-select'];
-    select.replaceChildren(new Option('Pilih hasil pencarian...', ''));
-    const results = searchObjects(document.getElementById('search-input').value, this.filter || 'all');
-    for (const [type, label] of [['star', 'Bintang'], ['planet', 'Planet'], ['dwarf-planet', 'Planet katai'], ['moon', 'Bulan'], ['comet', 'Komet']]) {
-      const group = document.createElement('optgroup'); group.label = label;
-      results.filter(body => (body.type || 'moon') === type).forEach(body => group.append(new Option(body.name, body.id)));
-      if (group.children.length) select.append(group);
-    }
-    document.getElementById('search-status').textContent = results.length ? results.length + ' objek' : 'Tidak ada objek yang cocok';
-    if (!results.length) select.options[0].textContent = 'Tidak ada objek yang cocok';
+    this.search?.render(document.activeElement === document.getElementById('search-input'));
   }
 
   #bindEvents() {
@@ -62,19 +54,9 @@ export class UIController extends EventTarget {
       event.currentTarget.setAttribute('aria-pressed', String(visible));
       this.emit('starfield-toggle', visible);
     });
-    document.getElementById('search-input').addEventListener('input', () => this.#populateSearch());
-    document.getElementById('search-input').addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        const result = searchObjects(event.target.value, this.filter || 'all')[0];
-        if (result) this.emit('select', result.id);
-      }
-    });
     document.getElementById('hud-button').addEventListener('click', () => this.toggleHud());
     document.getElementById('flight-exit').addEventListener('click', () => this.emit('flight-toggle'));
     document.getElementById('tour-skip').addEventListener('click', () => this.stepTour(1));
-    this['object-select'].addEventListener('change', (event) => {
-      if (event.target.value) this.emit('select', event.target.value);
-    });
     this['explore-button'].addEventListener('click', () => {
       this.hideWelcome();
       this.emit('overview');
@@ -100,6 +82,7 @@ export class UIController extends EventTarget {
       if (exited && document.body.classList.contains('hud-hidden')) this.toggleHud();
     });
     window.addEventListener('keydown', event => {
+      if (event.code === 'Escape' && this.mode === 'galaxy') this.dispatchEvent(new Event('galaxy-tour-exit'));
       if (event.code !== 'Escape' || document.querySelector('dialog[open]')) return;
       const cinematic = document.body.classList.contains('hud-hidden');
       if (!cinematic && !document.fullscreenElement) {
@@ -232,8 +215,31 @@ export class UIController extends EventTarget {
     this['time-label'].textContent = speed < 1 ? `${speed} hari/detik` : `${speed} hari/detik`;
   }
 
+  chooseSearch(id, mode) {
+    this.search?.close();
+    if (mode === 'solar-system' && this.mode === 'galaxy') { this.dispatchEvent(new CustomEvent('solar-search', { detail: id })); return; }
+    if (mode === 'galaxy') this.dispatchEvent(new CustomEvent('galaxy-select', { detail: id }));
+    else this.emit('select', id);
+  }
   emit(name, detail) {
+    if (this.mode === 'galaxy' && name !== 'quality-change') return;
     this.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+
+  setMode(id) {
+    this.mode = id;
+    const galaxy = id === 'galaxy';
+    document.body.classList.toggle('galaxy-mode', galaxy);
+    this.selectedId = null; this.closeInfo(); this.hideWelcome();
+    this.status(''); this.filter = 'all';
+    for (const button of document.querySelectorAll('.rail-button')) {
+      const active = button.dataset.filter === 'all';
+      button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+    }
+    for (const control of document.querySelectorAll('.left-rail button, .time-dock button, .time-dock input, #flight-button, #favorites-button')) control.disabled = galaxy;
+    document.getElementById('search-input').value = '';
+    this.#populateSearch();
+    document.getElementById('galaxy-placeholder').hidden = !galaxy;
   }
 
   ready() {
@@ -246,9 +252,10 @@ export class UIController extends EventTarget {
   }
 
   showInfo(data) {
+    document.dispatchEvent(new CustomEvent('observer-selection', { detail: data.id }));
     const active = document.activeElement;
     const focusPanel = this['tour-panel'].hidden && !document.pointerLockElement &&
-      (['search-input', 'object-select', 'space-canvas'].includes(active?.id) || active === document.body);
+      (['search-input', 'space-canvas'].includes(active?.id) || active === document.body);
     if (!this['info-panel'].contains(active)) this.infoReturnFocus = active;
     data = scienceFor(data);
     this.hideWelcome();
@@ -279,7 +286,6 @@ export class UIController extends EventTarget {
       const link = document.createElement('a'); link.href = source.url; link.textContent = source.label || source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
     }));
     if (!document.getElementById('object-sources').children.length) document.getElementById('object-sources').textContent = 'Data belum tersedia';
-    this['object-select'].value = data.id;
     this['info-panel'].inert = document.body.classList.contains('hud-hidden');
     this['info-panel'].scrollTop = 0;
     this['info-panel'].classList.add('open');
@@ -318,6 +324,7 @@ export class UIController extends EventTarget {
   }
 
   startTour() {
+    if (this.mode === 'galaxy') { this.dispatchEvent(new Event('galaxy-tour-start')); return; }
     this.hideWelcome();
     this.tourIndex = 0;
     this.tourPaused = false;

@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('planet rings follow the scene, remain pick-through and release resources', async ({ page }, testInfo) => {
   const errors = [];
@@ -37,7 +37,7 @@ test('planet rings follow the scene, remain pick-through and release resources',
   }
   await page.locator('#time-toggle').click();
   for (const id of ['saturn', 'uranus']) {
-    await page.locator('#object-select').selectOption(id);
+    await chooseObject(page, id);
     await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
     await page.locator('#close-info').click();
     const point = await page.evaluate(id => window.__observer.project(id), id);

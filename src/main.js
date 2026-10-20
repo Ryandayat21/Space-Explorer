@@ -1,369 +1,132 @@
-import { tour } from './data/tour.js';
-import { qualityPresets, readQuality } from './data/quality.js';
-import { visitDistance, clearApproach, cinematicEase } from './core/cameraMath.js';
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import './styles.css';
-import { SolarSystem } from './core/SolarSystem.js';
-import { CameraSafety } from './core/CameraSafety.js';
-import { FlightControls } from './core/FlightControls.js';
+import { qualityPresets, readQuality } from './data/quality.js';
+import { ModeController } from './core/ModeController.js';
+import { ModeTransition } from './core/ModeTransition.js';
+import { renderStats } from './core/renderStats.js';
+import { SolarSystemMode } from './modes/SolarSystemMode.js';
+import { GalaxyMode } from './modes/GalaxyMode.js';
 import { UIController } from './ui/UIController.js';
 import { initializeAudioControls } from './ui/AudioControls.js';
-
 if (!WebGL.isWebGL2Available()) {
   document.body.replaceChildren(WebGL.getWebGL2ErrorMessage());
   throw new Error('WebGL 2 tidak tersedia pada perangkat ini.');
 }
-
 const canvas = document.getElementById('space-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-// Color textures are tagged sRGB by SolarSystem; lighting works in linear space.
 THREE.ColorManagement.enabled = true;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1;
 let renderQuality = readQuality();
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x01030a);
-scene.fog = new THREE.FogExp2(0x02040d, 0.00042);
-
-const camera = new THREE.PerspectiveCamera(53, window.innerWidth / window.innerHeight, 0.05, 2200);
-camera.position.set(96, 58, 142);
-
+let transition;
+// Register before UI/camera shortcuts so no input reaches either mode during a switch.
+const gateTypes = ['keydown', 'keyup', 'pointerdown', 'pointerup', 'mousemove', 'wheel', 'click'];
+const gateInput = event => {
+  if (!transition?.busy) return;
+  if (event.target.closest?.('#mode-transition')) {
+    if (event.type === 'keydown' || event.type === 'keyup') {
+      event.stopImmediatePropagation();
+      if (!['Tab', 'Enter', ' '].includes(event.key)) event.preventDefault();
+    }
+    return;
+  }
+  event.preventDefault(); event.stopImmediatePropagation();
+};
+for (const type of gateTypes) window.addEventListener(type, gateInput, { capture: true, passive: false });
+const ui = new UIController();
+initializeAudioControls();
+const onContextLost = event => {
+  event.preventDefault(); ui.status('Konteks grafis terputus. Muat ulang halaman untuk memulihkan simulasi.');
+};
+canvas.addEventListener('webglcontextlost', onContextLost);
+const solar = new SolarSystemMode({ canvas, ui, renderer, quality: renderQuality });
+const galaxy = new GalaxyMode({ canvas, quality: renderQuality });
+const modes = new ModeController([solar, galaxy]);
+modes.activate('solar-system');
+const clock = new THREE.Clock();
 function resizeRenderer() {
-  const width = Math.max(1, window.innerWidth), height = Math.max(1, window.innerHeight);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  const ratio = Math.min(window.devicePixelRatio || 1, qualityPresets[renderQuality].pixelRatio);
+  const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
+  modes.resize(width, height);
+  const ratio = Math.min(devicePixelRatio || 1, qualityPresets[renderQuality].pixelRatio);
   if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
   renderer.setSize(width, height, false);
 }
 resizeRenderer();
-
-const orbitControls = new OrbitControls(camera, canvas);
-orbitControls.enableDamping = true;
-orbitControls.dampingFactor = 0.055;
-orbitControls.minDistance = 0.3;
-orbitControls.maxDistance = 720;
-orbitControls.target.set(0, 0, 0);
-
-const flightControls = new FlightControls(camera, canvas);
-const solarSystem = new SolarSystem(scene);
-solarSystem.setQuality(renderQuality);
-const safety = new CameraSafety(solarSystem);
-const ui = new UIController();
-initializeAudioControls();
-const clock = new THREE.Clock();
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-
-let timeScale = 1;
-let flightActive = false;
-let selectedObject = null;
-let followedObject = null;
-let cameraTween = null;
-let tourActive = false;
-let tourPaused = false;
-let tourElapsed = 0;
-let tweenSuspendedAt = 0;
-const targetScratch = new THREE.Vector3();
-const offsetScratch = new THREE.Vector3();
-const labelPosition = new THREE.Vector3();
-const labelDirection = new THREE.Vector3();
-const cameraDirection = new THREE.Vector3();
-let pointerStart = { x: 0, y: 0 };
-let frameId;
-const lookCamera = camera.clone();
-const savedPosition = new THREE.Vector3();
-const savedRotation = new THREE.Quaternion();
-const previousCameraPosition = new THREE.Vector3();
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-reducedMotion.addEventListener('change', () => {
-  if (reducedMotion.matches && cameraTween) {
-    cameraTween.fromPosition.copy(camera.position);
-    cameraTween.fromTarget.copy(orbitControls.target);
-    cameraTween.fromRotation.copy(camera.quaternion);
-    cameraTween.control = null;
-    cameraTween.start = performance.now(); cameraTween.duration = 150;
-    if (tourPaused) tweenSuspendedAt = cameraTween.start;
-  }
-});
-function resetObserver() {
-  savedPosition.copy(camera.position); savedRotation.copy(camera.quaternion);
-  orbitControls.enableDamping = false; orbitControls.update();
-  orbitControls.enableDamping = true;
-  camera.position.copy(savedPosition); camera.quaternion.copy(savedRotation);
-  orbitControls.enabled = !flightActive;
-}
-function beginTween(tween) {
-  if (reducedMotion.matches) tween.duration = 150;
-  resetObserver();
-  tween.fromRotation = camera.quaternion.clone();
-  // Test the same volumes as the runtime guard. A bounding sphere around a
-  // ring incorrectly rejects every route starting/ending in its empty interior.
-  // These scratch allocations happen once per visit, never in the frame loop.
-  const checked = new THREE.Vector3();
-  const routeClear = (start, end) => {
-    safety.resolve(checked.copy(end), start);
-    return checked.distanceToSquared(end) < 1e-10;
-  };
-  const from = tween.fromPosition, to = tween.toPosition;
-  if (!routeClear(from, to)) {
-    const midpoint = from.clone().add(to).multiplyScalar(.5);
-    const span = Math.max(15, from.distanceTo(to));
-    for (let index = 0; index < 64; index++) {
-      const y = 1 - 2 * (index + .5) / 64;
-      const radial = Math.sqrt(1 - y * y), angle = index * 2.399963229728653;
-      const axis = new THREE.Vector3(radial * Math.cos(angle), y, radial * Math.sin(angle));
-      const control = midpoint.clone().addScaledVector(axis, span);
-      let previous = from.clone(), valid = true;
-      for (let i = 1; i <= 32; i++) {
-        const t = i / 32;
-        const point = from.clone().multiplyScalar((1-t)**2).addScaledVector(control, 2*t*(1-t)).addScaledVector(to, t*t);
-        if (!routeClear(previous, point)) { valid = false; break; }
-        previous = point;
-      }
-      if (valid) { tween.control = control; break; }
-    }
-  }
-  cameraTween = tween; orbitControls.enabled = false;
-}
-function leaveFlight() {
-  if (!flightActive) return;
-  flightActive = false; flightControls.deactivate(); orbitControls.enabled = true;
-  camera.getWorldDirection(targetScratch);
-  orbitControls.target.copy(camera.position).addScaledVector(targetScratch, 8);
-  ui.setFlight(false);
-}
-function manualTakeover() {
-  if (cameraTween) {
-    const distance = Math.max(1, camera.position.distanceTo(orbitControls.target));
-    camera.getWorldDirection(targetScratch);
-    orbitControls.target.copy(camera.position).addScaledVector(targetScratch, distance);
-  }
-  if (cameraTween || tourActive) followedObject = null;
-  cameraTween = null; resetObserver();
-  if (tourActive) ui.pauseTour(true);
-}
-canvas.addEventListener('pointerdown', event => { pointerStart.x = event.clientX; pointerStart.y = event.clientY; manualTakeover(); }, { capture: true });
-canvas.addEventListener('wheel', manualTakeover, { passive: true, capture: true });
-window.addEventListener('texture-fallback', event => ui.status('Tekstur ' + event.detail + ' tidak tersedia. Menggunakan tekstur procedural.'));
-canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); ui.status('Konteks grafis terputus. Muat ulang halaman untuk memulihkan simulasi.'); });
-
-const labels = new Map();
-for (const [id, object] of solarSystem.objects) {
-  const label = ui.addLabel(object.data);
-  if (label) labels.set(id, label);
-}
-
-function setCameraDestination(id, duration = 1.65, follow = false, framing = 5.2) {
-  leaveFlight();
-  const object = solarSystem.getObject(id);
-  if (!object) return;
-  const target = solarSystem.getWorldPosition(id, new THREE.Vector3());
-  const direction = camera.position.clone().sub(target).normalize();
-  if (!Number.isFinite(direction.x) || direction.lengthSq() < 0.1) direction.set(1, 0.4, 1).normalize();
-  const distance = visitDistance(object.radius, object.data.visitFraming ?? framing);
-  const destination = target.clone().add(direction.multiplyScalar(distance)).add(new THREE.Vector3(0, object.radius * 0.65, 0));
-  const obstacles = [...solarSystem.objects.values()].filter(body => body !== object).map(body => ({
-    center: solarSystem.getWorldPosition(body.data.id).toArray(),
-    radius: Math.max(body.radius + Math.max(.25, body.radius * .08), .75)
-  }));
-  const safeEndpoint = new THREE.Vector3();
-  const canObserve = candidate => {
-    safety.resolve(safeEndpoint.copy(candidate));
-    return safeEndpoint.distanceToSquared(candidate) < 1e-10 &&
-      clearApproach(target.toArray(), candidate.toArray(), obstacles);
-  };
-  if (!canObserve(destination)) {
-    // Compressed orbits can place another planet across the incoming view.
-    // Search a bounded set of directions at the same framing distance.
-    for (let index = 0; index < 64; index++) {
-      const y = 1 - 2 * (index + .5) / 64;
-      const radial = Math.sqrt(1 - y * y), angle = index * 2.399963229728653;
-      const candidate = target.clone().add(new THREE.Vector3(
-        radial * Math.cos(angle), y, radial * Math.sin(angle)).multiplyScalar(distance));
-      if (canObserve(candidate)) {
-        destination.copy(candidate);
-        break;
-      }
-    }
-  }
-  beginTween({
-    start: performance.now(),
-    duration: duration * 1000,
-    fromPosition: camera.position.clone(),
-    toPosition: destination,
-    offset: destination.clone().sub(target),
-    fromTarget: orbitControls.target.clone(),
-    objectId: id,
-    follow
-  });
-  followedObject = null;
-}
-
-function selectObject(id, moveCamera = false) {
-  const object = solarSystem.getObject(id);
-  if (!object) return;
-  selectedObject = object;
-  solarSystem.select(id);
-  ui.showInfo(object.data);
-  if (moveCamera) setCameraDestination(id);
-}
-
-function updateCameraTween(now) {
-  if (!cameraTween || (tourActive && tourPaused)) return;
-  const progress = Math.min(1, (now - cameraTween.start) / cameraTween.duration);
-  const eased = cinematicEase(progress);
-  const target = solarSystem.getWorldPosition(cameraTween.objectId, targetScratch);
-  if (cameraTween.offset) cameraTween.toPosition.copy(target).add(cameraTween.offset);
-  camera.position.lerpVectors(cameraTween.fromPosition, cameraTween.toPosition, eased);
-  if (cameraTween.control) camera.position.copy(cameraTween.fromPosition).multiplyScalar((1-eased)**2)
-    .addScaledVector(cameraTween.control, 2*eased*(1-eased)).addScaledVector(cameraTween.toPosition, eased*eased);
-  orbitControls.target.lerpVectors(cameraTween.fromTarget, target, eased);
-  safety.resolve(camera.position, previousCameraPosition);
-  lookCamera.position.copy(camera.position); lookCamera.lookAt(orbitControls.target);
-  camera.quaternion.slerpQuaternions(cameraTween.fromRotation, lookCamera.quaternion, eased);
-  if (progress >= 1) {
-    const completedTween = cameraTween;
-    orbitControls.target.copy(target);
-    followedObject = completedTween.follow ? (solarSystem.getObject(completedTween.objectId) ?? null) : null;
-    cameraTween = null; resetObserver();
-  }
-}
-
-function updateLabels() {
-  if (!ui.labelsVisible || document.body.classList.contains('hud-hidden')) return;
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  camera.getWorldDirection(cameraDirection);
-  for (const [id, label] of labels) {
-    const position = solarSystem.getWorldPosition(id, labelPosition);
-    const toObject = labelDirection.subVectors(position, camera.position);
-    const distance = toObject.length();
-    const visible = toObject.dot(cameraDirection) > 0 && distance < 600;
-    if (!visible || !ui.labelsVisible) {
-      label.style.opacity = '0';
-      continue;
-    }
-    position.project(camera);
-    label.style.left = `${(position.x * 0.5 + 0.5) * width}px`;
-    label.style.top = `${(-position.y * 0.5 + 0.5) * height}px`;
-    label.style.opacity = String(Math.min(1, Math.max(0.25, 1 - distance / 600)));
-  }
-}
-
-function pickObject(clientX, clientY, center = false) {
-  if (center) pointer.set(0, 0);
-  else {
-    pointer.x = (clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(clientY / window.innerHeight) * 2 + 1;
-  }
-  raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects(solarSystem.pickables, false)[0];
-  if (hit?.object.userData.bodyId) selectObject(hit.object.userData.bodyId, false);
-}
-
-canvas.addEventListener('click', (event) => {
-  if (!flightActive && Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 5) return;
-  if (flightActive) {
-    if (!flightControls.pointerLocked) flightControls.activate();
-    else pickObject(0, 0, true);
-  } else pickObject(event.clientX, event.clientY);
-});
-
-ui.addEventListener('select', (event) => { if (tourActive) ui.stopTour(); selectObject(event.detail, true); });
-ui.addEventListener('visit', (event) => { if (tourActive) ui.stopTour(); setCameraDestination(event.detail, 1.65, false); });
-ui.addEventListener('follow', (event) => {
-  if (tourActive) ui.stopTour();
-  if (solarSystem.getObject(event.detail)) setCameraDestination(event.detail, 1.2, true);
-});
-ui.addEventListener('overview', () => {
-  leaveFlight(); if (tourActive) ui.stopTour(); followedObject = null;
-  beginTween({
-    start: performance.now(), duration: 1450,
-    fromPosition: camera.position.clone(), toPosition: new THREE.Vector3(100, 62, 155),
-    fromTarget: orbitControls.target.clone(), objectId: 'sun'
-  });
-});
-ui.addEventListener('time-change', (event) => { timeScale = event.detail; });
-ui.addEventListener('orbits-toggle', (event) => solarSystem.setOrbitsVisible(event.detail));
-ui.addEventListener('region-toggle', event => solarSystem.setRegionVisible(event.detail.id, event.detail.visible));
-ui.addEventListener('starfield-toggle', event => { solarSystem.background.visible = event.detail; });
-ui.addEventListener('filter', (event) => {
-  ui.hideWelcome();
-  ui.status(event.detail === 'all' ? '' : 'Kategori aktif: pilih objek pada hasil pencarian.');
-});
-ui.addEventListener('quality-change', (event) => {
-  const quality = event.detail;
-  solarSystem.setQuality(quality);
-  renderQuality = quality;
-  resizeRenderer();
-});
-ui.addEventListener('flight-toggle', () => {
-  if (tourActive) ui.stopTour();
-  if (flightActive) { leaveFlight(); return; }
-  manualTakeover(); flightControls.reset();
-  flightActive = true;
-  orbitControls.enabled = !flightActive;
-  cameraTween = null;
-  followedObject = null;
-  if (flightActive) flightControls.activate();
-  else flightControls.deactivate();
-  ui.setFlight(flightActive, flightControls.speed);
-});
-ui.addEventListener('tour-start', (event) => {
-  tourActive = true;
-  tourPaused = false;
-  if (flightActive) {
-    flightActive = false;
-    flightControls.deactivate();
-    orbitControls.enabled = true;
-    ui.setFlight(false);
-  }
-  goTour(event.detail);
-});
-ui.addEventListener('tour-step', (event) => goTour(event.detail));
-ui.addEventListener('tour-pause', (event) => {
-  if (event.detail && !tourPaused) tweenSuspendedAt = performance.now();
-  if (!event.detail && tourPaused) {
-    if (cameraTween) cameraTween.start += performance.now() - tweenSuspendedAt;
-    else if (!followedObject && tour[ui.tourIndex].id !== 'asteroid-belt') {
-      setCameraDestination(tour[ui.tourIndex].id, 1.2, true, tour[ui.tourIndex].framing);
-    }
-  }
-  tourPaused = event.detail;
-});
-ui.addEventListener('tour-exit', () => { tourActive = false; tourPaused = false; cameraTween = null; followedObject = null; resetObserver(); });
-function goTour(id) {
-  tourElapsed = 0;
-  if (id === 'asteroid-belt') {
-    ui.closeInfo(); followedObject = null;
-    beginTween({ start: performance.now(), duration: 2200, fromPosition: camera.position.clone(), toPosition: new THREE.Vector3(90, 95, 110), fromTarget: orbitControls.target.clone(), objectId: 'sun', follow: false });
-  } else {
-    selectObject(id);
-    setCameraDestination(id, 2.2, true, tour[ui.tourIndex].framing);
-  }
-}
-
-window.addEventListener('keydown', (event) => {
-  if (document.querySelector('dialog[open]')) return;
-  if (event.code === 'Escape') { manualTakeover(); followedObject = null; return; }
-  if (event.repeat || flightActive || event.ctrlKey || event.altKey || event.metaKey || document.activeElement.isContentEditable) return;
-  if (event.code === 'KeyF' && selectedObject && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-    if (tourActive) ui.stopTour();
-    setCameraDestination(selectedObject.data.id);
-  }
-});
-
 window.addEventListener('resize', resizeRenderer);
 document.addEventListener('fullscreenchange', resizeRenderer);
-
-
-
-// Opt-in development-only counter; no DOM work or counter in the production loop.
+ui.addEventListener('quality-change', event => {
+  renderQuality = event.detail; solar.setQuality(renderQuality); galaxy.setQuality(renderQuality); resizeRenderer();
+});
+const switchButton = document.getElementById('mode-toggle');
+const curtain = document.createElement('div'); curtain.id = 'mode-transition'; curtain.hidden = true;
+curtain.innerHTML = '<div class="mode-transition-shade"></div><div class="mode-transition-actions"><p role="status">Berpindah mode...</p><button type="button" title="Lewati animasi transisi" aria-label="Skip transition">Skip</button></div>';
+document.body.append(curtain);
+const skipButton = curtain.querySelector('button'), shade = curtain.firstElementChild;
+const motion = matchMedia('(prefers-reduced-motion: reduce)');
+const renderCamera = new THREE.PerspectiveCamera(), basePosition = new THREE.Vector3(), retreat = new THREE.Vector3();
+const inertState = new Map();
+let pendingLandmark = null;
+let pendingSolar = null;
+transition = new ModeTransition(modes, {
+  prepare(next) { renderer.compile(next.scene, next.camera); },
+  lock() {
+    for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+    for (const popover of document.querySelectorAll(':popover-open')) popover.hidePopover();
+    for (const element of document.body.children) if (element !== curtain) { inertState.set(element, element.inert); element.inert = true; }
+    document.body.classList.add('mode-transitioning'); curtain.hidden = false; shade.style.opacity = '0';
+    skipButton.focus();
+  },
+  scene(mode) {
+    renderCamera.copy(mode.camera); basePosition.copy(mode.camera.position);
+    retreat.set(0, 0, mode.id === 'galaxy' ? 2 : 8).applyQuaternion(mode.camera.quaternion);
+    if (transition.phase === 'in' && !motion.matches) renderCamera.position.add(retreat);
+  },
+  frame(amount) {
+    shade.style.opacity = String(amount);
+    const eased = amount * amount * (3 - 2 * amount);
+    renderCamera.position.copy(basePosition).addScaledVector(retreat, motion.matches ? 0 : eased);
+    renderCamera.aspect = modes.active.camera.aspect; renderCamera.updateProjectionMatrix();
+  },
+  changed(id) {
+    ui.setMode(id);
+    switchButton.textContent = id === 'galaxy' ? 'Enter Solar System' : 'View Milky Way';
+    switchButton.setAttribute('aria-pressed', String(id === 'galaxy'));
+  },
+  unlock() {
+    curtain.hidden = true; document.body.classList.remove('mode-transitioning');
+    for (const [element, previous] of inertState) element.inert = previous;
+    inertState.clear(); clock.getDelta(); switchButton.focus({ preventScroll: true });
+    if (pendingLandmark && modes.active.id === 'galaxy') galaxy.visitLandmark(pendingLandmark);
+    if (pendingSolar && modes.active.id === 'solar-system') ui.emit('select', pendingSolar);
+    pendingSolar = null;
+    pendingLandmark = null;
+  },
+  error() { ui.status('Mode tidak dapat dibuka. Mode sebelumnya dipertahankan.'); }
+});
+const requestMode = id => transition.start(id, motion.matches);
+const onSwitch = () => requestMode(modes.active.id === 'solar-system' ? 'galaxy' : 'solar-system');
+const onSkip = () => transition.skip();
+const onMotion = () => { if (motion.matches) transition.duration = .08; };
+switchButton.addEventListener('click', onSwitch); skipButton.addEventListener('click', onSkip); motion.addEventListener('change', onMotion);
+galaxy.onEnterSolarSystem = () => requestMode('solar-system');
+const onSolarSearch = event => {
+  if (transition.busy) return;
+  pendingSolar = event.detail;
+  if (!requestMode('solar-system')) pendingSolar = null;
+};
+ui.addEventListener('solar-search', onSolarSearch);
+const onGalaxySelect = event => {
+  if (transition.busy) return;
+  if (modes.active.id === 'galaxy') galaxy.visitLandmark(event.detail);
+  else { pendingLandmark = event.detail; if (!requestMode('galaxy')) pendingLandmark = null; }
+};
+ui.addEventListener('galaxy-select', onGalaxySelect);
+const onGalaxyTour = () => { if (!transition.busy && modes.active.id === 'galaxy') galaxy.tour.start(); };
+ui.addEventListener('galaxy-tour-start', onGalaxyTour);
+const onGalaxyTourExit = () => galaxy.tour?.exit();
+ui.addEventListener('galaxy-tour-exit', onGalaxyTourExit);
 const fpsDebug = import.meta.env.DEV && new URLSearchParams(location.search).has('debug');
 let fpsNode, fpsFrames = 0, fpsStart = performance.now();
 if (fpsDebug) {
@@ -371,71 +134,44 @@ if (fpsDebug) {
   fpsNode.style.cssText = 'position:fixed;left:8px;top:88px;z-index:99;color:white;background:#000c;padding:4px;pointer-events:none';
   document.body.append(fpsNode);
 }
+let frameId;
 function animate(now) {
   if (fpsDebug && ++fpsFrames && now - fpsStart >= 1000) {
-    fpsNode.textContent = `${Math.round(fpsFrames * 1000 / (now - fpsStart))} FPS`;
+    const stats = renderStats(renderer, modes.active);
+    fpsNode.textContent = `${Math.round(fpsFrames * 1000 / (now - fpsStart))} FPS | ${stats.calls} calls | ${stats.triangles} triangles | ${stats.points}/${stats.particles} points | ${stats.geometries} geometries | ${stats.materials} materials`;
     fpsFrames = 0; fpsStart = now;
   }
   frameId = requestAnimationFrame(animate);
-  previousCameraPosition.copy(camera.position);
-  const delta = Math.min(clock.getDelta(), 0.05);
-  solarSystem.update(delta * timeScale, delta);
-
-  if (flightActive) {
-    flightControls.update(delta, solarSystem.clearance(camera.position));
-    ui.setFlight(true, flightControls.effectiveSpeed);
-  } else {
-    if (followedObject && !cameraTween) {
-      solarSystem.getWorldPosition(followedObject.data.id, targetScratch);
-      offsetScratch.subVectors(targetScratch, orbitControls.target);
-      camera.position.add(offsetScratch);
-      orbitControls.target.copy(targetScratch);
-    }
-    updateCameraTween(now);
-    if (!cameraTween) orbitControls.update();
-  }
-
-  safety.resolve(camera.position, previousCameraPosition);
-  solarSystem.updateDetail(camera);
-  if (tourActive && !tourPaused && !cameraTween) {
-    tourElapsed += delta * 1000;
-    if (tourElapsed >= tour[ui.tourIndex].duration) ui.stepTour(1);
-  }
-
-  updateLabels();
-  renderer.render(scene, camera);
+  const delta = Math.min(clock.getDelta(), .05);
+  if (document.hidden) return; // Keep one RAF; skip simulation/render while hidden, consume clock delta.
+  if (transition.busy) transition.update(delta); else modes.update(delta, now);
+  renderer.render(modes.active.scene, transition.busy ? renderCamera : modes.active.camera);
 }
-
-renderer.render(scene, camera);
-// The Sun is the initial focal object, so load its final texture before revealing the scene.
-// A stalled request must not leave the application trapped on the loading screen.
+renderer.render(modes.active.scene, modes.active.camera);
 const startupTimeout = setTimeout(() => ui.ready(), 4000);
-solarSystem.loadTexture('sun').then(() => {
-  clearTimeout(startupTimeout);
-  ui.ready();
-});
+solar.integration.loadSun().then(() => { clearTimeout(startupTimeout); ui.ready(); });
 frameId = requestAnimationFrame(animate);
-// Read-only diagnostics for browser regression and allocation checks.
 if (import.meta.env.DEV) window.__observer = {
-  rendering: () => ({ pixelRatio: renderer.getPixelRatio(), aspect: camera.aspect,
+  performance: () => renderStats(renderer, modes.active),
+  ...solar.integration.diagnostics,
+  galaxyCamera: () => galaxy.camera ? ({ position: galaxy.camera.position.toArray(), flight: !!galaxy.controls.flight, tween: !!galaxy.controls.tween, multiplier: galaxy.controls.multiplier }) : null,
+  mode: () => ({ id: modes.active.id, transitioning: transition.busy, aspect: modes.active.camera.aspect, sceneObjects: modes.active.scene.children.length, galaxyParticles: galaxy.galaxy?.particleCount }),
+  rendering: () => ({ pixelRatio: renderer.getPixelRatio(), aspect: modes.active.camera.aspect,
     exposure: renderer.toneMappingExposure, colorSpace: renderer.outputColorSpace,
-    toneMapping: renderer.toneMapping, quality: renderQuality }),
-  elapsedDays: () => solarSystem.elapsedDays,
-  regions: () => [...solarSystem.regions].map(([id, region]) => ({ id, visible: region.visible, count: region.geometry.drawRange.count, rotation: region.rotation.y })),
-  resources: () => {
-    const geometries = new Set(), textures = new Set();
-    scene.traverse(object => {
-      if (object.geometry) geometries.add(object.geometry);
-      if (object.material) for (const material of [object.material].flat())
-        for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
-    });
-    return { geometries: geometries.size, textures: textures.size };
-  },
-  snapshot: () => ({ sunTextureLoaded: !!solarSystem.getObject('sun').mesh.material.map.image?.src?.endsWith('/textures/sun.jpg'), selected: selectedObject?.data.id, followed: followedObject?.data.id, flight: flightActive, pointerLocked: flightControls.pointerLocked, speed: flightControls.speed, effectiveSpeed: flightControls.effectiveSpeed, tween: !!cameraTween, tourActive, tourPaused, clearance: solarSystem.clearance(camera.position), camera: camera.position.toArray(), target: orbitControls.target.toArray(), memory: { ...renderer.info.memory } }),
-  project: id => { const v = solarSystem.getWorldPosition(id, new THREE.Vector3()).project(camera); return { x: (v.x + 1) * innerWidth / 2, y: (1 - v.y) * innerHeight / 2 }; }
+    toneMapping: renderer.toneMapping, quality: renderQuality })
 };
 window.addEventListener('pagehide', event => {
   if (event.persisted) return;
-  cancelAnimationFrame(frameId); flightControls.dispose(); orbitControls.dispose(); solarSystem.dispose(); renderer.dispose();
+  clearTimeout(startupTimeout); cancelAnimationFrame(frameId); transition.dispose(); modes.dispose(); renderer.dispose();
+  ui.search.dispose();
+  ui.removeEventListener('solar-search', onSolarSearch);
+  ui.removeEventListener('galaxy-select', onGalaxySelect);
+  ui.removeEventListener('galaxy-tour-start', onGalaxyTour);
+  ui.removeEventListener('galaxy-tour-exit', onGalaxyTourExit);
+  for (const type of gateTypes) window.removeEventListener(type, gateInput, true);
+  switchButton.removeEventListener('click', onSwitch); skipButton.removeEventListener('click', onSkip); motion.removeEventListener('change', onMotion); curtain.remove();
+  window.removeEventListener('resize', resizeRenderer);
+  document.removeEventListener('fullscreenchange', resizeRenderer);
+  canvas.removeEventListener('webglcontextlost', onContextLost);
 });
 if (import.meta.hot) import.meta.hot.accept(() => location.reload());

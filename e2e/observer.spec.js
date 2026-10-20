@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('desktop navigation, tours, picking, flight and resources', async ({ page }, testInfo) => {
   const errors = [];
@@ -9,15 +9,15 @@ test('desktop navigation, tours, picking, flight and resources', async ({ page }
   await expect(page.locator('#tour-panel')).toBeHidden();
   const snapshot = () => page.evaluate(() => window.__observer.snapshot());
   await page.locator('#search-input').fill('xyz-no-match');
-  await expect(page.locator('#object-select')).toContainText('Tidak ada objek');
+  await expect(page.locator('#search-results')).toContainText('Objek tidak ditemukan');
   await page.locator('#search-input').fill('');
   await page.locator('[data-filter="moon"]').click();
-  await expect(page.locator('#object-select optgroup')).toHaveCount(1);
-  await expect(page.locator('#object-select option')).toHaveCount(23);
+  await expect(page.locator('#search-results [role=group]')).toHaveCount(1);
+  await expect(page.locator('#search-results [role=option]')).toHaveCount(22);
   await page.locator('[data-filter="planet"]').click();
-  await expect(page.locator('#object-select option')).toHaveCount(9);
+  await expect(page.locator('#search-results [role=option]')).toHaveCount(8);
   await page.locator('[data-filter="star"]').click();
-  await expect(page.locator('#object-select option')).toHaveCount(2);
+  await expect(page.locator('#search-results [role=option]')).toHaveCount(1);
   await page.locator('[data-filter="all"]').click();
   await page.locator('#search-input').fill('earth');
   await page.locator('#search-input').press('Enter');
@@ -112,7 +112,7 @@ test('desktop navigation, tours, picking, flight and resources', async ({ page }
   });
   await page.goto('/');
   await expect(page.locator('#loading-screen')).toHaveClass(/done/);
-  await page.locator('#object-select').selectOption('moon');
+  await chooseObject(page, 'moon');
   await expect(page.locator('#app-status')).toContainText('procedural');
   await expect(page.locator('#object-name')).toHaveText('Bulan');
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
@@ -137,7 +137,7 @@ test('Sun texture is ready at startup without clicking and startup failure falls
   expect(await page.evaluate(() => window.__observer.snapshot().sunTextureLoaded)).toBe(true);
   expect(await page.evaluate(() => window.__observer.snapshot().selected)).toBeUndefined();
   expect(sunRequests).toBe(1);
-  await page.locator('#object-select').selectOption('sun');
+  await chooseObject(page, 'sun');
   expect(sunRequests).toBe(1);
   await page.route('**/textures/sun.jpg', route => route.fulfill({ status: 200, contentType: 'image/jpeg', body: 'invalid-image' }));
   await page.reload();

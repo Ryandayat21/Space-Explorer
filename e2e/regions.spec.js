@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('region toggles, quality limits and standalone dwarf planets work together', async ({ page }, testInfo) => {
   const errors = [];
@@ -24,7 +24,7 @@ test('region toggles, quality limits and standalone dwarf planets work together'
   }
   // Toggle only affects background particles, not independent dwarf planets.
   for (const id of ['ceres', 'pluto']) {
-    await page.locator('#object-select').selectOption(id);
+    await chooseObject(page, id);
     await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
     await page.locator('#close-info').click();
     const point = await page.evaluate(id => window.__observer.project(id), id);

@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('keyboard shortcuts, named modal focus and toggle semantics', async ({ page }) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
@@ -32,10 +32,10 @@ test('reduced motion shortens new and running transitions and removes loading an
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   expect(await page.locator('.loading-orbit').evaluate(node => getComputedStyle(node).animationName)).toBe('none');
-  await page.locator('#object-select').selectOption('earth');
+  await chooseObject(page, 'earth');
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween), { timeout: 1000, intervals: [50] }).toBe(false);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.locator('#object-select').selectOption('saturn');
+  await chooseObject(page, 'saturn');
   expect(await page.evaluate(() => window.__observer.snapshot().tween)).toBe(true);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween), { timeout: 1000, intervals: [50] }).toBe(false);

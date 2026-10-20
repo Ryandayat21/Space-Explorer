@@ -32,13 +32,12 @@
         </a>
 
         <div class="object-search">
-          <label class="sr-only" for="object-select">Cari objek langit</label>
+          <label class="sr-only" for="search-input">Cari objek langit</label>
           <span aria-hidden="true">⌕</span>
-          <input id="search-input" type="search" placeholder="Cari nama objek..." aria-label="Cari nama objek" autocomplete="off" />
+          <input id="search-input" type="search" placeholder="Cari planet, bintang, nebula, atau landmark..." role="combobox" aria-keyshortcuts="/" title="Cari objek (/)" aria-autocomplete="list" aria-expanded="false" aria-controls="search-results" aria-label="Cari nama objek" autocomplete="off" />
           <span id="search-status" class="sr-only" aria-live="polite"></span>
-          <select id="object-select" aria-label="Hasil pencarian">
-            <option value="">Cari objek langit…</option>
-          </select>
+          <button id="search-clear" type="button" aria-label="Hapus pencarian" title="Hapus pencarian" hidden>&times;</button>
+          <div id="search-results" role="listbox" aria-label="Hasil pencarian" hidden></div>
         </div>
 
         <nav class="top-actions" aria-label="Kontrol aplikasi">
@@ -171,6 +170,21 @@
       <button id="hud-button" class="button button-ghost hud-button" type="button" aria-pressed="false" aria-label="Aktifkan mode sinematik (H)" title="Aktifkan mode sinematik (H)">Sinematik · H</button>
       <p id="cinematic-status" class="cinematic-status" role="status" hidden></p>
       <p id="app-status" role="status"></p>
+      <button id="mode-toggle" class="button button-ghost mode-toggle" type="button" title="Beralih antara Tata Surya dan Bima Sakti" aria-label="Beralih antara Tata Surya dan Bima Sakti" aria-pressed="false">View Milky Way</button>
+      <section id="galaxy-placeholder" class="galaxy-placeholder glass-panel" role="status" hidden>
+        <h2>Galaxy Mode</h2>
+        <p>Representasi edukatif. Titik adalah sampel visual, bukan bintang katalog nyata. Struktur dan skala disederhanakan.</p>
+        <p>Cari landmark, klik marker, atau pilih dari daftar. Posisi skematis, bukan peta astrometri.</p>
+        <div class="galaxy-camera-controls" role="group" aria-label="Kamera galaksi">
+          <button id="galaxy-flight" type="button" title="Beralih orbit dan free-flight galaksi" aria-label="Beralih orbit dan free-flight galaksi">Free Flight</button>
+          <button id="galaxy-reset" type="button" title="Reset ke overview" aria-label="Reset kamera galaksi">Reset view</button>
+          <button data-galaxy-view="top" type="button" title="Lihat dari atas" aria-label="Top view">Top view</button>
+          <button data-galaxy-view="overview" type="button" title="Overview miring" aria-label="Angled overview">Angled overview</button>
+          <button data-galaxy-view="center" type="button" title="Lihat pusat galaksi" aria-label="Galactic center">Galactic center</button>
+          <button data-galaxy-view="solar" type="button" title="Wilayah Tata Surya ilustratif, bukan koordinat terverifikasi" aria-label="Solar System region ilustratif">Solar System region*</button>
+        </div>
+        <p>*Posisi ilustratif. Flight: WASD, mouse, Space/Ctrl, Shift boost, scroll kecepatan. Escape keluar flight atau membatalkan transisi.</p>
+      </section>
       <section id="audio-panel" class="audio-controls glass-panel" popover aria-label="Ambient audio">
         <button id="audio-play" type="button" title="Enable Ambience" aria-label="Enable Ambience">Enable Ambience</button>
         <button id="audio-mute" type="button" title="Bisukan ambience" aria-label="Bisukan ambience">Mute</button>

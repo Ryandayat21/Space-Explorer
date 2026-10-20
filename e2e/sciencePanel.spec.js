@@ -1,10 +1,10 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('grouped scientific panel supports every object type and restores keyboard focus', async ({ page }) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   for (const id of ['sun', 'earth', 'moon', 'pluto', 'halley']) {
-    await page.locator('#object-select').focus();
-    await page.locator('#object-select').selectOption(id);
+    await page.locator('#search-input').focus();
+    await chooseObject(page, id);
     await expect(page.locator('#object-name')).toBeFocused();
     await expect(page.locator('#object-stats')).toContainText('Karakteristik fisik');
     await expect(page.locator('#object-stats')).toContainText('Orbit dan rotasi');
@@ -13,6 +13,6 @@ test('grouped scientific panel supports every object type and restores keyboard 
     expect(await page.locator('#object-sources a').count()).toBeGreaterThan(0);
     await page.keyboard.press('Escape');
     await expect(page.locator('#info-panel')).toHaveAttribute('aria-hidden', 'true');
-    await expect(page.locator('#object-select')).toBeFocused();
+    await expect(page.locator('#search-input')).toBeFocused();
   }
 });

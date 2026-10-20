@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 import { moons } from '../src/data/celestialBodies.js';
 import { moonScience } from '../src/data/moonScience.js';
 
@@ -18,7 +18,7 @@ test('major moons are searchable, have sourced panels, and can be clicked after 
   for (const id of Object.keys(moonScience)) {
     const moon = moons.find(body => body.id === id);
     await page.locator('#search-input').fill(moon.name);
-    await page.locator('#object-select').selectOption(id);
+    await chooseObject(page, id);
     await expect(page.locator('#object-name')).toHaveText(moon.name);
     await expect(page.locator('#object-type')).toHaveText('SATELIT ALAMI');
     await expect(page.locator('#object-fact')).toHaveText(moonScience[id].fact);

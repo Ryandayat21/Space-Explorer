@@ -1,9 +1,9 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, chooseObject } from './fixtures.js';
 
 test('decorative sky toggles with keyboard and survives quality changes', async ({ page }, testInfo) => {
   await page.goto('/'); await expect(page.locator('#loading-screen')).toHaveClass(/done/);
   await page.locator('#time-toggle').click();
-  await page.locator('#object-select').selectOption('earth');
+  await chooseObject(page, 'earth');
   await expect.poll(() => page.evaluate(() => window.__observer.snapshot().tween)).toBe(false);
   const toggle = page.locator('#starfield-toggle');
   await toggle.focus(); await page.keyboard.press('Space');
