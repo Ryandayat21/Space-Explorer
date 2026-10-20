@@ -1,3 +1,4 @@
+import { loadingScreen } from './loadingScreen.js';
 import { SearchCombobox } from './SearchCombobox.js';
 import { tour } from '../data/tour.js';
 import { scienceFor } from '../data/science.js';
@@ -242,9 +243,7 @@ export class UIController extends EventTarget {
     document.getElementById('galaxy-placeholder').hidden = !galaxy;
   }
 
-  ready() {
-    window.setTimeout(() => this['loading-screen'].classList.add('done'), 550);
-  }
+  ready(message) { loadingScreen.ready(message); }
 
   hideWelcome() {
     this['welcome-card'].classList.add('hidden');

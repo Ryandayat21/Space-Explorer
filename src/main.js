@@ -1,6 +1,7 @@
 ﻿import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
-import './styles.css';
+import { loadingScreen, paintLoading } from './ui/loadingScreen.js';
+import { waitForOptionalAsset, loadingStages } from './core/loading.js';
 import { qualityPresets, readQuality } from './data/quality.js';
 import { ModeController } from './core/ModeController.js';
 import { ModeTransition } from './core/ModeTransition.js';
@@ -9,10 +10,13 @@ import { SolarSystemMode } from './modes/SolarSystemMode.js';
 import { GalaxyMode } from './modes/GalaxyMode.js';
 import { UIController } from './ui/UIController.js';
 import { initializeAudioControls } from './ui/AudioControls.js';
+export async function start() {
 if (!WebGL.isWebGL2Available()) {
-  document.body.replaceChildren(WebGL.getWebGL2ErrorMessage());
-  throw new Error('WebGL 2 tidak tersedia pada perangkat ini.');
+  const error = new Error('WebGL 2 unavailable'); error.code = 'WEBGL_UNAVAILABLE'; throw error;
 }
+loadingScreen.stage('scene', 'Inisialisasi renderer dan scene Tata Surya wajib.');
+await paintLoading();
+if (loadingScreen.failed) return;
 const canvas = document.getElementById('space-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 THREE.ColorManagement.enabled = true;
@@ -36,7 +40,11 @@ const gateInput = event => {
 };
 for (const type of gateTypes) window.addEventListener(type, gateInput, { capture: true, passive: false });
 const ui = new UIController();
-initializeAudioControls();
+try { initializeAudioControls(); }
+catch {
+  document.getElementById('audio-status').textContent = 'Audio unavailable. Simulasi tetap dapat digunakan.';
+  for (const id of ['audio-play', 'audio-mute', 'audio-volume']) document.getElementById(id).disabled = true;
+}
 const onContextLost = event => {
   event.preventDefault(); ui.status('Konteks grafis terputus. Muat ulang halaman untuk memulihkan simulasi.');
 };
@@ -61,7 +69,7 @@ ui.addEventListener('quality-change', event => {
 });
 const switchButton = document.getElementById('mode-toggle');
 const curtain = document.createElement('div'); curtain.id = 'mode-transition'; curtain.hidden = true;
-curtain.innerHTML = '<div class="mode-transition-shade"></div><div class="mode-transition-actions"><p role="status">Berpindah mode...</p><button type="button" title="Lewati animasi transisi" aria-label="Skip transition">Skip</button></div>';
+curtain.innerHTML = '<div class="mode-transition-shade"></div><div class="mode-transition-actions"><p role="status" aria-live="polite">Inisialisasi</p><button type="button" title="Lewati animasi transisi" aria-label="Skip transition">Skip</button></div>';
 document.body.append(curtain);
 const skipButton = curtain.querySelector('button'), shade = curtain.firstElementChild;
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -70,6 +78,13 @@ const inertState = new Map();
 let pendingLandmark = null;
 let pendingSolar = null;
 transition = new ModeTransition(modes, {
+  stage(stage) {
+    const label = transition.target === 'galaxy' ? 'Galaxy Mode' : 'Solar System Mode';
+    curtain.querySelector('[role=status]').textContent = `${loadingStages[stage]} — ${label}${stage === 'assets' ? ': aset lokal/procedural, tanpa unduhan audio' : ''}`;
+    curtain.dataset.stage = stage;
+    skipButton.disabled = stage !== 'ready';
+    if (stage === 'ready') skipButton.focus({ preventScroll: true });
+  },
   prepare(next) { renderer.compile(next.scene, next.camera); },
   lock() {
     for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
@@ -103,7 +118,7 @@ transition = new ModeTransition(modes, {
     pendingSolar = null;
     pendingLandmark = null;
   },
-  error() { ui.status('Mode tidak dapat dibuka. Mode sebelumnya dipertahankan.'); }
+  error() { loadingScreen.fail('Scene tujuan gagal disiapkan. Muat ulang untuk mencoba kembali dengan instance baru yang bersih.'); }
 });
 const requestMode = id => transition.start(id, motion.matches);
 const onSwitch = () => requestMode(modes.active.id === 'solar-system' ? 'galaxy' : 'solar-system');
@@ -136,6 +151,7 @@ if (fpsDebug) {
 }
 let frameId;
 function animate(now) {
+  if (loadingScreen.failed) return;
   if (fpsDebug && ++fpsFrames && now - fpsStart >= 1000) {
     const stats = renderStats(renderer, modes.active);
     fpsNode.textContent = `${Math.round(fpsFrames * 1000 / (now - fpsStart))} FPS | ${stats.calls} calls | ${stats.triangles} triangles | ${stats.points}/${stats.particles} points | ${stats.geometries} geometries | ${stats.materials} materials`;
@@ -144,12 +160,26 @@ function animate(now) {
   frameId = requestAnimationFrame(animate);
   const delta = Math.min(clock.getDelta(), .05);
   if (document.hidden) return; // Keep one RAF; skip simulation/render while hidden, consume clock delta.
-  if (transition.busy) transition.update(delta); else modes.update(delta, now);
-  renderer.render(modes.active.scene, transition.busy ? renderCamera : modes.active.camera);
+  try {
+    if (transition.busy) transition.update(delta); else modes.update(delta, now);
+    renderer.render(modes.active.scene, transition.busy ? renderCamera : modes.active.camera);
+  } catch (error) {
+    cancelAnimationFrame(frameId);
+    if (transition.busy) transition.fail(error);
+    else loadingScreen.fail('Tampilan scene gagal disiapkan. Muat ulang untuk memulihkan aplikasi.');
+  }
 }
 renderer.render(modes.active.scene, modes.active.camera);
-const startupTimeout = setTimeout(() => ui.ready(), 4000);
-solar.integration.loadSun().then(() => { clearTimeout(startupTimeout); ui.ready(); });
+loadingScreen.stage('assets', 'Memuat tekstur Matahari opsional. Material procedural sudah tersedia; audio menunggu interaksi.');
+const sunResult = await waitForOptionalAsset(solar.integration.loadSun());
+if (loadingScreen.failed) return;
+loadingScreen.stage('scene', 'Menyiapkan tampilan pertama dengan aset yang tersedia.');
+await paintLoading();
+if (loadingScreen.failed) return;
+renderer.render(modes.active.scene, modes.active.camera);
+const fallbackNotice = sunResult === 'deferred' ? 'Tekstur Matahari masih tertunda; simulasi memakai material procedural.' : sunResult === 'fallback' ? 'Tekstur Matahari gagal dimuat; simulasi memakai material procedural.' : '';
+if (fallbackNotice) ui.status(fallbackNotice);
+ui.ready(fallbackNotice || 'Tata Surya siap. Audio tetap opt-in.');
 frameId = requestAnimationFrame(animate);
 if (import.meta.env.DEV) window.__observer = {
   performance: () => renderStats(renderer, modes.active),
@@ -162,7 +192,7 @@ if (import.meta.env.DEV) window.__observer = {
 };
 window.addEventListener('pagehide', event => {
   if (event.persisted) return;
-  clearTimeout(startupTimeout); cancelAnimationFrame(frameId); transition.dispose(); modes.dispose(); renderer.dispose();
+  cancelAnimationFrame(frameId); transition.dispose(); modes.dispose(); renderer.dispose();
   ui.search.dispose();
   ui.removeEventListener('solar-search', onSolarSearch);
   ui.removeEventListener('galaxy-select', onGalaxySelect);
@@ -174,4 +204,5 @@ window.addEventListener('pagehide', event => {
   document.removeEventListener('fullscreenchange', resizeRenderer);
   canvas.removeEventListener('webglcontextlost', onContextLost);
 });
+}
 if (import.meta.hot) import.meta.hot.accept(() => location.reload());

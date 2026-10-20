@@ -154,3 +154,45 @@ Tugas implementasi pertama yang paling aman: perbaiki jalur startup/error/reload
 - [ ] Tinjau seluruh gerbang di atas sebelum keputusan rilis production.
 
 Tidak ada klaim production-ready, lisensi aman, bebas leak, bebas vulnerability atau berhasil deploy hanya dari unit test/build lokal ini.
+
+## 10. Loading startup dan Galaxy Mode - 20 Oktober 2026
+
+Bagian 1-9 adalah baseline audit sebelum implementasi. Tugas ini memperbaiki startup/loading saja; orbit, dataset, perhitungan kamera dan generator galaksi tidak diubah. Tidak ada commit atau deployment.
+
+### Pipeline dan kebijakan aset
+
+- [x] Tetap memakai #loading-screen, UIController.ready, SolarSystem.loadTexture dan ModeTransition. Tidak ada TextureLoader, renderer atau animation loop kedua.
+- [x] Entry ringan src/bootstrap.js menangkap kegagalan import modul utama dan startup. Status nyata: Inisialisasi, Memuat aset, Menyiapkan scene, Siap. Tahap dapat muncul kembali ketika beralih dari modul wajib ke tekstur opsional; tidak memaksakan urutan persentase fiktif.
+- [x] Indikator orbit existing bersifat indeterminate. Tidak ada persentase unduhan atau byte yang dibuat-buat. Status menjelaskan modul wajib, tekstur opsional dan aset procedural Galaxy.
+- [x] Aset wajib: modul aplikasi, renderer/WebGL2 dan scene. Kegagalan import/initialization/render awal ditangkap; pesan tetap terlihat dan menyediakan Muat Ulang (navigasi penuh), bukan Retry dalam instance parsial. Tidak ada auto-retry. Error render/update sesudahnya juga menghentikan loop, dengan pemulihan reload.
+- [x] Watchdog bootstrap 15 detik memberi penjelasan apabila modul/proses wajib belum siap. Modul yang datang setelah timeout tidak memulai instance terlambat. Watchdog tidak dapat memotong pekerjaan JavaScript sinkron yang memblokir thread; ini bukan jaminan startup di bawah 15 detik pada semua GPU.
+- [x] Tekstur Matahari opsional ditunggu maksimal 4 detik melalui promise loader existing. Gagal/reject memakai procedural; request tertahan melepas loading dengan status penjelasan. Tidak mengulang request. Respons terlambat tetap boleh memperbarui texture lewat loader existing, tetapi tidak membuka/menutup ulang loading.
+- [x] Audio tetap singleton, preload=none dan opt-in. Tidak ditunggu oleh startup; kegagalan constructor/inisialisasi audio menjadikan kontrol unavailable tanpa mematikan simulasi.
+- [x] HTML awal selalu menyediakan instruksi jika modul tidak terbuka dan link Muat Ulang, serta noscript untuk JavaScript nonaktif. Bila bootstrap atau dependensi loader sendiri gagal sebelum dapat dieksekusi, fallback ini tetap statis; bukan klaim watchdog JavaScript dapat bekerja tanpa JavaScript.
+
+### Persiapan Galaxy tanpa flashing canvas kosong
+
+- [x] Fase preparing diperluas pada ModeTransition existing. Input dikunci dan status ditampilkan sebelum konstruksi sinkron Galaxy, dengan kesempatan paint lewat RAF yang sama.
+- [x] Tahap aset Galaxy menjelaskan konten lokal/procedural; tidak mengunduh musik. Scene tujuan diinisialisasi/resize/compile sebelum swap.
+- [x] Scene/kamera sumber tetap dirender selama persiapan. Swap tetap di midpoint opaque existing; easing, posisi dan durasi gerakan kamera tidak diubah. Pada error persiapan, scene sumber dipertahankan dan overlay pemulihan reload ditampilkan.
+- [x] Skip aktif setelah scene siap; permintaan skip programatik saat preparing ditunda sampai tujuan siap. Input/fokus dikembalikan oleh lifecycle existing. Tidak menambah loop animasi atau callback listener saat switch berulang.
+- [x] Startup memberi satu kesempatan paint sebelum pekerjaan sinkron; requestAnimationFrame tersebut one-shot, bukan loop kedua. Setelah siap, pengujian mencatat satu pending RAF. Fade mengikuti reduced-motion; theme navy/cyan, status live, inert dan fokus pada Muat Ulang digunakan saat error.
+
+### Verifikasi tugas ini
+
+- npm test: **69/69 lulus**, exit 0. Tambahan mencakup optional asset success/failure/rejection/deadline/late completion dan tahapan prepare/skip sebelum activation. Tes lifecycle lama disesuaikan dengan persiapan bertahap.
+- npm run build: **berhasil, 57 modul**, exit 0. HTML 16,14 kB; CSS 25,87 kB; entry 2,72 kB; loadingScreen 1,58 kB; main 148,42 kB (gzip 47,20 kB); Three.js tetap terpisah 499,99 kB (gzip 126,49 kB). Nama chunk hashed berubah akibat entry dinamis; tidak ada dependency baru.
+- Browser final: **12/12 lulus** pada Edge 1366x768 dan Chrome 1920x1080, exit 0. Menguji tekstur tertahan/fallback, tahapan startup, satu RAF, zero request MP3, modul wajib gagal + reload, WebGL unavailable, audio initialization gagal, Galaxy initialization gagal, watchdog modul tertahan (timer dipercepat untuk tes), late import tidak memulai aplikasi, serta Skip/pergantian mode berulang. Fixture memeriksa pageerror dan warning/error console aplikasi.
+- Sebelum pengulangan final, search Galaxy dan integrasi loading/transisi juga lulus pada kedua browser (12/12 eksekusi saat itu). Seluruh suite E2E tidak dijalankan ulang pada tugas ini.
+- Smoke **production preview lokal Chrome** lulus: startup, Galaxy, kembali Solar System, request musik=0, dan kegagalan main chunk yang diinjeksi menampilkan recovery. Console warning/error kosong; screenshot recovery diperiksa. Ini bukan deployment Vercel.
+
+File baru: src/bootstrap.js, src/core/loading.js, src/ui/loadingScreen.js, test/loading.test.js, e2e/loading.spec.js.
+File berubah: index.html, src/main.js, src/core/ModeTransition.js, src/ui/UIController.js, src/styles.css, test/modeTransition.test.js, dokumen ini.
+
+### Checklist lanjutan
+
+- [x] Startup, optional asset deadline dan loading Galaxy dengan recovery Muat Ulang.
+- [x] Fallback WebGL2 unavailable dan pesan statis untuk JS/modul tidak terbuka.
+- [ ] Recovery context loss/restoration penuh, termasuk kondisi cinematic, masih terpisah dari tugas ini; checklist gabungan bagian 9 belum seluruhnya selesai.
+- [ ] Fault injection seluruh jenis error GPU, clean Linux build, full E2E, slow-network nyata dan profiling GPU lemah.
+- [ ] Lisensi audio, provenance aset, metadata/CI dan validasi Vercel tetap mengikuti backlog audit; belum dianggap selesai oleh perbaikan loading.

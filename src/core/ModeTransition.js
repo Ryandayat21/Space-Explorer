@@ -5,15 +5,30 @@ export class ModeTransition {
   start(id, reduced = false) {
     if (this.disposed || this.busy || this.manager.active.id === id) return false;
     this.phase = 'preparing'; this.target = id; this.duration = reduced ? .08 : .65; this.elapsed = 0;
+    this.preparationStep = 0; this.skipRequested = false;
     try {
-      const next = this.manager.initialize(id);
-      next.resize(this.manager.width, this.manager.height);
-      this.hooks.prepare?.(next);
       this.hooks.lock?.();
-      this.manager.active.deactivate();
-      this.phase = 'out'; this.hooks.scene?.(this.manager.active);
+      this.hooks.stage?.('initializing');
+      this.hooks.scene?.(this.manager.active);
       return true;
     } catch (error) { this.fail(error); return false; }
+  }
+  prepare() {
+    // Let the existing RAF paint the curtain before synchronous construction.
+    if (this.preparationStep++ === 0) return;
+    if (this.preparationStep === 2) {
+      this.next = this.manager.initialize(this.target);
+      this.next.resize(this.manager.width, this.manager.height);
+      this.hooks.stage?.('assets');
+    } else if (this.preparationStep === 3) {
+      this.hooks.stage?.('scene');
+    } else {
+      this.hooks.prepare?.(this.next);
+      this.manager.active.deactivate();
+      this.phase = 'out'; this.hooks.scene?.(this.manager.active);
+      this.hooks.stage?.('ready');
+      if (this.skipRequested) this.skip();
+    }
   }
   swap() {
     this.manager.activate(this.target);
@@ -24,6 +39,7 @@ export class ModeTransition {
   update(delta) {
     if (!this.busy) return;
     try {
+      if (this.phase === 'preparing') { this.prepare(); return; }
       this.elapsed += Math.max(0, delta);
       const t = Math.min(1, this.elapsed / this.duration);
       this.hooks.frame?.(this.phase === 'out' ? t : 1 - t, this.phase);
@@ -32,6 +48,7 @@ export class ModeTransition {
   }
   skip() {
     if (!this.busy) return;
+    if (this.phase === 'preparing') { this.skipRequested = true; return; }
     try { if (this.phase === 'out') this.swap(); this.finish(); } catch (error) { this.fail(error); }
   }
   finish() { this.phase = 'idle'; this.hooks.unlock?.(); }

@@ -18,8 +18,10 @@
       <div id="loading-screen" class="loading-screen" aria-live="polite">
         <div class="loading-orbit" aria-hidden="true"><span></span></div>
         <p class="eyebrow">MILKY WAY OBSERVER</p>
-        <h1>Menyiapkan Tata Surya</h1>
-        <p class="muted">Menyelaraskan orbit dan menyalakan bintang…</p>
+        <h1 id="loading-title">Inisialisasi</h1>
+        <p id="loading-detail" class="muted">Menunggu modul aplikasi. Jika proses berhenti atau koneksi gagal, muat ulang halaman.</p>
+        <a id="loading-reload" class="button button-ghost" href="" title="Muat ulang aplikasi">Muat Ulang</a>
+        <noscript>JavaScript diperlukan untuk membuka simulasi ini. Aktifkan JavaScript lalu muat ulang.</noscript>
       </div>
 
       <header class="topbar glass-panel">
@@ -218,6 +220,6 @@
         Pengalaman terbaik tersedia di desktop dengan mouse dan keyboard.
       </div>
     </div>
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/bootstrap.js"></script>
   </body>
 </html>

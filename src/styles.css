@@ -546,3 +546,14 @@ button:disabled { opacity: .4; cursor: default; }
 #search-input::-webkit-search-cancel-button { appearance: none; }
 .galaxy-landmark-list > summary { position: sticky; top: 0; z-index: 2; background: #0b192b; border-radius: 6px; }
 .galaxy-landmark-list [data-landmark] { scroll-margin-top: 44px; }
+/* Existing loading surfaces: indeterminate stages, never invented percentages. */
+.loading-screen { padding: 24px; text-align: center; }
+#loading-detail { max-width: 480px; line-height: 1.7; font-size: 13px; color: #bdd1e5; }
+#loading-reload { margin-top: 16px; color: #9ce6ff; }
+.loading-screen[data-stage=error] { opacity: 1 !important; visibility: visible !important; transition: none; }
+.loading-screen[data-stage=error] .loading-orbit, .loading-screen[data-stage=ready] .loading-orbit { animation: none; }
+.loading-screen[data-stage=error] .loading-orbit { display: none; }
+#mode-transition[data-stage]:not([data-stage=ready]) .mode-transition-actions { padding: 16px 24px; border-radius: 16px; background: #071326f2; border: 1px solid #57d8ff40; }
+.mode-transition-actions p { max-width: min(480px, 80vw); font-size: 13px; line-height: 1.6; }
+.mode-transition-actions button:disabled { opacity: .4; cursor: wait; }
+@media (prefers-reduced-motion: reduce) { .loading-screen { transition: none; } }
