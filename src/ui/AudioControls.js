@@ -28,11 +28,15 @@ export function initializeAudioControls() {
   const onVolume = () => manager.setPreferences({ volume: Number(volume.value) / 100 });
   play.addEventListener('click', onPlay); mute.addEventListener('click', onMute); volume.addEventListener('input', onVolume);
   manager.addEventListener('change', render); render();
-  const onPageHide = event => {
-    if (event.persisted) return;
+  let disposed = false;
+  const cleanup = () => {
+    if (disposed) return;
+    disposed = true;
     manager.removeEventListener('change', render);
     play.removeEventListener('click', onPlay); mute.removeEventListener('click', onMute); volume.removeEventListener('input', onVolume);
     window.removeEventListener('pagehide', onPageHide); manager.dispose();
   };
+  const onPageHide = event => { if (!event.persisted) cleanup(); };
   window.addEventListener('pagehide', onPageHide);
+  return cleanup;
 }

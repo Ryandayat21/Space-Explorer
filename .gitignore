@@ -30,3 +30,6 @@ pnpm-debug.log*
 # Operating system
 .DS_Store
 Thumbs.db
+
+# Local Vercel project linkage
+.vercel/
