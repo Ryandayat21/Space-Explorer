@@ -322,3 +322,16 @@ Belum diverifikasi: social crawler pada URL publik, screen reader, semua browser
 - [ ] Full suite lama yang memakai __observer tidak dianggap lulus terhadap production; hanya suite produksi yang disebutkan dijalankan. Izin audio/provenance aset tetap blocker publikasi.
 
 Perubahan: src/styles.css, e2e/productionRelease.spec.js (baru), docs/release-checklist.md (baru), dokumen ini. Build akhir: HTML 19,87 kB, CSS 28,04 kB; main 124,39 kB, Galaxy 26,59 kB, Three 499,99 kB. Tidak ada library baru, commit, atau deploy. Tidak mengklaim peningkatan performa, bebas leak, atau production-ready.
+
+## 15. Konfigurasi Vercel existing project - 21 Oktober 2026
+
+- [x] Audit package.json/lockfile, vite.config.js, vercel.json dan .gitignore. Working tree bersih sebelum tugas; branch feat/phase-6-production-vercel.
+- [x] Mempertahankan konfigurasi minimal existing: framework vite, npm run build, output dist. Tidak ada client-side URL routes, sehingga tidak menambah SPA rewrite/catch-all untuk aset hilang.
+- [x] Tidak menambah cache immutable, header keamanan, runtime override atau dependency upgrade. Node lokal v22.20.0 memenuhi engine Vite lock 7.3.7; runtime dashboard tetap perlu konfirmasi. Dokumentasi resmi Vercel/Vite ditinjau dan ditautkan dalam docs/deployment.md.
+- [x] Exact-case audit: 93 import relatif src dan 14 path aset public/dist cocok; public assets disalin tanpa perubahan byte. Tidak ada file .env/node_modules/dist/.vercel terlacak pada pemeriksaan git ls-files. Menambahkan .vercel/ pada .gitignore.
+- [x] docs/deployment.md memisahkan fakta repository dan konfirmasi dashboard: root, build/install/Node, master sebagai Production Branch, Phase 6 sebagai Preview, Git integration/protection dan domain assignment. Prosedur import hanya referensi; proyek existing tidak di-import ulang.
+- [x] Runbook Preview -> PR base master -> merge -> production serta rollback didokumentasikan. Tidak Promote Preview sebelum merge. Checklist mencakup missing assets 404, cache headers, Range MP3, case-sensitive paths dan pengujian UI.
+- [x] npm test 77/77 PASS; npm run build PASS, 59 modul, exit 0. Root dependency declarations cocok dengan package-lock.json. Tidak menjalankan clean install Linux/npm ci atau browser suite ulang karena perubahan hanya ignore/dokumentasi.
+- [ ] Dashboard Vercel, URL Preview/domain online, cache/header/404 CDN dan rollback nyata belum diverifikasi; tidak ada login, pembuatan proyek, pengaitan ulang, pergantian domain/Production Branch, push, commit atau deploy.
+
+Pengguna menyatakan proyek sudah online; hal ini bukan bukti konfigurasi dashboard atau izin aset. Audio/provenance tetap mengikuti blocker release-checklist. File berubah: .gitignore, docs/deployment.md (baru), dokumen ini.
