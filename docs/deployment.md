@@ -1,4 +1,4 @@
-# Deployment Milky Way Observer — Vercel existing project
+# Deployment Milky Way Observer â€” Vercel existing project
 
 Audit: **21 Oktober 2026**. Pengguna menyatakan proyek sudah online dan terhubung ke GitHub. Identitas proyek, domain, deployment ID dan dashboard **belum diakses/diverifikasi**. Dokumen ini bukan instruksi membuat proyek baru atau menghubungkan ulang repository.
 
@@ -81,3 +81,8 @@ Sumber prosedur/limit: [Vercel Instant Rollback](https://vercel.com/docs/instant
 ## Hasil audit lokal
 
 21 Oktober 2026: npm test **77/77 PASS**, npm run build **PASS (59 modul)**. Main 124,39 kB; Galaxy 26,59 kB; Three 499,99 kB; CSS 28,04 kB; HTML 19,87 kB. Konfigurasi aplikasi dan runtime tidak diubah. Perubahan hanya .gitignore dan dokumentasi. Dashboard, Preview Vercel, domain production dan rollback nyata tetap **NOT VERIFIED**; pengguna belum memberikan URL/config snapshot untuk pemeriksaan tersebut.
+
+
+### Konfirmasi metadata domain produksi ? 21 Oktober 2026
+
+Pembaruan setelah audit di atas: pengguna mengonfirmasi `https://space-explorer-kappa-azure.vercel.app/` sebagai domain produksi saat ini. Canonical dan og:url pada index.html kini memakai URL tersebut dengan trailing slash yang sama, termasuk untuk build Preview. URL deployment unik/preview branch tidak digunakan. Jika beralih ke custom domain, perbarui kedua field, README dan e2e/publicInfo.spec.js. Catatan sebelumnya tentang domain belum dikonfirmasi adalah riwayat sebelum konfirmasi ini. Gambar sosial tetap belum ditentukan. Konfirmasi domain tidak menyelesaikan blocker akses Preview kandidat, perbedaan artefak, atau izin aset; tidak ada commit/push/deploy.

@@ -1,4 +1,4 @@
-# Release checklist � Milky Way Observer
+# Release checklist — Milky Way Observer
 
 Tanggal: 20 Oktober 2026. Scope: hasil `dist` melalui **npm run preview**, bukan dev server dan bukan deployment. Status PASS hanya berlaku pada skenario dan lingkungan yang disebutkan; bukan jaminan seluruh perangkat atau production-ready.
 
@@ -64,3 +64,33 @@ Tidak commit atau deploy. Status keseluruhan: **belum memberi persetujuan rilis 
 ## Hasil akhir dan inspeksi visual
 
 Setelah perbaikan CSS dan rebuild: **16/16 test produksi PASS** pada Edge dan Chrome (productionRelease, lazyLoading, publicInfo), exit 0. npm test **77/77 PASS** dan build PASS. Screenshot reflow-tour 683x384, galaxy-tour 1366x768, serta galaxy-panel 1920x1080 diperiksa secara visual: panel/kontrol terpisah dan teks dapat dibaca pada gambar tersebut. Pemeriksaan tidak mencakup setiap posisi kamera, kombinasi panel atau level zoom.
+
+## Addendum online — 21 Oktober 2026
+
+Bagian sebelumnya adalah hasil preview lokal 20 Oktober, bukan bukti deployment Vercel Phase 6. User memberikan dua URL. Konfirmasi user: domain produksi belum ditetapkan untuk metadata; canonical/og:url tetap kosong.
+
+| Target / pemeriksaan | Status | Bukti |
+| --- | --- | --- |
+| Deployment n3v3h5khd dari sesi baru | FAIL | Redirect ke Login – Vercel; blocker akses, bukan error aplikasi. Tidak login atau bypass. |
+| Fitur/asset Phase 6 pada deployment n3v3h5khd | NOT TESTED | Aplikasi tidak dapat dibuka tanpa otorisasi Vercel. |
+| Alias space-explorer-kappa-azure.vercel.app sesi baru/reload | PASS | HTTP 200 dan aplikasi terbuka; dua browser headless. |
+| Alias: JS/CSS/texture normal | PASS | Tidak ada request gagal/HTTP >=400 pada alur UI; semua 10 JPEG diperiksa 200 image/jpeg. |
+| Alias: kedua mode/search/panel/tur | PASS | productionRelease discovery: 2/2 PASS (Edge 1366x768, Chrome 1920x1080). |
+| Alias: audio opt-in/mute/volume | PASS | productionRelease audio: 2/2 PASS; MP3 tidak diminta sebelum Play, tidak autoplay setelah reload. |
+| Alias: audio Range | PASS | 206 audio/mpeg; bytes 0-1023/12549142; 1024 byte diterima. |
+| Alias: console/pageerror | PASS | Tidak ada error/warning tak terduga dari fixture pada skenario yang diuji. |
+| Alias: missing assets/case | PASS | Missing JPEG/JS/MP3 dan Sun.jpg salah kapitalisasi memberi 404, bukan HTML aplikasi berstatus 200. |
+| Alias: cache index/sun.jpg | PASS | public, max-age=0, must-revalidate; tidak immutable. Tidak digeneralisasi ke seluruh response. |
+| Kesamaan artefak alias dengan kandidat Phase 6 | FAIL | Hash entry alias berbeda dari dist lokal; SHA deployment tidak diketahui. PASS alias bukan acceptance Phase 6. |
+| Domain produksi untuk canonical | NOT TESTED | User meminta tetap kosong karena belum dikonfirmasi. |
+| Zoom native 200%, tab OS asli, screen reader, rollback/dashboard | NOT TESTED | Tetap membutuhkan pemeriksaan yang sah/manual. |
+| Izin audio dan provenance/attribution | FAIL | Belum ada bukti penyelesaian sejak audit sebelumnya. |
+
+Total online alias: **6/6 test PASS**, terdiri dari empat test fungsional dan dua test hosted-assets. Test baru: e2e/onlineAssets.spec.js; jalankan dengan PLAYWRIGHT_BASE_URL HTTPS yang diotorisasi. Nama file hash berbeda dicatat rinci di phase-6-progress bagian 16. Local rerun 21 Oktober: **77/77 unit PASS**, build PASS (59 modul).
+
+**Keputusan: belum siap merge ke master untuk rilis.** Dapat ditinjau sebagai draft PR; akses Preview kandidat/SHA dan blocker izin aset harus diselesaikan lebih dulu. Tidak menganggap login HTTP 200 sebagai PASS aplikasi dan tidak memakai alias untuk melewati proteksi deployment.
+
+
+### Konfirmasi metadata domain produksi ? 21 Oktober 2026
+
+Pembaruan setelah audit di atas: pengguna mengonfirmasi `https://space-explorer-kappa-azure.vercel.app/` sebagai domain produksi saat ini. Canonical dan og:url pada index.html kini memakai URL tersebut dengan trailing slash yang sama, termasuk untuk build Preview. URL deployment unik/preview branch tidak digunakan. Jika beralih ke custom domain, perbarui kedua field, README dan e2e/publicInfo.spec.js. Catatan sebelumnya tentang domain belum dikonfirmasi adalah riwayat sebelum konfirmasi ini. Gambar sosial tetap belum ditentukan. Konfirmasi domain tidak menyelesaikan blocker akses Preview kandidat, perbedaan artefak, atau izin aset; tidak ada commit/push/deploy.

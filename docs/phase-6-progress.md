@@ -335,3 +335,44 @@ Perubahan: src/styles.css, e2e/productionRelease.spec.js (baru), docs/release-ch
 - [ ] Dashboard Vercel, URL Preview/domain online, cache/header/404 CDN dan rollback nyata belum diverifikasi; tidak ada login, pembuatan proyek, pengaitan ulang, pergantian domain/Production Branch, push, commit atau deploy.
 
 Pengguna menyatakan proyek sudah online; hal ini bukan bukti konfigurasi dashboard atau izin aset. Audio/provenance tetap mengikuti blocker release-checklist. File berubah: .gitignore, docs/deployment.md (baru), dokumen ini.
+
+## 16. Finalisasi dan pemeriksaan online - 21 Oktober 2026
+
+Sumber URL dari pengguna:
+- Deployment spesifik: https://space-explorer-n3v3h5khd-ryandayat21s-projects.vercel.app/ (teks link pengguna; href aslinya menuju halaman dashboard deployment Vercel).
+- Alias publik: https://space-explorer-kappa-azure.vercel.app/.
+
+Pengguna mengonfirmasi bahwa domain produksi **belum dikonfirmasi** dan meminta metadata URL tetap kosong. Canonical/og:url tidak diisi; alias publik tidak diasumsikan domain produksi resmi.
+
+### Bukti browser baru
+
+Browser awal di sandbox menghasilkan ERR_NETWORK_ACCESS_DENIED. Percobaan read-only di luar sandbox dengan izin berhasil mengakses jaringan; ini bukan bukti website down. Tidak melakukan login, menggunakan token bypass, atau melewati proteksi Vercel.
+
+- Deployment spesifik: sesi baru Chrome dialihkan ke vercel.com/login (judul Login – Vercel, status akhir halaman login 200). Aplikasi **NOT TESTED**; blocker Deployment Protection. Status 200 login bukan startup aplikasi PASS.
+- Alias publik: sesi baru Chrome membuka aplikasi HTTP 200, judul Milky Way Observer. Empat test fungsional existing productionRelease (discovery dan audio pada Edge 1366x768/Chrome 1920x1080) **4/4 PASS**. Cakupan: kedua mode, pergantian berulang, search/empty/keyboard/panel Sirius, kedua tur/pause/resume/minimize/expand/exit, flight/reset, quality/bookmark/compare, fullscreen/sinematik, serta audio opt-in/preferences/visibility handler. Visibility adalah injeksi event, bukan tab OS asli.
+- Test hosting baru e2e/onlineAssets.spec.js **2/2 PASS** pada kedua browser: startup sesi baru, reload, tidak ada request MP3 sebelum interaksi; tidak ada requestfailed atau HTTP >=400 pada alur normal JS/CSS/texture. Sepuluh JPEG masing-masing 200 image/jpeg. Range MP3 206 audio/mpeg, Content-Range bytes 0-1023/12549142, body 1024 byte.
+- Empat URL sengaja salah (/textures/__missing__.jpg, /assets/__missing__.js, /audio/__missing__.mp3, /textures/Sun.jpg) memberi 404. Tidak mengembalikan index aplikasi dengan 200. Request ini tes negatif, bukan error aset normal.
+- Cache-Control root dan sun.jpg: public, max-age=0, must-revalidate; bukan immutable. Header semua aset/CDN lintas region belum diaudit.
+- Fixture browser tidak menemukan pageerror atau warning/error console tak terduga pada skenario online tersebut.
+
+### Blocker identitas artefak
+
+Entry assets alias publik: index-DAcmkbOo.css, index-jygk-r49.js, three-B-02bfyu.js.
+Entry assets build lokal Phase 6: index-B4rlouQ5.css, index-DZI3HjNL.js, loadingScreen-phf3oqAs.js.
+
+Artefak berbeda. Hash tidak mengidentifikasi SHA atau branch secara pasti; **enam PASS online tidak memverifikasi deployment branch Phase 6**. Pemilik perlu menyediakan akses sah ke Preview spesifik dan mengonfirmasi SHA/environment deployment cocok dengan kandidat PR. Jangan mengubah deployment protection atau mempromosikan alias dari tugas ini.
+
+### Hasil dan keputusan
+
+npm test **77/77 PASS**; npm run build **PASS, 59 modul**, exit 0. Tidak ditemukan blocker kode baru yang dapat dibuktikan dari alias; tidak mengubah implementasi atau metadata URL. Menambahkan test hosted yang skip otomatis jika PLAYWRIGHT_BASE_URL bukan HTTPS agar pemeriksaan hosting tidak salah diterapkan ke Vite dev server.
+
+README dan release-checklist diperbarui; docs/phase-6-pr-summary.md adalah draft teks PR, bukan PR yang dibuat/dikirim. Status: **belum siap di-merge ke master sebagai rilis terverifikasi**. Blocker: Preview Phase 6 terlindungi/tidak diuji, artefak alias berbeda, izin audio dan verifikasi provenance/attribution masih terbuka. Zoom native 200%, tab OS asli, screen reader, dashboard production branch/Node/commit SHA dan rollback tetap belum diuji/dikonfirmasi.
+
+Tidak commit, push, merge, login, mengubah dashboard atau deployment produksi.
+
+
+### Konfirmasi metadata domain produksi ? 21 Oktober 2026
+
+Pembaruan setelah audit di atas: pengguna mengonfirmasi `https://space-explorer-kappa-azure.vercel.app/` sebagai domain produksi saat ini. Canonical dan og:url pada index.html kini memakai URL tersebut dengan trailing slash yang sama, termasuk untuk build Preview. URL deployment unik/preview branch tidak digunakan. Jika beralih ke custom domain, perbarui kedua field, README dan e2e/publicInfo.spec.js. Catatan sebelumnya tentang domain belum dikonfirmasi adalah riwayat sebelum konfirmasi ini. Gambar sosial tetap belum ditentukan. Konfirmasi domain tidak menyelesaikan blocker akses Preview kandidat, perbedaan artefak, atau izin aset; tidak ada commit/push/deploy.
+
+Verifikasi metadata: npm test 77/77 PASS; npm run build PASS (59 modul); e2e/publicInfo.spec.js 4/4 PASS pada Edge dan Chrome. Canonical dan og:url diperiksa sama dengan domain produksi yang dikonfirmasi.

@@ -6,7 +6,9 @@ test('public identity and credits are accessible without invented deployment met
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Bima Sakti/);
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Milky Way Observer');
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary');
-  expect(await page.locator('meta[property="og:url"],meta[property="og:image"],meta[name="twitter:image"],link[rel="canonical"]').count()).toBe(0);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://space-explorer-kappa-azure.vercel.app/');
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', 'https://space-explorer-kappa-azure.vercel.app/');
+  expect(await page.locator('meta[property="og:image"],meta[name="twitter:image"]').count()).toBe(0);
   const icon = await page.request.get(await page.locator('link[rel="icon"]').getAttribute('href'));
   expect(icon.ok()).toBe(true); expect(await icon.text()).toContain('<svg');
   await page.locator('#help-button').focus(); await page.keyboard.press('Enter');
